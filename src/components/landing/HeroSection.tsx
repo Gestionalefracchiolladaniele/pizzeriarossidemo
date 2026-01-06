@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, MapPin, Phone, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
@@ -12,7 +13,7 @@ const HeroSection = () => {
           backgroundImage: `url('https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=2070')`,
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
       </div>
 
       {/* Content */}
@@ -28,7 +29,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/40 text-primary mb-6"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/40 text-white mb-6"
           >
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="text-sm font-medium">Forno a Legna dal 1990</span>
@@ -37,7 +38,7 @@ const HeroSection = () => {
           {/* Main Heading */}
           <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
             La Pizza Perfetta,{" "}
-            <span className="text-gradient-gold">A Casa Tua</span>{" "}
+            <span className="text-gradient-red">A Casa Tua</span>{" "}
             o Nel Nostro Locale
           </h1>
 
@@ -54,19 +55,23 @@ const HeroSection = () => {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
           >
-            <Button 
-              size="lg" 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-gold text-lg px-8 py-6"
-            >
-              Prenota Tavolo
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6"
-            >
-              Ordina Ora
-            </Button>
+            <Link to="/prenota">
+              <Button 
+                size="lg" 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red text-lg px-8 py-6 w-full sm:w-auto"
+              >
+                Prenota Tavolo
+              </Button>
+            </Link>
+            <Link to="/ordina">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6 w-full sm:w-auto"
+              >
+                Ordina Ora
+              </Button>
+            </Link>
           </motion.div>
 
           {/* Quick Info */}
@@ -101,7 +106,9 @@ const HeroSection = () => {
           <motion.div
             animate={{ y: [0, 10, 0] }}
             transition={{ repeat: Infinity, duration: 2 }}
+            className="flex flex-col items-center gap-2"
           >
+            <span className="text-white/50 text-xs">Scorri</span>
             <ChevronDown className="w-8 h-8 text-white/50" />
           </motion.div>
         </motion.div>

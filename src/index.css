@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Pizzeria Design System - Colori oro/giallo, elegante e caldo */
+/* Pizzeria Design System - Rosso Pizzeria + Accenti Naturali */
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 30 25% 97%;
     --foreground: 20 14% 12%;
 
     --card: 0 0% 100%;
@@ -15,89 +15,109 @@
     --popover: 0 0% 100%;
     --popover-foreground: 20 14% 12%;
 
-    --primary: 43 74% 49%;
+    --primary: 4 70% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 20% 94%;
+    --secondary: 30 25% 94%;
     --secondary-foreground: 20 14% 12%;
 
-    --muted: 30 15% 92%;
+    --muted: 30 20% 92%;
     --muted-foreground: 20 10% 45%;
 
-    --accent: 43 74% 49%;
+    --accent: 120 35% 32%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 15% 88%;
-    --input: 30 15% 88%;
-    --ring: 43 74% 49%;
+    --border: 30 20% 88%;
+    --input: 30 20% 88%;
+    --ring: 4 70% 48%;
 
     --radius: 0.75rem;
 
-    /* Custom pizzeria tokens */
-    --gold: 43 74% 49%;
-    --gold-light: 43 70% 60%;
-    --gold-dark: 43 78% 40%;
-    --cream: 40 30% 96%;
+    /* Custom pizzeria tokens - Rosso Pizzeria */
+    --pizzeria-red: 4 70% 48%;
+    --pizzeria-red-light: 4 65% 58%;
+    --pizzeria-red-dark: 4 75% 38%;
+    
+    /* Ingredienti naturali */
+    --basil-green: 120 35% 32%;
+    --basil-light: 120 30% 45%;
+    --tomato-red: 10 80% 50%;
+    --mozzarella: 45 30% 95%;
+    --olive-oil: 45 60% 55%;
+    --flour: 40 20% 92%;
+    
+    /* Sfondo caldo */
+    --cream: 35 35% 96%;
     --charcoal: 20 14% 12%;
-    --warm-gray: 30 10% 40%;
+    --warm-gray: 25 12% 40%;
+    --terracotta: 15 55% 50%;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 30 25% 97%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 43 74% 49%;
+    --sidebar-primary: 4 70% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 30 20% 94%;
+    --sidebar-accent: 30 25% 94%;
     --sidebar-accent-foreground: 20 14% 12%;
-    --sidebar-border: 30 15% 88%;
-    --sidebar-ring: 43 74% 49%;
+    --sidebar-border: 30 20% 88%;
+    --sidebar-ring: 4 70% 48%;
   }
 
   .dark {
     --background: 20 14% 8%;
-    --foreground: 40 30% 96%;
+    --foreground: 35 35% 96%;
 
     --card: 20 14% 12%;
-    --card-foreground: 40 30% 96%;
+    --card-foreground: 35 35% 96%;
 
     --popover: 20 14% 12%;
-    --popover-foreground: 40 30% 96%;
+    --popover-foreground: 35 35% 96%;
 
-    --primary: 43 74% 49%;
-    --primary-foreground: 20 14% 8%;
+    --primary: 4 65% 55%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 20 14% 18%;
-    --secondary-foreground: 40 30% 96%;
+    --secondary-foreground: 35 35% 96%;
 
     --muted: 20 14% 18%;
     --muted-foreground: 30 15% 60%;
 
-    --accent: 43 74% 49%;
-    --accent-foreground: 20 14% 8%;
+    --accent: 120 30% 40%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 20 14% 20%;
     --input: 20 14% 20%;
-    --ring: 43 74% 49%;
+    --ring: 4 65% 55%;
 
-    --gold: 43 74% 49%;
-    --gold-light: 43 70% 60%;
-    --gold-dark: 43 78% 40%;
-    --cream: 40 20% 12%;
-    --charcoal: 40 30% 96%;
+    --pizzeria-red: 4 65% 55%;
+    --pizzeria-red-light: 4 60% 65%;
+    --pizzeria-red-dark: 4 70% 45%;
+    
+    --basil-green: 120 30% 40%;
+    --basil-light: 120 25% 50%;
+    --tomato-red: 10 75% 55%;
+    --mozzarella: 45 20% 20%;
+    --olive-oil: 45 50% 45%;
+    --flour: 40 15% 18%;
+    
+    --cream: 35 20% 12%;
+    --charcoal: 35 35% 96%;
     --warm-gray: 30 15% 60%;
+    --terracotta: 15 50% 45%;
 
     --sidebar-background: 20 14% 10%;
-    --sidebar-foreground: 40 30% 96%;
-    --sidebar-primary: 43 74% 49%;
-    --sidebar-primary-foreground: 20 14% 8%;
+    --sidebar-foreground: 35 35% 96%;
+    --sidebar-primary: 4 65% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 20 14% 18%;
-    --sidebar-accent-foreground: 40 30% 96%;
+    --sidebar-accent-foreground: 35 35% 96%;
     --sidebar-border: 20 14% 20%;
-    --sidebar-ring: 43 74% 49%;
+    --sidebar-ring: 4 65% 55%;
   }
 }
 
@@ -116,15 +136,43 @@
 }
 
 @layer utilities {
-  .text-gradient-gold {
-    @apply bg-gradient-to-r from-[hsl(var(--gold-dark))] via-[hsl(var(--gold))] to-[hsl(var(--gold-light))] bg-clip-text text-transparent;
+  .text-gradient-red {
+    @apply bg-gradient-to-r from-[hsl(var(--pizzeria-red-dark))] via-[hsl(var(--pizzeria-red))] to-[hsl(var(--pizzeria-red-light))] bg-clip-text text-transparent;
   }
 
-  .bg-gradient-gold {
-    @apply bg-gradient-to-r from-[hsl(var(--gold-dark))] via-[hsl(var(--gold))] to-[hsl(var(--gold-light))];
+  .bg-gradient-red {
+    @apply bg-gradient-to-r from-[hsl(var(--pizzeria-red-dark))] via-[hsl(var(--pizzeria-red))] to-[hsl(var(--pizzeria-red-light))];
   }
 
-  .shadow-gold {
-    box-shadow: 0 4px 20px -4px hsl(var(--gold) / 0.3);
+  .shadow-red {
+    box-shadow: 0 4px 20px -4px hsl(var(--pizzeria-red) / 0.3);
+  }
+
+  .text-gradient-basil {
+    @apply bg-gradient-to-r from-[hsl(var(--basil-green))] to-[hsl(var(--basil-light))] bg-clip-text text-transparent;
+  }
+
+  .bg-gradient-basil {
+    @apply bg-gradient-to-r from-[hsl(var(--basil-green))] to-[hsl(var(--basil-light))];
+  }
+
+  .shadow-basil {
+    box-shadow: 0 4px 20px -4px hsl(var(--basil-green) / 0.3);
+  }
+
+  .bg-ingredient-tomato {
+    @apply bg-[hsl(var(--tomato-red))];
+  }
+
+  .bg-ingredient-mozzarella {
+    @apply bg-[hsl(var(--mozzarella))];
+  }
+
+  .bg-ingredient-basil {
+    @apply bg-[hsl(var(--basil-green))];
+  }
+
+  .bg-ingredient-olive {
+    @apply bg-[hsl(var(--olive-oil))];
   }
 }
