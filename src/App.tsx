@@ -10,6 +10,7 @@ import Prenota from "./pages/Prenota";
 import Ordina from "./pages/Ordina";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
+import AdminAuth from "./pages/AdminAuth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/ordina" element={<Ordina />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/admin-auth" element={<AdminAuth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
