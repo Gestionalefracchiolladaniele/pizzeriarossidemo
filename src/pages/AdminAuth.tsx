@@ -22,12 +22,8 @@ const AdminAuth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!authLoading && user) {
-      if (isAdmin) {
-        navigate("/admin");
-      } else {
-        setError("Accesso non autorizzato. Solo gli amministratori possono accedere.");
-      }
+    if (!authLoading && user && isAdmin) {
+      navigate("/admin");
     }
   }, [user, isAdmin, authLoading, navigate]);
 
@@ -46,20 +42,38 @@ const AdminAuth = () => {
     }
 
     setIsLoading(true);
-    const { error } = await signIn(email, password);
-    setIsLoading(false);
-
-    if (error) {
-      if (error.message.includes("Invalid login credentials")) {
+    const { error: signInError } = await signIn(email, password);
+    
+    if (signInError) {
+      setIsLoading(false);
+      if (signInError.message.includes("Invalid login credentials")) {
         setError("Credenziali non valide. Controlla email e password.");
-      } else if (error.message.includes("Email not confirmed")) {
+      } else if (signInError.message.includes("Email not confirmed")) {
         setError("Email non confermata. Controlla la tua casella di posta.");
       } else {
-        setError(error.message);
+        setError(signInError.message);
       }
-    } else {
-      toast.success("Accesso effettuato!");
+      return;
     }
+
+    // Wait a moment for isAdmin to be checked
+    setTimeout(async () => {
+      const { data } = await (await import("@/integrations/supabase/client")).supabase.auth.getUser();
+      if (data?.user) {
+        const { data: roleData } = await (await import("@/integrations/supabase/client")).supabase.rpc('has_role', {
+          _user_id: data.user.id,
+          _role: 'admin'
+        });
+        if (roleData) {
+          toast.success("Accesso effettuato!");
+          navigate("/admin");
+        } else {
+          setError("Accesso non autorizzato. Solo gli amministratori possono accedere.");
+          await (await import("@/integrations/supabase/client")).supabase.auth.signOut();
+        }
+      }
+      setIsLoading(false);
+    }, 100);
   };
 
   return (
