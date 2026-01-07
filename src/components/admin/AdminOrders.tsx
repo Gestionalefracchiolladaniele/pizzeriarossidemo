@@ -11,19 +11,19 @@ import { Clock, Phone, MapPin, User } from "lucide-react";
 type Order = Tables<"orders">;
 
 const statusColors: Record<string, string> = {
-  pending: "bg-yellow-500",
-  confirmed: "bg-blue-500",
+  received: "bg-blue-500",
+  read: "bg-purple-500",
   preparing: "bg-orange-500",
-  ready: "bg-green-500",
+  done: "bg-green-500",
   delivered: "bg-gray-500",
   cancelled: "bg-red-500",
 };
 
 const statusLabels: Record<string, string> = {
-  pending: "In Attesa",
-  confirmed: "Confermato",
+  received: "Ricevuto",
+  read: "Letto",
   preparing: "In Preparazione",
-  ready: "Pronto",
+  done: "Fatto",
   delivered: "Consegnato",
   cancelled: "Annullato",
 };
@@ -154,10 +154,10 @@ export const AdminOrders = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">In Attesa</SelectItem>
-                    <SelectItem value="confirmed">Confermato</SelectItem>
+                    <SelectItem value="received">Ricevuto</SelectItem>
+                    <SelectItem value="read">Letto</SelectItem>
                     <SelectItem value="preparing">In Preparazione</SelectItem>
-                    <SelectItem value="ready">Pronto</SelectItem>
+                    <SelectItem value="done">Fatto</SelectItem>
                     <SelectItem value="delivered">Consegnato</SelectItem>
                     <SelectItem value="cancelled">Annullato</SelectItem>
                   </SelectContent>

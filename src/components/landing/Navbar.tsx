@@ -112,19 +112,17 @@ const Navbar = () => {
             </a>
             {user ? (
               <div className="flex items-center gap-2">
+                <Link to="/profilo">
+                  <Button variant="ghost" className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}>
+                    <User className="w-4 h-4 mr-2" />
+                    Profilo
+                  </Button>
+                </Link>
                 <Link to="/prenota">
                   <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
                     Prenota Ora
                   </Button>
                 </Link>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={signOut}
-                  className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}
-                >
-                  <LogOut className="w-5 h-5" />
-                </Button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
@@ -204,19 +202,17 @@ const Navbar = () => {
                 </a>
                 {user ? (
                   <>
+                    <Link to="/profilo" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" className="w-full">
+                        <User className="w-4 h-4 mr-2" />
+                        Il Mio Profilo
+                      </Button>
+                    </Link>
                     <Link to="/prenota" onClick={() => setIsOpen(false)}>
                       <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
                         Prenota Ora
                       </Button>
                     </Link>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => { signOut(); setIsOpen(false); }}
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Esci
-                    </Button>
                   </>
                 ) : (
                   <>
