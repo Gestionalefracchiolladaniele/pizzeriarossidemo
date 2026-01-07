@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X, Phone, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -18,6 +19,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const isHomePage = location.pathname === "/";
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -108,11 +110,37 @@ const Navbar = () => {
               <Phone className="w-4 h-4 text-primary" />
               02 1234567
             </a>
-            <Link to="/prenota">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
-                Prenota Ora
-              </Button>
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-2">
+                <Link to="/prenota">
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
+                    Prenota Ora
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={signOut}
+                  className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}
+                >
+                  <LogOut className="w-5 h-5" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link to="/auth">
+                  <Button variant="ghost" className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}>
+                    <User className="w-4 h-4 mr-2" />
+                    Accedi
+                  </Button>
+                </Link>
+                <Link to="/prenota">
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
+                    Prenota Ora
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -174,11 +202,37 @@ const Navbar = () => {
                   <Phone className="w-4 h-4 text-primary" />
                   02 1234567
                 </a>
-                <Link to="/prenota">
-                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
-                    Prenota Ora
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <Link to="/prenota" onClick={() => setIsOpen(false)}>
+                      <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
+                        Prenota Ora
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => { signOut(); setIsOpen(false); }}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Esci
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/auth" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" className="w-full">
+                        <User className="w-4 h-4 mr-2" />
+                        Accedi / Registrati
+                      </Button>
+                    </Link>
+                    <Link to="/prenota" onClick={() => setIsOpen(false)}>
+                      <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
+                        Prenota Ora
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
