@@ -1,9 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Pizza, Calendar, ShoppingBag, Settings, Menu, X } from "lucide-react";
+import { LayoutDashboard, Pizza, Calendar, ShoppingBag, Settings, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { AdminMenu } from "@/components/admin/AdminMenu";
+import { AdminOrders } from "@/components/admin/AdminOrders";
+import { AdminBookings } from "@/components/admin/AdminBookings";
+import { AdminSettings } from "@/components/admin/AdminSettings";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
@@ -13,16 +18,56 @@ const menuItems = [
   { icon: Settings, label: "Impostazioni", id: "settings" },
 ];
 
-const mockStats = {
-  ordersToday: 24,
-  bookingsToday: 8,
-  revenue: 1250,
-  pendingOrders: 3,
-};
-
 const Admin = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, isAdmin, isLoading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/auth");
+    } else if (!isLoading && user && !isAdmin) {
+      navigate("/");
+    }
+  }, [user, isAdmin, isLoading, navigate]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return null;
+  }
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case "dashboard":
+        return <AdminDashboard />;
+      case "menu":
+        return <AdminMenu />;
+      case "orders":
+        return <AdminOrders />;
+      case "bookings":
+        return <AdminBookings />;
+      case "settings":
+        return <AdminSettings />;
+      default:
+        return <AdminDashboard />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -36,6 +81,7 @@ const Admin = () => {
             <X className="w-5 h-5" />
           </Button>
         </div>
+        
         <nav className="p-4 space-y-2">
           {menuItems.map((item) => (
             <button
@@ -48,6 +94,12 @@ const Admin = () => {
             </button>
           ))}
         </nav>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
+          <Button variant="ghost" className="w-full justify-start" onClick={handleSignOut}>
+            <LogOut className="w-5 h-5 mr-3" /> Esci
+          </Button>
+        </div>
       </aside>
 
       {/* Main Content */}
@@ -58,28 +110,14 @@ const Admin = () => {
           </Button>
         </div>
 
-        {activeSection === "dashboard" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="p-6"><div className="text-3xl font-bold text-primary">{mockStats.ordersToday}</div><div className="text-muted-foreground">Ordini Oggi</div></Card>
-              <Card className="p-6"><div className="text-3xl font-bold text-basil">{mockStats.bookingsToday}</div><div className="text-muted-foreground">Prenotazioni Oggi</div></Card>
-              <Card className="p-6"><div className="text-3xl font-bold">€{mockStats.revenue}</div><div className="text-muted-foreground">Incasso Oggi</div></Card>
-              <Card className="p-6"><div className="text-3xl font-bold text-tomato">{mockStats.pendingOrders}</div><div className="text-muted-foreground">Ordini in Attesa</div></Card>
-            </div>
-            <Card className="p-6"><h2 className="text-xl font-bold mb-4">Ordini Recenti</h2><p className="text-muted-foreground">Connetti Lovable Cloud per vedere i dati reali.</p></Card>
-          </motion.div>
-        )}
-
-        {activeSection !== "dashboard" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-            <h1 className="text-3xl font-bold capitalize">{activeSection}</h1>
-            <Card className="p-12 text-center">
-              <p className="text-muted-foreground mb-4">Questa sezione sarà disponibile dopo aver connesso Lovable Cloud per la persistenza dei dati.</p>
-              <Button variant="outline">Scopri di più</Button>
-            </Card>
-          </motion.div>
-        )}
+        <motion.div
+          key={activeSection}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {renderContent()}
+        </motion.div>
       </main>
     </div>
   );
