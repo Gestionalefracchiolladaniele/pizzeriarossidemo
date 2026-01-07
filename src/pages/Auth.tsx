@@ -1,22 +1,102 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Phone } from "lucide-react";
+import { Mail, Lock, User, Phone, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { z } from "zod";
+
+const emailSchema = z.string().email("Email non valida");
+const passwordSchema = z.string().min(6, "La password deve avere almeno 6 caratteri");
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  
+  const { signIn, signUp, user, isAdmin } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+    }
+  }, [user, isAdmin, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    
+    try {
+      emailSchema.parse(email);
+      passwordSchema.parse(password);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.errors[0].message);
+        return;
+      }
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      alert("Connetti Lovable Cloud per abilitare l'autenticazione!");
-    }, 1000);
+    const { error } = await signIn(email, password);
+    setIsLoading(false);
+
+    if (error) {
+      if (error.message.includes("Invalid login credentials")) {
+        setError("Credenziali non valide. Controlla email e password.");
+      } else if (error.message.includes("Email not confirmed")) {
+        setError("Email non confermata. Controlla la tua casella di posta.");
+      } else {
+        setError(error.message);
+      }
+    } else {
+      toast.success("Accesso effettuato!");
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      emailSchema.parse(email);
+      passwordSchema.parse(password);
+      if (!fullName.trim()) throw new Error("Il nome è obbligatorio");
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.errors[0].message);
+        return;
+      }
+      if (err instanceof Error) {
+        setError(err.message);
+        return;
+      }
+    }
+
+    setIsLoading(true);
+    const { error } = await signUp(email, password, fullName, phone);
+    setIsLoading(false);
+
+    if (error) {
+      if (error.message.includes("already registered")) {
+        setError("Questa email è già registrata. Prova ad accedere.");
+      } else {
+        setError(error.message);
+      }
+    } else {
+      toast.success("Registrazione completata! Controlla la tua email per confermare.");
+    }
   };
 
   return (
@@ -30,21 +110,42 @@ const Auth = () => {
         </div>
 
         <Card className="p-6">
-          <Tabs defaultValue="login">
+          {error && (
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          <Tabs defaultValue="login" onValueChange={() => setError(null)}>
             <TabsList className="w-full mb-6">
               <TabsTrigger value="login" className="flex-1">Accedi</TabsTrigger>
               <TabsTrigger value="register" className="flex-1">Registrati</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input placeholder="Email" type="email" className="pl-10" required />
+                  <Input 
+                    placeholder="Email" 
+                    type="email" 
+                    className="pl-10" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required 
+                  />
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input placeholder="Password" type="password" className="pl-10" required />
+                  <Input 
+                    placeholder="Password" 
+                    type="password" 
+                    className="pl-10" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required 
+                  />
                 </div>
                 <Button className="w-full" disabled={isLoading}>
                   {isLoading ? "Caricamento..." : "Accedi"}
@@ -53,22 +154,48 @@ const Auth = () => {
             </TabsContent>
 
             <TabsContent value="register">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleRegister} className="space-y-4">
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input placeholder="Nome e Cognome" className="pl-10" required />
+                  <Input 
+                    placeholder="Nome e Cognome" 
+                    className="pl-10" 
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required 
+                  />
                 </div>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input placeholder="Email" type="email" className="pl-10" required />
+                  <Input 
+                    placeholder="Email" 
+                    type="email" 
+                    className="pl-10" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required 
+                  />
                 </div>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input placeholder="Telefono" type="tel" className="pl-10" required />
+                  <Input 
+                    placeholder="Telefono" 
+                    type="tel" 
+                    className="pl-10" 
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input placeholder="Password" type="password" className="pl-10" required />
+                  <Input 
+                    placeholder="Password" 
+                    type="password" 
+                    className="pl-10" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required 
+                  />
                 </div>
                 <Button className="w-full" disabled={isLoading}>
                   {isLoading ? "Caricamento..." : "Registrati"}
