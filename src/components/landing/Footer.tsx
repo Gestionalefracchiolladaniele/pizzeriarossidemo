@@ -1,4 +1,5 @@
 import { Facebook, Instagram, Phone, Mail, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -115,6 +116,9 @@ const Footer = () => {
             <a href="#" className="hover:text-primary transition-colors">
               Cookie Policy
             </a>
+            <Link to="/admin-auth" className="hover:text-primary transition-colors text-xs opacity-60">
+              Area Riservata
+            </Link>
           </div>
         </div>
       </div>
