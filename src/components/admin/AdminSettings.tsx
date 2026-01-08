@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Save, Upload } from "lucide-react";
+import { NotificationSettings } from "@/components/settings/NotificationSettings";
 
 export const AdminSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -193,6 +194,7 @@ export const AdminSettings = () => {
             />
           </div>
         </Card>
+        <NotificationSettings />
       </div>
 
       <div className="flex justify-end">
