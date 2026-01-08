@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { User, Package, Calendar, LogOut, ArrowLeft } from "lucide-react";
+import { User, Package, Calendar, LogOut, ArrowLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
+import { NotificationSettings } from "@/components/settings/NotificationSettings";
 
 type Order = Tables<"orders">;
 type Reservation = Tables<"reservations">;
@@ -135,16 +136,20 @@ const Profilo = () => {
             </div>
           </Card>
 
-          {/* Tabs for Orders and Reservations */}
+          {/* Tabs for Orders, Reservations and Settings */}
           <Tabs defaultValue="orders" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="orders" className="flex items-center gap-2">
                 <Package className="w-4 h-4" />
-                I Miei Ordini ({orders.length})
+                <span className="hidden sm:inline">Ordini</span> ({orders.length})
               </TabsTrigger>
               <TabsTrigger value="reservations" className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                Le Mie Prenotazioni ({reservations.length})
+                <span className="hidden sm:inline">Prenotazioni</span> ({reservations.length})
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                <span className="hidden sm:inline">Impostazioni</span>
               </TabsTrigger>
             </TabsList>
 
@@ -258,6 +263,10 @@ const Profilo = () => {
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="settings" className="mt-6">
+              <NotificationSettings />
             </TabsContent>
           </Tabs>
         </motion.div>
