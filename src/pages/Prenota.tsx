@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, Users, Check, ArrowLeft, ArrowRight, Phone, User } from "lucide-react";
 import { format, addDays, isSameDay } from "date-fns";
@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import { OpeningHoursDisplay } from "@/components/OpeningHoursDisplay";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const timeSlots = [
   "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30"
@@ -27,7 +31,9 @@ interface BookingData {
 }
 
 const Prenota = () => {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [booking, setBooking] = useState<BookingData>({
     date: null,
     time: "",
@@ -39,12 +45,58 @@ const Prenota = () => {
   });
   const [bookingCode, setBookingCode] = useState("");
 
+  // Pre-fill user data if logged in
+  useEffect(() => {
+    if (user) {
+      setBooking(prev => ({
+        ...prev,
+        name: user.user_metadata?.full_name || "",
+        phone: user.user_metadata?.phone || "",
+        email: user.email || "",
+      }));
+    }
+  }, [user]);
+
   const dates = Array.from({ length: 14 }, (_, i) => addDays(new Date(), i + 1));
 
-  const handleSubmit = () => {
-    const code = `PR${Date.now().toString(36).toUpperCase()}`;
-    setBookingCode(code);
-    setStep(5);
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("reservations")
+        .insert({
+          user_id: user?.id || null,
+          guest_name: booking.name,
+          guest_email: booking.email || `${Date.now()}@guest.pizzeria.com`,
+          guest_phone: booking.phone,
+          reservation_date: booking.date ? format(booking.date, "yyyy-MM-dd") : "",
+          reservation_time: booking.time,
+          guests_count: booking.people,
+          notes: booking.notes || null,
+          status: "pending",
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("Error creating reservation:", error);
+        toast.error("Errore durante la prenotazione");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const code = `PR${data.id.slice(0, 8).toUpperCase()}`;
+      setBookingCode(code);
+      setStep(5);
+      toast.success("Prenotazione inviata con successo!");
+    } catch (err) {
+      console.error("Error:", err);
+      toast.error("Errore durante la prenotazione");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const canProceed = () => {
@@ -116,6 +168,12 @@ const Prenota = () => {
             className="space-y-6"
           >
             <h2 className="text-2xl font-bold text-center mb-8">Seleziona la data</h2>
+            
+            {/* Opening Hours Display */}
+            <div className="max-w-sm mx-auto mb-6">
+              <OpeningHoursDisplay />
+            </div>
+            
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
               {dates.map((date) => (
                 <Card
@@ -312,9 +370,9 @@ const Prenota = () => {
             ) : (
               <Button
                 onClick={handleSubmit}
-                disabled={!canProceed()}
+                disabled={!canProceed() || isSubmitting}
               >
-                Conferma Prenotazione
+                {isSubmitting ? "Prenotando..." : "Conferma Prenotazione"}
                 <Check className="w-4 h-4 ml-2" />
               </Button>
             )}

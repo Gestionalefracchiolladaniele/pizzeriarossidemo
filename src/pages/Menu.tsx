@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Leaf, Flame, WheatOff, Search, ShoppingCart } from "lucide-react";
+import { Leaf, Flame, WheatOff, Search, ShoppingCart, LogIn } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { menuItems, menuCategories, MenuItem } from "@/data/menuData";
 import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 const tagConfig = {
   vegetariano: { icon: Leaf, label: "Vegetariano", className: "bg-basil/10 text-basil border-basil/30" },
@@ -18,10 +20,24 @@ const tagConfig = {
 };
 
 const Menu = () => {
+  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState<string>("pizze");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const { addItem, totalItems, totalPrice, cart, updateQuantity, removeItem } = useCart();
+
+  const handleAddItem = (item: MenuItem) => {
+    if (!user) {
+      toast.error("Accedi per aggiungere prodotti al carrello", {
+        action: {
+          label: "Accedi",
+          onClick: () => window.location.href = "/auth"
+        }
+      });
+      return;
+    }
+    addItem(item);
+  };
 
   const toggleFilter = (filter: string) => {
     setActiveFilters(prev =>
@@ -150,10 +166,20 @@ const Menu = () => {
                 
                 <Button
                   className="w-full"
-                  onClick={() => addItem(item)}
+                  onClick={() => handleAddItem(item)}
+                  variant={user ? "default" : "secondary"}
                 >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Aggiungi
+                  {user ? (
+                    <>
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Aggiungi
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Accedi per ordinare
+                    </>
+                  )}
                 </Button>
               </div>
             </motion.div>
