@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShoppingCart, MapPin, Clock, Trash2, Plus, Minus, Check, Bike, Store } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
@@ -11,19 +11,26 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { menuItems, menuCategories, MenuItem } from "@/data/menuData";
 import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const pickupTimes = [
   "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"
 ];
 
 const Ordina = () => {
+  const { user } = useAuth();
   const [step, setStep] = useState<"menu" | "checkout" | "confirmed">("menu");
   const [activeCategory, setActiveCategory] = useState("pizze");
   const [orderCode, setOrderCode] = useState("");
+  const [orderNumber, setOrderNumber] = useState<number | null>(null);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {
     cart,
@@ -37,13 +44,72 @@ const Ordina = () => {
     clearCart,
   } = useCart();
 
+  // Pre-fill customer data if user is logged in
+  useEffect(() => {
+    if (user) {
+      setCustomerName(user.user_metadata?.full_name || "");
+      setCustomerPhone(user.user_metadata?.phone || "");
+      setCustomerEmail(user.email || "");
+    }
+  }, [user]);
+
   const filteredItems = menuItems.filter(item => item.category === activeCategory);
 
-  const handleConfirmOrder = () => {
-    const code = `ORD${Date.now().toString(36).toUpperCase()}`;
-    setOrderCode(code);
-    setStep("confirmed");
-    clearCart();
+  const handleConfirmOrder = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    const deliveryFee = cart.deliveryType === "delivery" ? 2.50 : 0;
+    const finalTotal = totalPrice + deliveryFee;
+
+    // Prepare order items for database
+    const orderItems = cart.items.map(item => ({
+      id: item.menuItem.id,
+      name: item.menuItem.name,
+      price: item.menuItem.price,
+      quantity: item.quantity,
+      notes: item.notes,
+    }));
+
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .insert({
+          user_id: user?.id || null,
+          customer_name: customerName,
+          customer_email: customerEmail || `${Date.now()}@guest.pizzeria.com`,
+          customer_phone: customerPhone,
+          delivery_type: cart.deliveryType,
+          delivery_address: cart.deliveryType === "delivery" ? deliveryAddress : null,
+          pickup_time: cart.deliveryType === "asporto" ? cart.pickupTime : null,
+          items: orderItems,
+          subtotal: totalPrice,
+          delivery_fee: deliveryFee,
+          total: finalTotal,
+          notes: orderNotes || null,
+          status: "received",
+        })
+        .select("order_number")
+        .single();
+
+      if (error) {
+        console.error("Error creating order:", error);
+        toast.error("Errore durante l'invio dell'ordine");
+        setIsSubmitting(false);
+        return;
+      }
+
+      setOrderNumber(data.order_number);
+      setOrderCode(`ORD${data.order_number}`);
+      setStep("confirmed");
+      clearCart();
+      toast.success("Ordine inviato con successo!");
+    } catch (err) {
+      console.error("Error:", err);
+      toast.error("Errore durante l'invio dell'ordine");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const deliveryFee = cart.deliveryType === "delivery" ? 2.50 : 0;
@@ -66,8 +132,8 @@ const Ordina = () => {
             <h1 className="text-3xl font-bold mb-4">Ordine Confermato!</h1>
             
             <Card className="p-6 mb-6">
-              <div className="text-sm text-muted-foreground mb-2">Codice ordine</div>
-              <div className="text-3xl font-mono font-bold text-primary mb-4">{orderCode}</div>
+              <div className="text-sm text-muted-foreground mb-2">Numero ordine</div>
+              <div className="text-3xl font-mono font-bold text-primary mb-4">#{orderNumber}</div>
               <p className="text-muted-foreground">
                 {cart.deliveryType === "delivery" 
                   ? "Il tuo ordine è in preparazione. Arriverà in circa 30-45 minuti."
@@ -271,6 +337,12 @@ const Ordina = () => {
                     placeholder="Nome e Cognome *"
                   />
                   <Input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="Email *"
+                  />
+                  <Input
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="Telefono *"
@@ -367,13 +439,14 @@ const Ordina = () => {
                       size="lg"
                       onClick={handleConfirmOrder}
                       disabled={
-                        !customerName || !customerPhone ||
+                        isSubmitting ||
+                        !customerName || !customerPhone || !customerEmail ||
                         (cart.deliveryType === "asporto" && !cart.pickupTime) ||
                         (cart.deliveryType === "delivery" && !deliveryAddress)
                       }
                     >
                       <Check className="w-4 h-4 mr-2" />
-                      Conferma Ordine
+                      {isSubmitting ? "Invio in corso..." : "Conferma Ordine"}
                     </Button>
                   )}
                 </>
