@@ -152,6 +152,41 @@ const Ordina = () => {
     );
   }
 
+  // If user not logged in, show login prompt
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-24 pb-16">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="container mx-auto px-4 text-center max-w-lg"
+          >
+            <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <ShoppingCart className="w-10 h-10 text-primary" />
+            </div>
+            
+            <h1 className="text-3xl font-bold mb-4">Accedi per ordinare</h1>
+            <p className="text-muted-foreground mb-6">
+              Per effettuare un ordine devi prima accedere al tuo account o registrarti.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" onClick={() => window.location.href = "/auth"}>
+                Accedi
+              </Button>
+              <Button variant="outline" size="lg" onClick={() => window.location.href = "/menu"}>
+                Sfoglia il Menu
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
