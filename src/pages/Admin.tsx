@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Pizza, Calendar, ShoppingBag, Settings, Menu, X, LogOut } from "lucide-react";
+import { LayoutDashboard, Pizza, Calendar, ShoppingBag, Settings, Menu, X, LogOut, Armchair } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,10 +9,12 @@ import { AdminMenu } from "@/components/admin/AdminMenu";
 import { AdminOrders } from "@/components/admin/AdminOrders";
 import { AdminBookings } from "@/components/admin/AdminBookings";
 import { AdminSettings } from "@/components/admin/AdminSettings";
+import { AdminTables } from "@/components/admin/AdminTables";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
   { icon: Pizza, label: "Menu", id: "menu" },
+  { icon: Armchair, label: "Tavoli", id: "tables" },
   { icon: Calendar, label: "Prenotazioni", id: "bookings" },
   { icon: ShoppingBag, label: "Ordini", id: "orders" },
   { icon: Settings, label: "Impostazioni", id: "settings" },
@@ -58,6 +60,8 @@ const Admin = () => {
         return <AdminDashboard />;
       case "menu":
         return <AdminMenu />;
+      case "tables":
+        return <AdminTables />;
       case "orders":
         return <AdminOrders />;
       case "bookings":
