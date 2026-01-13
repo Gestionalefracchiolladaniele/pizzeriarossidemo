@@ -11,6 +11,7 @@ import { AdminBookings } from "@/components/admin/AdminBookings";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminTables } from "@/components/admin/AdminTables";
 import { AdminOpeningHours } from "@/components/admin/AdminOpeningHours";
+import { NotificationPromptDialog } from "@/components/NotificationPromptDialog";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
@@ -79,6 +80,9 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Notification Prompt Dialog */}
+      <NotificationPromptDialog userType="admin" />
+      
       {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform lg:transform-none ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className="p-4 border-b flex justify-between items-center">

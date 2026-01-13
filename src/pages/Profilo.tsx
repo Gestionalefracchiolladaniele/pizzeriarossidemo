@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import { NotificationPromptDialog } from "@/components/NotificationPromptDialog";
 
 type Order = Tables<"orders">;
 type Reservation = Tables<"reservations">;
@@ -95,6 +96,9 @@ const Profilo = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Notification Prompt Dialog */}
+      <NotificationPromptDialog userType="customer" />
+      
       {/* Header */}
       <header className="bg-card border-b sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
