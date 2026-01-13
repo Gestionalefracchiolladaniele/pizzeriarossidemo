@@ -20,54 +20,76 @@ interface NotificationPromptDialogProps {
 export const NotificationPromptDialog = ({ userType }: NotificationPromptDialogProps) => {
   const hasInitialized = useRef(false);
   const [open, setOpen] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   
   const {
     isSupported,
     isSubscribed,
+    isReady,
     isLoading,
     isiOS,
     isPWA,
+    isInIframe,
     subscribe,
-    unsubscribe,
+    silentUnsubscribe,
   } = usePushNotifications();
 
   useEffect(() => {
+    // Aspetta che l'hook sia pronto e non sia in un iframe
+    if (!isReady || isInIframe) return;
+    
+    // Evita doppia esecuzione in StrictMode
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
     const init = async () => {
-      setIsInitializing(true);
+      console.log('[NotificationPrompt] Init - isSupported:', isSupported, 'isSubscribed:', isSubscribed);
       
-      try {
-        // Step 1: Disabilita notifiche silenziosamente se attive
-        if (isSubscribed) {
-          await unsubscribe();
-        }
-      } catch (error) {
-        console.log('[NotificationPrompt] Silent unsubscribe error:', error);
+      // Non mostrare se non supportato o iOS non-PWA
+      if (!isSupported) {
+        console.log('[NotificationPrompt] Not supported, skipping');
+        return;
       }
       
-      setIsInitializing(false);
+      if (isiOS && !isPWA) {
+        console.log('[NotificationPrompt] iOS non-PWA, skipping');
+        return;
+      }
+
+      setIsProcessing(true);
       
-      // Step 2: Mostra sempre il popup (dopo un piccolo delay per UX)
+      try {
+        // Step 1: Disabilita notifiche silenziosamente se erano attive
+        if (isSubscribed) {
+          console.log('[NotificationPrompt] Unsubscribing existing subscription...');
+          await silentUnsubscribe();
+        }
+      } catch (error) {
+        console.error('[NotificationPrompt] Silent unsubscribe error:', error);
+      }
+      
+      setIsProcessing(false);
+      
+      // Step 2: Mostra il popup dopo un piccolo delay per UX migliore
       setTimeout(() => {
+        console.log('[NotificationPrompt] Showing dialog');
         setOpen(true);
-      }, 500);
+      }, 800);
     };
 
-    // Attendi un momento per assicurarsi che lo stato sia caricato
+    // Piccolo delay per assicurarsi che il componente sia montato
     const timeout = setTimeout(init, 300);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [isReady, isSupported, isSubscribed, isiOS, isPWA, isInIframe, silentUnsubscribe]);
 
   const handleEnable = async () => {
+    setIsProcessing(true);
     try {
       await subscribe();
       setOpen(false);
       toast({
-        title: "Notifiche abilitate",
+        title: "Notifiche abilitate ✅",
         description: "Riceverai notifiche push anche quando l'app è chiusa.",
       });
     } catch (error) {
@@ -77,6 +99,8 @@ export const NotificationPromptDialog = ({ userType }: NotificationPromptDialogP
         description: error instanceof Error ? error.message : "Impossibile abilitare le notifiche",
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -84,17 +108,12 @@ export const NotificationPromptDialog = ({ userType }: NotificationPromptDialogP
     setOpen(false);
   };
 
-  // Non mostrare su iOS non-PWA
-  if (isiOS && !isPWA) {
+  // Non renderizzare nulla durante il processing iniziale o se in iframe
+  if (isProcessing && !open) {
     return null;
   }
 
-  // Non mostrare se non supportato o sta caricando
-  if (!isSupported || isInitializing) {
-    return null;
-  }
-
-  const title = "Notifiche non abilitate";
+  const title = "🔔 Notifiche non abilitate";
   const description = userType === 'admin'
     ? "Vuoi abilitare le notifiche push? Riceverai una notifica ogni volta che arriva un nuovo ordine, anche quando l'app è chiusa."
     : "Vuoi abilitare le notifiche push? Riceverai aggiornamenti sullo stato dei tuoi ordini, anche quando l'app è chiusa.";
@@ -117,15 +136,16 @@ export const NotificationPromptDialog = ({ userType }: NotificationPromptDialogP
           <AlertDialogCancel 
             onClick={handleDismiss}
             className="w-full sm:w-auto"
+            disabled={isProcessing || isLoading}
           >
-            No
+            No, grazie
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleEnable}
-            disabled={isLoading}
+            disabled={isProcessing || isLoading}
             className="w-full sm:w-auto"
           >
-            {isLoading ? (
+            {isProcessing || isLoading ? (
               <span className="flex items-center gap-2">
                 <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
                 Abilitazione...

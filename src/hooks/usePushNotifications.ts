@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -23,80 +23,94 @@ export function usePushNotifications() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isLoading, setIsLoading] = useState(false);
+  const [isReady, setIsReady] = useState(false); // Nuovo: indica quando il check iniziale è completato
   const [isiOS, setIsiOS] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
   const [isInIframe, setIsInIframe] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState<PushSubscription | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
+  const hasCheckedRef = useRef(false);
 
   const addLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs(prev => [...prev.slice(-49), `[${timestamp}] ${message}`]);
   }, []);
 
+  // Controlla la subscription esistente
+  const checkSubscription = useCallback(async (): Promise<boolean> => {
+    try {
+      if (!('serviceWorker' in navigator)) {
+        return false;
+      }
+
+      const registration = await navigator.serviceWorker.getRegistration('/sw-push.js');
+      if (!registration) {
+        setIsSubscribed(false);
+        setCurrentSubscription(null);
+        return false;
+      }
+
+      const subscription = await registration.pushManager.getSubscription();
+      const subscribed = !!subscription;
+      setIsSubscribed(subscribed);
+      setCurrentSubscription(subscription);
+      return subscribed;
+    } catch (error) {
+      console.error('[Push] Error checking subscription:', error);
+      setIsSubscribed(false);
+      setCurrentSubscription(null);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
-    const inIframe = window.self !== window.top;
-    setIsInIframe(inIframe);
+    if (hasCheckedRef.current) return;
+    hasCheckedRef.current = true;
 
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream: unknown }).MSStream;
-    setIsiOS(isIOSDevice);
+    const init = async () => {
+      const inIframe = window.self !== window.top;
+      setIsInIframe(inIframe);
 
-    const isPWAMode = window.matchMedia('(display-mode: standalone)').matches || 
-                      (navigator as unknown as { standalone: boolean }).standalone === true;
-    setIsPWA(isPWAMode);
+      const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream: unknown }).MSStream;
+      setIsiOS(isIOSDevice);
 
-    const checkSupport = () => {
+      const isPWAMode = window.matchMedia('(display-mode: standalone)').matches || 
+                        (navigator as unknown as { standalone: boolean }).standalone === true;
+      setIsPWA(isPWAMode);
+
       const hasServiceWorker = 'serviceWorker' in navigator;
       const hasPushManager = 'PushManager' in window;
       const hasNotification = 'Notification' in window;
 
       if (isIOSDevice && !isPWAMode) {
         setIsSupported(false);
-        return;
+      } else {
+        setIsSupported(hasServiceWorker && hasPushManager && hasNotification);
       }
 
-      setIsSupported(hasServiceWorker && hasPushManager && hasNotification);
+      if ('Notification' in window) {
+        setPermission(Notification.permission);
+      }
+
+      // Check subscription e poi setta isReady
+      await checkSubscription();
+      setIsReady(true);
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data?.type === 'PUSH_RECEIVED') {
+            addLog(`📨 Notifica ricevuta: ${event.data.payload.title}`);
+          }
+        });
+      }
     };
 
-    checkSupport();
-
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
-    }
-
-    checkSubscription();
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data?.type === 'PUSH_RECEIVED') {
-          addLog(`📨 Notifica ricevuta: ${event.data.payload.title}`);
-        }
-      });
-    }
-  }, [addLog]);
-
-  const checkSubscription = async () => {
-    try {
-      if (!('serviceWorker' in navigator)) return;
-
-      const registration = await navigator.serviceWorker.getRegistration('/sw-push.js');
-      if (!registration) {
-        setIsSubscribed(false);
-        return;
-      }
-
-      const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
-      setCurrentSubscription(subscription);
-    } catch (error) {
-      console.error('[Push] Error checking subscription:', error);
-      setIsSubscribed(false);
-    }
-  };
+    init();
+  }, [addLog, checkSubscription]);
 
   const subscribe = useCallback(async () => {
-    if (!isSupported || !user) {
-      throw new Error('Push notifications are not supported or user not logged in');
+    if (!isSupported) {
+      throw new Error('Push notifications are not supported');
     }
 
     setIsLoading(true);
@@ -151,33 +165,36 @@ export function usePushNotifications() {
 
       addLog('💾 Salvataggio nel database...');
       
-      // Delete any existing subscription for this user
-      await supabase
-        .from('push_subscriptions')
-        .delete()
-        .eq('user_id', user.id);
+      // Salva nel database solo se c'è un utente loggato
+      if (user) {
+        // Delete any existing subscription for this user
+        await supabase
+          .from('push_subscriptions')
+          .delete()
+          .eq('user_id', user.id);
 
-      const { error } = await supabase
-        .from('push_subscriptions')
-        .insert({
-          user_id: user.id,
-          endpoint: subscription.endpoint,
-          p256dh,
-          auth,
-          user_type: isAdmin ? 'admin' : 'customer',
-          is_enabled: true
-        });
+        const { error } = await supabase
+          .from('push_subscriptions')
+          .insert({
+            user_id: user.id,
+            endpoint: subscription.endpoint,
+            p256dh,
+            auth,
+            user_type: isAdmin ? 'admin' : 'customer',
+            is_enabled: true
+          });
 
-      if (error) {
-        console.error('[Push] Error storing subscription:', error);
-        throw error;
+        if (error) {
+          console.error('[Push] Error storing subscription:', error);
+          throw error;
+        }
+
+        // Update profile
+        await supabase
+          .from('profiles')
+          .update({ notifications_enabled: true })
+          .eq('user_id', user.id);
       }
-
-      // Update profile
-      await supabase
-        .from('profiles')
-        .update({ notifications_enabled: true })
-        .eq('user_id', user.id);
 
       setIsSubscribed(true);
       setCurrentSubscription(subscription);
@@ -193,8 +210,6 @@ export function usePushNotifications() {
   }, [isSupported, user, isAdmin, addLog]);
 
   const unsubscribe = useCallback(async () => {
-    if (!user) return;
-    
     setIsLoading(true);
     addLog('🔄 Annullamento sottoscrizione...');
 
@@ -207,15 +222,17 @@ export function usePushNotifications() {
         }
       }
 
-      await supabase
-        .from('push_subscriptions')
-        .delete()
-        .eq('user_id', user.id);
+      if (user) {
+        await supabase
+          .from('push_subscriptions')
+          .delete()
+          .eq('user_id', user.id);
 
-      await supabase
-        .from('profiles')
-        .update({ notifications_enabled: false })
-        .eq('user_id', user.id);
+        await supabase
+          .from('profiles')
+          .update({ notifications_enabled: false })
+          .eq('user_id', user.id);
+      }
 
       setIsSubscribed(false);
       setCurrentSubscription(null);
@@ -229,6 +246,37 @@ export function usePushNotifications() {
       setIsLoading(false);
     }
   }, [user, addLog]);
+
+  // Versione silenziosa di unsubscribe (senza loading/logs)
+  const silentUnsubscribe = useCallback(async () => {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration('/sw-push.js');
+      if (registration) {
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          await subscription.unsubscribe();
+        }
+      }
+
+      if (user) {
+        await supabase
+          .from('push_subscriptions')
+          .delete()
+          .eq('user_id', user.id);
+
+        await supabase
+          .from('profiles')
+          .update({ notifications_enabled: false })
+          .eq('user_id', user.id);
+      }
+
+      setIsSubscribed(false);
+      setCurrentSubscription(null);
+    } catch (error) {
+      console.error('[Push] Silent unsubscribe error:', error);
+      // Non rilanciare l'errore - è silenzioso
+    }
+  }, [user]);
 
   const sendTestNotification = useCallback(async () => {
     if (!currentSubscription) {
@@ -264,6 +312,7 @@ export function usePushNotifications() {
   return {
     isSupported,
     isSubscribed,
+    isReady, // Nuovo
     permission,
     isLoading,
     isiOS,
@@ -272,7 +321,9 @@ export function usePushNotifications() {
     logs,
     subscribe,
     unsubscribe,
+    silentUnsubscribe, // Nuovo
     sendTestNotification,
-    clearLogs
+    clearLogs,
+    checkSubscription // Esporta per refresh manuale
   };
 }
