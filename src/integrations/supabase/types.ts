@@ -205,6 +205,7 @@ export type Database = {
           name: string
           opening_hours: Json | null
           phone: string | null
+          reservation_settings: Json | null
           updated_at: string
         }
         Insert: {
@@ -218,6 +219,7 @@ export type Database = {
           name?: string
           opening_hours?: Json | null
           phone?: string | null
+          reservation_settings?: Json | null
           updated_at?: string
         }
         Update: {
@@ -231,6 +233,7 @@ export type Database = {
           name?: string
           opening_hours?: Json | null
           phone?: string | null
+          reservation_settings?: Json | null
           updated_at?: string
         }
         Relationships: []
