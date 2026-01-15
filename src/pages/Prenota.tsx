@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, Users, Check, ArrowLeft, ArrowRight, Phone, User } from "lucide-react";
-import { format, addDays, isSameDay } from "date-fns";
+import { Calendar, Clock, Users, Check, ArrowLeft, ArrowRight, User, AlertCircle } from "lucide-react";
+import { format, addDays, isSameDay, getDay } from "date-fns";
 import { it } from "date-fns/locale";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
@@ -9,14 +9,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { OpeningHoursDisplay } from "@/components/OpeningHoursDisplay";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const timeSlots = [
-  "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30"
-];
+interface ReservationSettings {
+  time_slots: string[];
+  days_available: {
+    monday: boolean;
+    tuesday: boolean;
+    wednesday: boolean;
+    thursday: boolean;
+    friday: boolean;
+    saturday: boolean;
+    sunday: boolean;
+  };
+  max_reservations_per_slot: number;
+  advance_booking_days: number;
+}
+
+interface SlotAvailability {
+  [slot: string]: {
+    count: number;
+    available: number;
+  };
+}
+
+const DAY_KEYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
 
 const peopleOptions = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -29,6 +49,16 @@ interface BookingData {
   email: string;
   notes: string;
 }
+
+const DEFAULT_SETTINGS: ReservationSettings = {
+  time_slots: ["18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"],
+  days_available: {
+    monday: true, tuesday: true, wednesday: true, thursday: true,
+    friday: true, saturday: true, sunday: false,
+  },
+  max_reservations_per_slot: 5,
+  advance_booking_days: 14,
+};
 
 const Prenota = () => {
   const { user } = useAuth();
@@ -44,8 +74,14 @@ const Prenota = () => {
     notes: "",
   });
   const [bookingCode, setBookingCode] = useState("");
+  const [settings, setSettings] = useState<ReservationSettings>(DEFAULT_SETTINGS);
+  const [isLoading, setIsLoading] = useState(true);
+  const [slotAvailability, setSlotAvailability] = useState<SlotAvailability>({});
 
-  // Pre-fill user data if logged in
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
   useEffect(() => {
     if (user) {
       setBooking(prev => ({
@@ -57,7 +93,82 @@ const Prenota = () => {
     }
   }, [user]);
 
-  const dates = Array.from({ length: 14 }, (_, i) => addDays(new Date(), i + 1));
+  useEffect(() => {
+    if (booking.date) {
+      fetchSlotAvailability(booking.date);
+    }
+  }, [booking.date]);
+
+  const fetchSettings = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("pizzeria_settings")
+      .select("reservation_settings")
+      .limit(1)
+      .single();
+
+    if (error) {
+      console.error("Error fetching settings:", error);
+      setIsLoading(false);
+      return;
+    }
+
+    if (data?.reservation_settings) {
+      const fetched = data.reservation_settings as unknown as ReservationSettings;
+      setSettings({
+        ...DEFAULT_SETTINGS,
+        ...fetched,
+        days_available: {
+          ...DEFAULT_SETTINGS.days_available,
+          ...(fetched.days_available || {}),
+        },
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const fetchSlotAvailability = async (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    
+    const { data, error } = await supabase
+      .from("reservations")
+      .select("reservation_time")
+      .eq("reservation_date", dateStr)
+      .neq("status", "cancelled");
+
+    if (error) {
+      console.error("Error fetching reservations:", error);
+      return;
+    }
+
+    // Count reservations per slot
+    const counts: Record<string, number> = {};
+    (data || []).forEach(r => {
+      const time = r.reservation_time;
+      counts[time] = (counts[time] || 0) + 1;
+    });
+
+    // Build availability map
+    const availability: SlotAvailability = {};
+    settings.time_slots.forEach(slot => {
+      const count = counts[slot] || 0;
+      availability[slot] = {
+        count,
+        available: settings.max_reservations_per_slot - count,
+      };
+    });
+
+    setSlotAvailability(availability);
+  };
+
+  const isDayAvailable = (date: Date) => {
+    const dayIndex = getDay(date);
+    const dayKey = DAY_KEYS[dayIndex];
+    return settings.days_available[dayKey];
+  };
+
+  const dates = Array.from({ length: settings.advance_booking_days }, (_, i) => addDays(new Date(), i + 1))
+    .filter(isDayAvailable);
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
@@ -108,6 +219,20 @@ const Prenota = () => {
       default: return false;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center pt-32">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Caricamento disponibilità...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,32 +294,36 @@ const Prenota = () => {
           >
             <h2 className="text-2xl font-bold text-center mb-8">Seleziona la data</h2>
             
-            {/* Opening Hours Display */}
-            <div className="max-w-sm mx-auto mb-6">
-              <OpeningHoursDisplay />
-            </div>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
-              {dates.map((date) => (
-                <Card
-                  key={date.toISOString()}
-                  className={`p-4 text-center cursor-pointer transition-all hover:border-primary ${
-                    booking.date && isSameDay(booking.date, date)
-                      ? "border-primary bg-primary/10"
-                      : ""
-                  }`}
-                  onClick={() => setBooking({ ...booking, date })}
-                >
-                  <div className="text-sm text-muted-foreground">
-                    {format(date, "EEE", { locale: it })}
-                  </div>
-                  <div className="text-2xl font-bold">{format(date, "d")}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {format(date, "MMM", { locale: it })}
-                  </div>
-                </Card>
-              ))}
-            </div>
+            {dates.length === 0 ? (
+              <Card className="p-8 text-center">
+                <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Nessuna data disponibile per le prenotazioni. Riprova più tardi.
+                </p>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+                {dates.map((date) => (
+                  <Card
+                    key={date.toISOString()}
+                    className={`p-4 text-center cursor-pointer transition-all hover:border-primary ${
+                      booking.date && isSameDay(booking.date, date)
+                        ? "border-primary bg-primary/10"
+                        : ""
+                    }`}
+                    onClick={() => setBooking({ ...booking, date, time: "" })}
+                  >
+                    <div className="text-sm text-muted-foreground">
+                      {format(date, "EEE", { locale: it })}
+                    </div>
+                    <div className="text-2xl font-bold">{format(date, "d")}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {format(date, "MMM", { locale: it })}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -208,19 +337,44 @@ const Prenota = () => {
             <h2 className="text-2xl font-bold text-center mb-8">
               Seleziona l'orario per {booking.date && format(booking.date, "EEEE d MMMM", { locale: it })}
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 max-w-2xl mx-auto">
-              {timeSlots.map((time) => (
-                <Button
-                  key={time}
-                  variant={booking.time === time ? "default" : "outline"}
-                  size="lg"
-                  onClick={() => setBooking({ ...booking, time })}
-                  className="text-lg"
-                >
-                  {time}
-                </Button>
-              ))}
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 max-w-2xl mx-auto">
+              {settings.time_slots.map((time) => {
+                const availability = slotAvailability[time];
+                const isFull = availability && availability.available <= 0;
+                const spotsLeft = availability?.available ?? settings.max_reservations_per_slot;
+                
+                return (
+                  <div key={time} className="relative">
+                    <Button
+                      variant={booking.time === time ? "default" : "outline"}
+                      size="lg"
+                      onClick={() => !isFull && setBooking({ ...booking, time })}
+                      className={`w-full text-lg ${isFull ? "opacity-50 cursor-not-allowed" : ""}`}
+                      disabled={isFull}
+                    >
+                      {time}
+                    </Button>
+                    {availability && (
+                      <Badge 
+                        variant={isFull ? "destructive" : spotsLeft <= 2 ? "secondary" : "outline"}
+                        className="absolute -top-2 -right-2 text-xs"
+                      >
+                        {isFull ? "Pieno" : `${spotsLeft} posti`}
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+            
+            {settings.time_slots.length === 0 && (
+              <Card className="p-8 text-center">
+                <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Nessuna fascia oraria disponibile per questa data.
+                </p>
+              </Card>
+            )}
           </motion.div>
         )}
 

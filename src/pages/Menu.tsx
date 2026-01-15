@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Leaf, Flame, WheatOff, Search, ShoppingCart, LogIn } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
@@ -7,24 +7,83 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { menuItems, menuCategories, MenuItem } from "@/data/menuData";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-const tagConfig = {
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  category_id: string;
+  image_url: string | null;
+  tags: string[] | null;
+  is_available: boolean | null;
+  is_popular: boolean | null;
+}
+
+interface MenuCategory {
+  id: string;
+  name: string;
+  icon: string | null;
+  sort_order: number | null;
+}
+
+const tagConfig: Record<string, { icon: typeof Leaf; label: string; className: string }> = {
   vegetariano: { icon: Leaf, label: "Vegetariano", className: "bg-basil/10 text-basil border-basil/30" },
+  vegano: { icon: Leaf, label: "Vegano", className: "bg-basil/10 text-basil border-basil/30" },
   piccante: { icon: Flame, label: "Piccante", className: "bg-tomato/10 text-tomato border-tomato/30" },
   "senza-glutine": { icon: WheatOff, label: "Senza Glutine", className: "bg-olive-oil/10 text-olive-oil border-olive-oil/30" },
 };
 
 const Menu = () => {
   const { user } = useAuth();
-  const [activeCategory, setActiveCategory] = useState<string>("pizze");
+  const [activeCategory, setActiveCategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const { addItem, totalItems, totalPrice, cart, updateQuantity, removeItem } = useCart();
+  const { addItem, totalItems, totalPrice, cart, updateQuantity } = useCart();
+  
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMenuData();
+  }, []);
+
+  const fetchMenuData = async () => {
+    setIsLoading(true);
+    
+    // Fetch categories and items in parallel
+    const [categoriesRes, itemsRes] = await Promise.all([
+      supabase
+        .from("menu_categories")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order"),
+      supabase
+        .from("menu_items")
+        .select("*")
+        .eq("is_available", true)
+        .order("sort_order"),
+    ]);
+
+    if (categoriesRes.data) {
+      setCategories(categoriesRes.data);
+      if (categoriesRes.data.length > 0 && !activeCategory) {
+        setActiveCategory(categoriesRes.data[0].id);
+      }
+    }
+
+    if (itemsRes.data) {
+      setMenuItems(itemsRes.data);
+    }
+
+    setIsLoading(false);
+  };
 
   const handleAddItem = (item: MenuItem) => {
     if (!user) {
@@ -36,7 +95,17 @@ const Menu = () => {
       });
       return;
     }
-    addItem(item);
+    
+    // Convert to cart format - use 'pizze' as default category for cart compatibility
+    addItem({
+      id: item.id,
+      name: item.name,
+      description: item.description || "",
+      price: item.price,
+      category: "pizze",
+      image: item.image_url || "/placeholder.svg",
+      tags: (item.tags || []) as any,
+    });
   };
 
   const toggleFilter = (filter: string) => {
@@ -46,13 +115,27 @@ const Menu = () => {
   };
 
   const filteredItems = menuItems.filter(item => {
-    const matchesCategory = item.category === activeCategory;
+    const matchesCategory = item.category_id === activeCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (item.description || "").toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilters = activeFilters.length === 0 ||
-      activeFilters.every(filter => item.tags.includes(filter as any));
+      activeFilters.every(filter => (item.tags || []).includes(filter));
     return matchesCategory && matchesSearch && matchesFilters;
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center pt-32">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Caricamento menu...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -107,15 +190,15 @@ const Menu = () => {
 
         {/* Category Tabs */}
         <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-          {menuCategories.map((category) => (
+          {categories.map((category) => (
             <Button
               key={category.id}
               variant={activeCategory === category.id ? "default" : "outline"}
               onClick={() => setActiveCategory(category.id)}
               className="whitespace-nowrap"
             >
-              <span className="mr-2">{category.icon}</span>
-              {category.label}
+              <span className="mr-2">{category.icon || "🍽️"}</span>
+              {category.name}
             </Button>
           ))}
         </div>
@@ -133,13 +216,18 @@ const Menu = () => {
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img
-                  src={item.image}
+                  src={item.image_url || "/placeholder.svg"}
                   alt={item.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-3 py-1 rounded-full font-bold text-sm">
                   €{item.price.toFixed(2)}
                 </div>
+                {item.is_popular && (
+                  <div className="absolute top-2 left-2 bg-tomato text-white px-2 py-1 rounded-full text-xs font-medium">
+                    Popolare
+                  </div>
+                )}
               </div>
               
               <div className="p-4">
@@ -150,10 +238,11 @@ const Menu = () => {
                   {item.description}
                 </p>
                 
-                {item.tags.length > 0 && (
+                {(item.tags || []).length > 0 && (
                   <div className="flex gap-1 flex-wrap mb-3">
-                    {item.tags.map((tag) => {
+                    {(item.tags || []).map((tag) => {
                       const config = tagConfig[tag];
+                      if (!config) return null;
                       return (
                         <Badge key={tag} variant="outline" className={`text-xs ${config.className}`}>
                           <config.icon className="w-3 h-3 mr-1" />
