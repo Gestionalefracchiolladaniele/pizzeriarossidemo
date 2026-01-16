@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, Save, X, Users, Circle, Square, Hexagon, Clock, Settings } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, X, Users, Square, Clock, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Tables } from "@/integrations/supabase/types";
 
-type RestaurantTable = Tables<"restaurant_tables">;
+interface RestaurantTableWithHours {
+  id: string;
+  table_number: number;
+  seats: number;
+  is_active: boolean | null;
+  available_hours: string[] | null;
+  created_at: string;
+  updated_at: string;
+}
 
 interface ReservationSettings {
   time_slots: string[];
@@ -57,7 +64,7 @@ const DAY_LABELS: Record<string, string> = {
 };
 
 // Visual table representation component
-const TableVisual = ({ table, isActive }: { table: RestaurantTable; isActive: boolean }) => {
+const TableVisual = ({ table, isActive }: { table: RestaurantTableWithHours; isActive: boolean }) => {
   const seats = table.seats;
   const tableNumber = table.table_number;
   
@@ -129,10 +136,10 @@ const TableVisual = ({ table, isActive }: { table: RestaurantTable; isActive: bo
 
 export const AdminTables = () => {
   const [activeTab, setActiveTab] = useState("tables");
-  const [tables, setTables] = useState<RestaurantTable[]>([]);
+  const [tables, setTables] = useState<RestaurantTableWithHours[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTable, setEditingTable] = useState<RestaurantTable | null>(null);
+  const [editingTable, setEditingTable] = useState<RestaurantTableWithHours | null>(null);
   const [reservationSettings, setReservationSettings] = useState<ReservationSettings>(DEFAULT_SETTINGS);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -140,6 +147,7 @@ export const AdminTables = () => {
     table_number: "",
     seats: "4",
     is_active: true,
+    available_hours: ALL_TIME_SLOTS.slice(5), // Default: evening slots
   });
 
   useEffect(() => {
@@ -159,7 +167,7 @@ export const AdminTables = () => {
       return;
     }
 
-    setTables(data || []);
+    setTables((data || []) as RestaurantTableWithHours[]);
     setIsLoading(false);
   };
 
@@ -206,13 +214,14 @@ export const AdminTables = () => {
     setIsSavingSettings(false);
   };
 
-  const openDialog = (table?: RestaurantTable) => {
+  const openDialog = (table?: RestaurantTableWithHours) => {
     if (table) {
       setEditingTable(table);
       setFormData({
         table_number: table.table_number.toString(),
         seats: table.seats.toString(),
         is_active: table.is_active ?? true,
+        available_hours: table.available_hours || ALL_TIME_SLOTS.slice(5),
       });
     } else {
       setEditingTable(null);
@@ -221,9 +230,17 @@ export const AdminTables = () => {
         table_number: nextNumber.toString(),
         seats: "4",
         is_active: true,
+        available_hours: ALL_TIME_SLOTS.slice(5),
       });
     }
     setIsDialogOpen(true);
+  };
+
+  const toggleFormHour = (hour: string) => {
+    const newHours = formData.available_hours.includes(hour)
+      ? formData.available_hours.filter(h => h !== hour)
+      : [...formData.available_hours, hour].sort();
+    setFormData({ ...formData, available_hours: newHours });
   };
 
   const handleSave = async () => {
@@ -232,10 +249,16 @@ export const AdminTables = () => {
       return;
     }
 
+    if (formData.available_hours.length === 0) {
+      toast.error("Seleziona almeno un orario disponibile");
+      return;
+    }
+
     const data = {
       table_number: parseInt(formData.table_number),
       seats: parseInt(formData.seats),
       is_active: formData.is_active,
+      available_hours: formData.available_hours,
     };
 
     if (editingTable) {
@@ -282,7 +305,7 @@ export const AdminTables = () => {
     fetchTables();
   };
 
-  const toggleActive = async (table: RestaurantTable) => {
+  const toggleActive = async (table: RestaurantTableWithHours) => {
     const { error } = await supabase
       .from("restaurant_tables")
       .update({ is_active: !table.is_active })
@@ -295,13 +318,6 @@ export const AdminTables = () => {
 
     toast.success(table.is_active ? "Tavolo disattivato" : "Tavolo attivato");
     fetchTables();
-  };
-
-  const toggleTimeSlot = (slot: string) => {
-    const newSlots = reservationSettings.time_slots.includes(slot)
-      ? reservationSettings.time_slots.filter(s => s !== slot)
-      : [...reservationSettings.time_slots, slot].sort();
-    setReservationSettings({ ...reservationSettings, time_slots: newSlots });
   };
 
   const toggleDay = (day: keyof ReservationSettings["days_available"]) => {
@@ -326,7 +342,7 @@ export const AdminTables = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Gestione Tavoli & Orari</h1>
+          <h1 className="text-3xl font-bold">Gestione Tavoli</h1>
           <p className="text-muted-foreground mt-1">
             {activeTables} tavoli attivi • {totalSeats} posti totali
           </p>
@@ -340,8 +356,8 @@ export const AdminTables = () => {
             Tavoli
           </TabsTrigger>
           <TabsTrigger value="schedule" className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Orari Prenotazioni
+            <Settings className="w-4 h-4" />
+            Impostazioni
           </TabsTrigger>
         </TabsList>
 
@@ -409,6 +425,20 @@ export const AdminTables = () => {
                       </p>
                     </div>
 
+                    {/* Show available hours */}
+                    <div className="mt-3 flex flex-wrap gap-1 justify-center">
+                      {(table.available_hours || []).slice(0, 4).map(hour => (
+                        <Badge key={hour} variant="secondary" className="text-xs">
+                          {hour}
+                        </Badge>
+                      ))}
+                      {(table.available_hours || []).length > 4 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{(table.available_hours || []).length - 4}
+                        </Badge>
+                      )}
+                    </div>
+
                     <div className="flex gap-2 mt-4">
                       <Button variant="outline" size="sm" className="flex-1" onClick={() => openDialog(table)}>
                         <Pencil className="w-4 h-4 mr-1" /> Modifica
@@ -424,32 +454,8 @@ export const AdminTables = () => {
           )}
         </TabsContent>
 
-        {/* Schedule Tab */}
+        {/* Settings Tab - Days and general settings */}
         <TabsContent value="schedule" className="space-y-6">
-          <Card className="p-6">
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
-              Orari Disponibili per Prenotazioni
-            </h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              Seleziona gli orari in cui i clienti possono prenotare un tavolo.
-            </p>
-            
-            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-              {ALL_TIME_SLOTS.map((slot) => (
-                <Button
-                  key={slot}
-                  variant={reservationSettings.time_slots.includes(slot) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => toggleTimeSlot(slot)}
-                  className="text-sm"
-                >
-                  {slot}
-                </Button>
-              ))}
-            </div>
-          </Card>
-
           <Card className="p-6">
             <h3 className="text-lg font-bold mb-4">Giorni Disponibili</h3>
             <p className="text-muted-foreground text-sm mb-4">
@@ -538,9 +544,9 @@ export const AdminTables = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Add/Edit Table Dialog */}
+      {/* Add/Edit Table Dialog - Now includes available hours */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingTable ? "Modifica Tavolo" : "Nuovo Tavolo"}</DialogTitle>
           </DialogHeader>
@@ -553,6 +559,7 @@ export const AdminTables = () => {
                   table_number: parseInt(formData.table_number) || 1, 
                   seats: parseInt(formData.seats) || 4,
                   is_active: formData.is_active,
+                  available_hours: formData.available_hours,
                   created_at: "",
                   updated_at: ""
                 }} 
@@ -588,6 +595,34 @@ export const AdminTables = () => {
                   <SelectItem value="12">12 posti (tavolata)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Available Hours Selection */}
+            <div>
+              <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
+                Orari Disponibili per Prenotazione *
+              </label>
+              <p className="text-xs text-muted-foreground mb-3">
+                Seleziona gli orari in cui questo tavolo può essere prenotato.
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {ALL_TIME_SLOTS.map((hour) => (
+                  <Button
+                    key={hour}
+                    type="button"
+                    variant={formData.available_hours.includes(hour) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => toggleFormHour(hour)}
+                    className="text-xs"
+                  >
+                    {hour}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {formData.available_hours.length} orari selezionati
+              </p>
             </div>
 
             <div className="flex items-center justify-between">

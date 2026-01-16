@@ -150,7 +150,7 @@ const Ordina = () => {
           customer_phone: customerPhone,
           delivery_type: cart.deliveryType,
           delivery_address: cart.deliveryType === "delivery" ? deliveryAddress : null,
-          pickup_time: cart.deliveryType === "asporto" ? cart.pickupTime : null,
+          pickup_time: cart.deliveryType === "takeaway" ? cart.pickupTime : null,
           items: orderItems,
           subtotal: totalPrice,
           delivery_fee: deliveryFee,
@@ -300,11 +300,11 @@ const Ordina = () => {
               <>
                 {/* Delivery Type Selection */}
                 <Card className="p-4 mb-6">
-                  <Tabs value={cart.deliveryType} onValueChange={(v) => setDeliveryType(v as any)}>
+                  <Tabs value={cart.deliveryType} onValueChange={(v) => setDeliveryType(v as 'takeaway' | 'delivery')}>
                     <TabsList className="w-full">
-                      <TabsTrigger value="asporto" className="flex-1">
+                      <TabsTrigger value="takeaway" className="flex-1">
                         <Store className="w-4 h-4 mr-2" />
-                        Asporto
+                        Ritiro
                       </TabsTrigger>
                       <TabsTrigger value="delivery" className="flex-1">
                         <Bike className="w-4 h-4 mr-2" />
@@ -423,7 +423,7 @@ const Ordina = () => {
                 
                 <h2 className="text-2xl font-bold">Completa l'ordine</h2>
                 
-                {cart.deliveryType === "asporto" ? (
+                {cart.deliveryType === "takeaway" ? (
                   <Card className="p-4">
                     <h3 className="font-bold mb-3 flex items-center gap-2">
                       <Clock className="w-5 h-5 text-primary" />
@@ -567,7 +567,7 @@ const Ordina = () => {
                       disabled={
                         isSubmitting ||
                         !customerName || !customerPhone || !customerEmail ||
-                        (cart.deliveryType === "asporto" && !cart.pickupTime) ||
+                        (cart.deliveryType === "takeaway" && !cart.pickupTime) ||
                         (cart.deliveryType === "delivery" && !deliveryAddress)
                       }
                     >

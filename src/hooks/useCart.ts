@@ -21,7 +21,7 @@ export interface CartItem {
 
 export interface Cart {
   items: CartItem[];
-  deliveryType: 'asporto' | 'delivery';
+  deliveryType: 'takeaway' | 'delivery';
   deliveryAddress?: string;
   pickupTime?: string;
 }
@@ -33,12 +33,17 @@ export const useCart = () => {
     const saved = localStorage.getItem(CART_STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Migrate old 'asporto' to 'takeaway'
+        if (parsed.deliveryType === 'asporto') {
+          parsed.deliveryType = 'takeaway';
+        }
+        return parsed;
       } catch {
-        return { items: [], deliveryType: 'asporto' };
+        return { items: [], deliveryType: 'takeaway' };
       }
     }
-    return { items: [], deliveryType: 'asporto' };
+    return { items: [], deliveryType: 'takeaway' };
   });
 
   useEffect(() => {
@@ -96,7 +101,7 @@ export const useCart = () => {
     }));
   }, []);
 
-  const setDeliveryType = useCallback((type: 'asporto' | 'delivery') => {
+  const setDeliveryType = useCallback((type: 'takeaway' | 'delivery') => {
     setCart(prev => ({ ...prev, deliveryType: type }));
   }, []);
 
@@ -109,7 +114,7 @@ export const useCart = () => {
   }, []);
 
   const clearCart = useCallback(() => {
-    setCart({ items: [], deliveryType: 'asporto' });
+    setCart({ items: [], deliveryType: 'takeaway' });
   }, []);
 
   const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);

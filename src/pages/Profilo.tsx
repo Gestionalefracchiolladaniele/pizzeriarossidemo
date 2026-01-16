@@ -218,6 +218,14 @@ const Profilo = () => {
             </TabsContent>
 
             <TabsContent value="reservations" className="mt-6">
+              {/* Always visible button to create new reservation */}
+              <div className="mb-6">
+                <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate("/prenota")}>
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Nuova Prenotazione
+                </Button>
+              </div>
+
               {loadingData ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -226,9 +234,6 @@ const Profilo = () => {
                 <Card className="p-8 text-center">
                   <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Non hai ancora effettuato prenotazioni</p>
-                  <Button className="mt-4" onClick={() => navigate("/prenota")}>
-                    Prenota Ora
-                  </Button>
                 </Card>
               ) : (
                 <div className="space-y-4">
