@@ -1,5 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
-import { MenuItem } from '@/data/menuData';
+
+// Flexible MenuItem interface that works with both static and dynamic data
+export interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  tags: string[];
+  ingredients?: string[];
+  allergens?: string[];
+}
 
 export interface CartItem {
   menuItem: MenuItem;
