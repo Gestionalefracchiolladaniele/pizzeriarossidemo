@@ -8,12 +8,30 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { menuItems, menuCategories, MenuItem } from "@/data/menuData";
-import { useCart } from "@/hooks/useCart";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCart, MenuItem } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+interface MenuCategory {
+  id: string;
+  name: string;
+  icon: string | null;
+  sort_order: number | null;
+}
+
+interface DbMenuItem {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  category_id: string;
+  image_url: string | null;
+  tags: string[] | null;
+  is_available: boolean | null;
+  is_popular: boolean | null;
+}
 
 const pickupTimes = [
   "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"
@@ -22,7 +40,7 @@ const pickupTimes = [
 const Ordina = () => {
   const { user } = useAuth();
   const [step, setStep] = useState<"menu" | "checkout" | "confirmed">("menu");
-  const [activeCategory, setActiveCategory] = useState("pizze");
+  const [activeCategory, setActiveCategory] = useState("");
   const [orderCode, setOrderCode] = useState("");
   const [orderNumber, setOrderNumber] = useState<number | null>(null);
   const [deliveryAddress, setDeliveryAddress] = useState("");
@@ -31,6 +49,11 @@ const Ordina = () => {
   const [customerEmail, setCustomerEmail] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Dynamic menu state
+  const [menuItems, setMenuItems] = useState<DbMenuItem[]>([]);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const {
     cart,
@@ -44,6 +67,11 @@ const Ordina = () => {
     clearCart,
   } = useCart();
 
+  // Fetch menu data from Supabase
+  useEffect(() => {
+    fetchMenuData();
+  }, []);
+
   // Pre-fill customer data if user is logged in
   useEffect(() => {
     if (user) {
@@ -53,7 +81,48 @@ const Ordina = () => {
     }
   }, [user]);
 
-  const filteredItems = menuItems.filter(item => item.category === activeCategory);
+  const fetchMenuData = async () => {
+    setIsLoading(true);
+    
+    const [categoriesRes, itemsRes] = await Promise.all([
+      supabase
+        .from("menu_categories")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order"),
+      supabase
+        .from("menu_items")
+        .select("*")
+        .eq("is_available", true)
+        .order("sort_order"),
+    ]);
+
+    if (categoriesRes.data) {
+      setCategories(categoriesRes.data);
+      if (categoriesRes.data.length > 0 && !activeCategory) {
+        setActiveCategory(categoriesRes.data[0].id);
+      }
+    }
+
+    if (itemsRes.data) {
+      setMenuItems(itemsRes.data);
+    }
+
+    setIsLoading(false);
+  };
+
+  const filteredItems = menuItems.filter(item => item.category_id === activeCategory);
+
+  // Convert DB item to cart MenuItem format
+  const toCartItem = (item: DbMenuItem): MenuItem => ({
+    id: item.id,
+    name: item.name,
+    description: item.description || "",
+    price: item.price,
+    category: item.category_id,
+    image: item.image_url || "/placeholder.svg",
+    tags: item.tags || [],
+  });
 
   const handleConfirmOrder = async () => {
     if (isSubmitting) return;
@@ -187,6 +256,20 @@ const Ordina = () => {
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center pt-32">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Caricamento menu...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -233,90 +316,98 @@ const Ordina = () => {
 
                 {/* Category Tabs */}
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                  {menuCategories.map((category) => (
+                  {categories.map((category) => (
                     <Button
                       key={category.id}
                       variant={activeCategory === category.id ? "default" : "outline"}
                       onClick={() => setActiveCategory(category.id)}
                       className="whitespace-nowrap"
                     >
-                      <span className="mr-2">{category.icon}</span>
-                      {category.label}
+                      <span className="mr-2">{category.icon || "🍽️"}</span>
+                      {category.name}
                     </Button>
                   ))}
                 </div>
 
                 {/* Menu Items */}
-                <div className="space-y-4">
-                  {filteredItems.map((item) => {
-                    const cartItem = cart.items.find(ci => ci.menuItem.id === item.id);
-                    return (
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                      >
-                        <Card className="p-4 flex gap-4">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-24 h-24 object-cover rounded-lg"
-                          />
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3 className="font-bold">{item.name}</h3>
-                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                  {item.description}
-                                </p>
+                {filteredItems.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <p className="text-muted-foreground">
+                      Nessun prodotto disponibile in questa categoria.
+                    </p>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredItems.map((item) => {
+                      const cartItem = cart.items.find(ci => ci.menuItem.id === item.id);
+                      return (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                        >
+                          <Card className="p-4 flex gap-4">
+                            <img
+                              src={item.image_url || "/placeholder.svg"}
+                              alt={item.name}
+                              className="w-24 h-24 object-cover rounded-lg"
+                            />
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h3 className="font-bold">{item.name}</h3>
+                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                    {item.description}
+                                  </p>
+                                </div>
+                                <span className="font-bold text-primary">
+                                  €{item.price.toFixed(2)}
+                                </span>
                               </div>
-                              <span className="font-bold text-primary">
-                                €{item.price.toFixed(2)}
-                              </span>
-                            </div>
-                            
-                            <div className="mt-3 flex justify-between items-center">
-                              {item.tags.length > 0 && (
-                                <div className="flex gap-1">
-                                  {item.tags.slice(0, 2).map(tag => (
-                                    <Badge key={tag} variant="secondary" className="text-xs">
-                                      {tag === "vegetariano" ? "🌿" : tag === "piccante" ? "🌶️" : "🌾"}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
                               
-                              {cartItem ? (
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
-                                  >
-                                    <Minus className="w-4 h-4" />
+                              <div className="mt-3 flex justify-between items-center">
+                                {(item.tags || []).length > 0 && (
+                                  <div className="flex gap-1">
+                                    {(item.tags || []).slice(0, 2).map(tag => (
+                                      <Badge key={tag} variant="secondary" className="text-xs">
+                                        {tag === "vegetariano" ? "🌿" : tag === "piccante" ? "🌶️" : "🌾"}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                {cartItem ? (
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
+                                    >
+                                      <Minus className="w-4 h-4" />
+                                    </Button>
+                                    <span className="w-8 text-center font-bold">{cartItem.quantity}</span>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
+                                    >
+                                      <Plus className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button size="sm" onClick={() => addItem(toCartItem(item))}>
+                                    <Plus className="w-4 h-4 mr-1" />
+                                    Aggiungi
                                   </Button>
-                                  <span className="w-8 text-center font-bold">{cartItem.quantity}</span>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
-                                  >
-                                    <Plus className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              ) : (
-                                <Button size="sm" onClick={() => addItem(item)}>
-                                  <Plus className="w-4 h-4 mr-1" />
-                                  Aggiungi
-                                </Button>
-                              )}
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </Card>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
               </>
             )}
 
