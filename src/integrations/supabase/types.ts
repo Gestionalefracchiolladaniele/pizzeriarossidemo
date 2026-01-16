@@ -365,6 +365,7 @@ export type Database = {
       }
       restaurant_tables: {
         Row: {
+          available_hours: string[] | null
           created_at: string
           id: string
           is_active: boolean | null
@@ -373,6 +374,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          available_hours?: string[] | null
           created_at?: string
           id?: string
           is_active?: boolean | null
@@ -381,6 +383,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available_hours?: string[] | null
           created_at?: string
           id?: string
           is_active?: boolean | null

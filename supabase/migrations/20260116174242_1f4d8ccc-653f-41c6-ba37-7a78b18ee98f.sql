@@ -1,0 +1,3 @@
+-- Add available_hours column to restaurant_tables for table-specific booking hours
+ALTER TABLE public.restaurant_tables 
+ADD COLUMN available_hours text[] DEFAULT ARRAY['18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00']::text[];
