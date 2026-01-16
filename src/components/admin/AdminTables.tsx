@@ -1,24 +1,59 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, Save, X, Users, Circle, Square, Hexagon } from "lucide-react";
+import { Plus, Pencil, Trash2, Save, X, Users, Circle, Square, Hexagon, Clock, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
 
 type RestaurantTable = Tables<"restaurant_tables">;
 
-// Table shape icons based on seats
-const getTableShape = (seats: number) => {
-  if (seats <= 2) return { icon: Circle, shape: "round-small" };
-  if (seats <= 4) return { icon: Square, shape: "square" };
-  if (seats <= 6) return { icon: Hexagon, shape: "round-large" };
-  return { icon: Hexagon, shape: "rectangular" };
+interface ReservationSettings {
+  time_slots: string[];
+  days_available: {
+    monday: boolean;
+    tuesday: boolean;
+    wednesday: boolean;
+    thursday: boolean;
+    friday: boolean;
+    saturday: boolean;
+    sunday: boolean;
+  };
+  max_reservations_per_slot: number;
+  advance_booking_days: number;
+}
+
+const DEFAULT_SETTINGS: ReservationSettings = {
+  time_slots: ["18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"],
+  days_available: {
+    monday: true, tuesday: true, wednesday: true, thursday: true,
+    friday: true, saturday: true, sunday: false,
+  },
+  max_reservations_per_slot: 5,
+  advance_booking_days: 14,
+};
+
+const ALL_TIME_SLOTS = [
+  "12:00", "12:30", "13:00", "13:30", "14:00",
+  "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00"
+];
+
+const DAY_LABELS: Record<string, string> = {
+  monday: "Lunedì",
+  tuesday: "Martedì",
+  wednesday: "Mercoledì",
+  thursday: "Giovedì",
+  friday: "Venerdì",
+  saturday: "Sabato",
+  sunday: "Domenica",
 };
 
 // Visual table representation component
@@ -26,7 +61,6 @@ const TableVisual = ({ table, isActive }: { table: RestaurantTable; isActive: bo
   const seats = table.seats;
   const tableNumber = table.table_number;
   
-  // Generate seat positions based on table type
   const getSeatPositions = () => {
     const positions: { top?: string; bottom?: string; left?: string; right?: string; transform?: string }[] = [];
     
@@ -46,7 +80,6 @@ const TableVisual = ({ table, isActive }: { table: RestaurantTable; isActive: bo
       positions.push({ left: "-8px", top: "50%", transform: "translateY(-50%)" });
       positions.push({ right: "-8px", top: "50%", transform: "translateY(-50%)" });
     } else {
-      // 8+ seats
       for (let i = 0; i < Math.min(seats, 8); i++) {
         const angle = (i * 360) / Math.min(seats, 8);
         const radius = 45;
@@ -68,7 +101,6 @@ const TableVisual = ({ table, isActive }: { table: RestaurantTable; isActive: bo
   
   return (
     <div className="relative w-24 h-24 mx-auto">
-      {/* Table surface */}
       <motion.div
         className={`absolute inset-3 ${isRound ? 'rounded-full' : 'rounded-lg'} 
           ${isActive ? 'bg-gradient-to-br from-amber-600 to-amber-800' : 'bg-muted'} 
@@ -80,7 +112,6 @@ const TableVisual = ({ table, isActive }: { table: RestaurantTable; isActive: bo
         </span>
       </motion.div>
       
-      {/* Seats */}
       {seatPositions.slice(0, seats).map((pos, idx) => (
         <motion.div
           key={idx}
@@ -97,10 +128,13 @@ const TableVisual = ({ table, isActive }: { table: RestaurantTable; isActive: bo
 };
 
 export const AdminTables = () => {
+  const [activeTab, setActiveTab] = useState("tables");
   const [tables, setTables] = useState<RestaurantTable[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<RestaurantTable | null>(null);
+  const [reservationSettings, setReservationSettings] = useState<ReservationSettings>(DEFAULT_SETTINGS);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const [formData, setFormData] = useState({
     table_number: "",
@@ -110,6 +144,7 @@ export const AdminTables = () => {
 
   useEffect(() => {
     fetchTables();
+    fetchReservationSettings();
   }, []);
 
   const fetchTables = async () => {
@@ -126,6 +161,49 @@ export const AdminTables = () => {
 
     setTables(data || []);
     setIsLoading(false);
+  };
+
+  const fetchReservationSettings = async () => {
+    const { data, error } = await supabase
+      .from("pizzeria_settings")
+      .select("reservation_settings")
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching settings:", error);
+      return;
+    }
+
+    if (data?.reservation_settings) {
+      const fetched = data.reservation_settings as unknown as ReservationSettings;
+      setReservationSettings({
+        ...DEFAULT_SETTINGS,
+        ...fetched,
+        days_available: {
+          ...DEFAULT_SETTINGS.days_available,
+          ...(fetched.days_available || {}),
+        },
+      });
+    }
+  };
+
+  const saveReservationSettings = async () => {
+    setIsSavingSettings(true);
+    
+    const { error } = await supabase
+      .from("pizzeria_settings")
+      .update({ reservation_settings: reservationSettings as unknown as any })
+      .eq("id", (await supabase.from("pizzeria_settings").select("id").limit(1).single()).data?.id);
+
+    if (error) {
+      toast.error("Errore nel salvataggio impostazioni");
+      setIsSavingSettings(false);
+      return;
+    }
+
+    toast.success("Impostazioni salvate!");
+    setIsSavingSettings(false);
   };
 
   const openDialog = (table?: RestaurantTable) => {
@@ -219,7 +297,23 @@ export const AdminTables = () => {
     fetchTables();
   };
 
-  // Statistics
+  const toggleTimeSlot = (slot: string) => {
+    const newSlots = reservationSettings.time_slots.includes(slot)
+      ? reservationSettings.time_slots.filter(s => s !== slot)
+      : [...reservationSettings.time_slots, slot].sort();
+    setReservationSettings({ ...reservationSettings, time_slots: newSlots });
+  };
+
+  const toggleDay = (day: keyof ReservationSettings["days_available"]) => {
+    setReservationSettings({
+      ...reservationSettings,
+      days_available: {
+        ...reservationSettings.days_available,
+        [day]: !reservationSettings.days_available[day],
+      },
+    });
+  };
+
   const totalTables = tables.length;
   const activeTables = tables.filter(t => t.is_active).length;
   const totalSeats = tables.reduce((sum, t) => sum + (t.is_active ? t.seats : 0), 0);
@@ -232,86 +326,219 @@ export const AdminTables = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Gestione Tavoli</h1>
+          <h1 className="text-3xl font-bold">Gestione Tavoli & Orari</h1>
           <p className="text-muted-foreground mt-1">
             {activeTables} tavoli attivi • {totalSeats} posti totali
           </p>
         </div>
-        <Button onClick={() => openDialog()}>
-          <Plus className="w-4 h-4 mr-2" /> Aggiungi Tavolo
-        </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="p-4 text-center">
-          <div className="text-3xl font-bold text-primary">{totalTables}</div>
-          <div className="text-sm text-muted-foreground">Tavoli Totali</div>
-        </Card>
-        <Card className="p-4 text-center">
-          <div className="text-3xl font-bold text-green-600">{activeTables}</div>
-          <div className="text-sm text-muted-foreground">Tavoli Attivi</div>
-        </Card>
-        <Card className="p-4 text-center">
-          <div className="text-3xl font-bold text-blue-600">{totalSeats}</div>
-          <div className="text-sm text-muted-foreground">Posti Disponibili</div>
-        </Card>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="tables" className="flex items-center gap-2">
+            <Square className="w-4 h-4" />
+            Tavoli
+          </TabsTrigger>
+          <TabsTrigger value="schedule" className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Orari Prenotazioni
+          </TabsTrigger>
+        </TabsList>
 
-      {tables.length === 0 ? (
-        <Card className="p-12 text-center">
-          <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-            <Square className="w-10 h-10 text-muted-foreground" />
+        {/* Tables Tab */}
+        <TabsContent value="tables" className="space-y-6">
+          <div className="flex justify-end">
+            <Button onClick={() => openDialog()}>
+              <Plus className="w-4 h-4 mr-2" /> Aggiungi Tavolo
+            </Button>
           </div>
-          <p className="text-muted-foreground mb-4">Nessun tavolo configurato</p>
-          <Button onClick={() => openDialog()}>
-            <Plus className="w-4 h-4 mr-2" /> Aggiungi il primo tavolo
-          </Button>
-        </Card>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {tables.map((table) => (
-            <motion.div
-              key={table.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <Card className={`p-4 transition-all ${!table.is_active ? 'opacity-60 grayscale' : 'hover:shadow-lg'}`}>
-                <div className="flex justify-between items-start mb-2">
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium
-                    ${table.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
-                  >
-                    {table.is_active ? 'Attivo' : 'Disattivo'}
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-3 gap-4">
+            <Card className="p-4 text-center">
+              <div className="text-3xl font-bold text-primary">{totalTables}</div>
+              <div className="text-sm text-muted-foreground">Tavoli Totali</div>
+            </Card>
+            <Card className="p-4 text-center">
+              <div className="text-3xl font-bold text-green-600">{activeTables}</div>
+              <div className="text-sm text-muted-foreground">Tavoli Attivi</div>
+            </Card>
+            <Card className="p-4 text-center">
+              <div className="text-3xl font-bold text-blue-600">{totalSeats}</div>
+              <div className="text-sm text-muted-foreground">Posti Disponibili</div>
+            </Card>
+          </div>
+
+          {tables.length === 0 ? (
+            <Card className="p-12 text-center">
+              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Square className="w-10 h-10 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground mb-4">Nessun tavolo configurato</p>
+              <Button onClick={() => openDialog()}>
+                <Plus className="w-4 h-4 mr-2" /> Aggiungi il primo tavolo
+              </Button>
+            </Card>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {tables.map((table) => (
+                <motion.div
+                  key={table.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  <Card className={`p-4 transition-all ${!table.is_active ? 'opacity-60 grayscale' : 'hover:shadow-lg'}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium
+                        ${table.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
+                      >
+                        {table.is_active ? 'Attivo' : 'Disattivo'}
+                      </div>
+                      <Switch
+                        checked={table.is_active ?? true}
+                        onCheckedChange={() => toggleActive(table)}
+                      />
+                    </div>
+
+                    <TableVisual table={table} isActive={table.is_active ?? true} />
+
+                    <div className="text-center mt-4">
+                      <h3 className="font-bold text-lg">Tavolo {table.table_number}</h3>
+                      <p className="text-muted-foreground flex items-center justify-center gap-1">
+                        <Users className="w-4 h-4" /> {table.seats} posti
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2 mt-4">
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => openDialog(table)}>
+                        <Pencil className="w-4 h-4 mr-1" /> Modifica
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(table.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Schedule Tab */}
+        <TabsContent value="schedule" className="space-y-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" />
+              Orari Disponibili per Prenotazioni
+            </h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              Seleziona gli orari in cui i clienti possono prenotare un tavolo.
+            </p>
+            
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              {ALL_TIME_SLOTS.map((slot) => (
+                <Button
+                  key={slot}
+                  variant={reservationSettings.time_slots.includes(slot) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => toggleTimeSlot(slot)}
+                  className="text-sm"
+                >
+                  {slot}
+                </Button>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="text-lg font-bold mb-4">Giorni Disponibili</h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              Seleziona i giorni in cui accetti prenotazioni.
+            </p>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {(Object.keys(DAY_LABELS) as Array<keyof typeof DAY_LABELS>).map((day) => (
+                <div
+                  key={day}
+                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                    reservationSettings.days_available[day as keyof ReservationSettings["days_available"]]
+                      ? 'bg-primary/10 border-primary'
+                      : 'bg-muted/50'
+                  }`}
+                  onClick={() => toggleDay(day as keyof ReservationSettings["days_available"])}
+                >
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={reservationSettings.days_available[day as keyof ReservationSettings["days_available"]]}
+                      onChange={() => {}}
+                    />
+                    <span className="font-medium">{DAY_LABELS[day]}</span>
                   </div>
-                  <Switch
-                    checked={table.is_active ?? true}
-                    onCheckedChange={() => toggleActive(table)}
-                  />
                 </div>
+              ))}
+            </div>
+          </Card>
 
-                <TableVisual table={table} isActive={table.is_active ?? true} />
+          <Card className="p-6">
+            <h3 className="text-lg font-bold mb-4">Impostazioni Aggiuntive</h3>
+            
+            <div className="grid sm:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Prenotazioni max per slot
+                </label>
+                <Select
+                  value={reservationSettings.max_reservations_per_slot.toString()}
+                  onValueChange={(v) => setReservationSettings({
+                    ...reservationSettings,
+                    max_reservations_per_slot: parseInt(v)
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 8, 10, 15, 20].map(n => (
+                      <SelectItem key={n} value={n.toString()}>{n} prenotazioni</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Giorni di anticipo max
+                </label>
+                <Select
+                  value={reservationSettings.advance_booking_days.toString()}
+                  onValueChange={(v) => setReservationSettings({
+                    ...reservationSettings,
+                    advance_booking_days: parseInt(v)
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[7, 14, 21, 30, 60, 90].map(n => (
+                      <SelectItem key={n} value={n.toString()}>{n} giorni</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
 
-                <div className="text-center mt-4">
-                  <h3 className="font-bold text-lg">Tavolo {table.table_number}</h3>
-                  <p className="text-muted-foreground flex items-center justify-center gap-1">
-                    <Users className="w-4 h-4" /> {table.seats} posti
-                  </p>
-                </div>
+          <div className="flex justify-end">
+            <Button onClick={saveReservationSettings} disabled={isSavingSettings}>
+              <Save className="w-4 h-4 mr-2" />
+              {isSavingSettings ? "Salvataggio..." : "Salva Impostazioni"}
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
 
-                <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => openDialog(table)}>
-                    <Pencil className="w-4 h-4 mr-1" /> Modifica
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(table.id)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      )}
-
+      {/* Add/Edit Table Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -319,7 +546,6 @@ export const AdminTables = () => {
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Preview */}
             <div className="bg-muted/50 rounded-lg p-4">
               <TableVisual 
                 table={{ 
@@ -359,6 +585,7 @@ export const AdminTables = () => {
                   <SelectItem value="6">6 posti (grande)</SelectItem>
                   <SelectItem value="8">8 posti (extra large)</SelectItem>
                   <SelectItem value="10">10 posti (tavolo lungo)</SelectItem>
+                  <SelectItem value="12">12 posti (tavolata)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
