@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, Save, X, Users, Square, Clock, Settings } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Square, Clock, Settings, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -147,7 +148,7 @@ export const AdminTables = () => {
     table_number: "",
     seats: "4",
     is_active: true,
-    available_hours: ALL_TIME_SLOTS.slice(5), // Default: evening slots
+    available_hours: [] as string[],
   });
 
   useEffect(() => {
@@ -221,7 +222,7 @@ export const AdminTables = () => {
         table_number: table.table_number.toString(),
         seats: table.seats.toString(),
         is_active: table.is_active ?? true,
-        available_hours: table.available_hours || ALL_TIME_SLOTS.slice(5),
+        available_hours: table.available_hours || [],
       });
     } else {
       setEditingTable(null);
@@ -230,7 +231,7 @@ export const AdminTables = () => {
         table_number: nextNumber.toString(),
         seats: "4",
         is_active: true,
-        available_hours: ALL_TIME_SLOTS.slice(5),
+        available_hours: [], // Empty - admin MUST select hours
       });
     }
     setIsDialogOpen(true);
@@ -243,6 +244,18 @@ export const AdminTables = () => {
     setFormData({ ...formData, available_hours: newHours });
   };
 
+  const selectAllHours = (type: 'lunch' | 'dinner' | 'all' | 'none') => {
+    let hours: string[] = [];
+    if (type === 'lunch') {
+      hours = ALL_TIME_SLOTS.filter(h => parseInt(h) < 15);
+    } else if (type === 'dinner') {
+      hours = ALL_TIME_SLOTS.filter(h => parseInt(h) >= 18);
+    } else if (type === 'all') {
+      hours = [...ALL_TIME_SLOTS];
+    }
+    setFormData({ ...formData, available_hours: hours });
+  };
+
   const handleSave = async () => {
     if (!formData.table_number || !formData.seats) {
       toast.error("Compila tutti i campi obbligatori");
@@ -250,7 +263,7 @@ export const AdminTables = () => {
     }
 
     if (formData.available_hours.length === 0) {
-      toast.error("Seleziona almeno un orario disponibile");
+      toast.error("Seleziona almeno un orario disponibile per il tavolo");
       return;
     }
 
@@ -333,6 +346,7 @@ export const AdminTables = () => {
   const totalTables = tables.length;
   const activeTables = tables.filter(t => t.is_active).length;
   const totalSeats = tables.reduce((sum, t) => sum + (t.is_active ? t.seats : 0), 0);
+  const tablesWithoutHours = tables.filter(t => !t.available_hours || t.available_hours.length === 0);
 
   if (isLoading) {
     return <div className="text-center py-12 text-muted-foreground">Caricamento...</div>;
@@ -348,6 +362,23 @@ export const AdminTables = () => {
           </p>
         </div>
       </div>
+
+      {/* Warning if tables without hours */}
+      {tablesWithoutHours.length > 0 && (
+        <Card className="p-4 border-orange-500/50 bg-orange-500/10">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-orange-500" />
+            <div>
+              <p className="font-medium text-orange-700">
+                {tablesWithoutHours.length} tavol{tablesWithoutHours.length === 1 ? 'o' : 'i'} senza orari configurati
+              </p>
+              <p className="text-sm text-muted-foreground">
+                I tavoli senza orari non saranno visibili ai clienti durante la prenotazione.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2 max-w-md">
@@ -397,67 +428,80 @@ export const AdminTables = () => {
             </Card>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {tables.map((table) => (
-                <motion.div
-                  key={table.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <Card className={`p-4 transition-all ${!table.is_active ? 'opacity-60 grayscale' : 'hover:shadow-lg'}`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium
-                        ${table.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
-                      >
-                        {table.is_active ? 'Attivo' : 'Disattivo'}
+              {tables.map((table) => {
+                const hasNoHours = !table.available_hours || table.available_hours.length === 0;
+                
+                return (
+                  <motion.div
+                    key={table.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <Card className={`p-4 transition-all ${!table.is_active ? 'opacity-60 grayscale' : 'hover:shadow-lg'} ${hasNoHours ? 'border-orange-500/50' : ''}`}>
+                      <div className="flex justify-between items-start mb-2">
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium
+                          ${table.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
+                        >
+                          {table.is_active ? 'Attivo' : 'Disattivo'}
+                        </div>
+                        <Switch
+                          checked={table.is_active ?? true}
+                          onCheckedChange={() => toggleActive(table)}
+                        />
                       </div>
-                      <Switch
-                        checked={table.is_active ?? true}
-                        onCheckedChange={() => toggleActive(table)}
-                      />
-                    </div>
 
-                    <TableVisual table={table} isActive={table.is_active ?? true} />
+                      <TableVisual table={table} isActive={table.is_active ?? true} />
 
-                    <div className="text-center mt-4">
-                      <h3 className="font-bold text-lg">Tavolo {table.table_number}</h3>
-                      <p className="text-muted-foreground flex items-center justify-center gap-1">
-                        <Users className="w-4 h-4" /> {table.seats} posti
-                      </p>
-                    </div>
+                      <div className="text-center mt-4">
+                        <h3 className="font-bold text-lg">Tavolo {table.table_number}</h3>
+                        <p className="text-muted-foreground flex items-center justify-center gap-1">
+                          <Users className="w-4 h-4" /> {table.seats} posti
+                        </p>
+                      </div>
 
-                    {/* Show available hours */}
-                    <div className="mt-3 flex flex-wrap gap-1 justify-center">
-                      {(table.available_hours || []).slice(0, 4).map(hour => (
-                        <Badge key={hour} variant="secondary" className="text-xs">
-                          {hour}
-                        </Badge>
-                      ))}
-                      {(table.available_hours || []).length > 4 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{(table.available_hours || []).length - 4}
-                        </Badge>
-                      )}
-                    </div>
+                      {/* Show available hours */}
+                      <div className="mt-3">
+                        {hasNoHours ? (
+                          <div className="flex items-center justify-center gap-1 text-orange-600 text-sm">
+                            <AlertCircle className="w-4 h-4" />
+                            <span>Nessun orario</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-1 justify-center">
+                            {(table.available_hours || []).slice(0, 4).map(hour => (
+                              <Badge key={hour} variant="secondary" className="text-xs">
+                                {hour}
+                              </Badge>
+                            ))}
+                            {(table.available_hours || []).length > 4 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{(table.available_hours || []).length - 4}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </div>
 
-                    <div className="flex gap-2 mt-4">
-                      <Button variant="outline" size="sm" className="flex-1" onClick={() => openDialog(table)}>
-                        <Pencil className="w-4 h-4 mr-1" /> Modifica
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(table.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
+                      <div className="flex gap-2 mt-4">
+                        <Button variant="outline" size="sm" className="flex-1" onClick={() => openDialog(table)}>
+                          <Pencil className="w-4 h-4 mr-1" /> Modifica
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(table.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </TabsContent>
 
-        {/* Settings Tab - Days and general settings */}
+        {/* Settings Tab */}
         <TabsContent value="schedule" className="space-y-6">
           <Card className="p-6">
-            <h3 className="text-lg font-bold mb-4">Giorni Disponibili</h3>
+            <h3 className="text-lg font-bold mb-4">Giorni Disponibili per Prenotazioni</h3>
             <p className="text-muted-foreground text-sm mb-4">
               Seleziona i giorni in cui accetti prenotazioni.
             </p>
@@ -486,48 +530,38 @@ export const AdminTables = () => {
           </Card>
 
           <Card className="p-6">
-            <h3 className="text-lg font-bold mb-4">Impostazioni Aggiuntive</h3>
+            <h3 className="text-lg font-bold mb-4">Altre Impostazioni</h3>
             
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Prenotazioni max per slot
-                </label>
+                <Label className="mb-2 block">Giorni prenotazione in anticipo</Label>
                 <Select
-                  value={reservationSettings.max_reservations_per_slot.toString()}
-                  onValueChange={(v) => setReservationSettings({
-                    ...reservationSettings,
-                    max_reservations_per_slot: parseInt(v)
-                  })}
+                  value={reservationSettings.advance_booking_days.toString()}
+                  onValueChange={(v) => setReservationSettings({ ...reservationSettings, advance_booking_days: parseInt(v) })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 8, 10, 15, 20].map(n => (
-                      <SelectItem key={n} value={n.toString()}>{n} prenotazioni</SelectItem>
+                    {[7, 14, 21, 30, 60].map(days => (
+                      <SelectItem key={days} value={days.toString()}>{days} giorni</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Giorni di anticipo max
-                </label>
+                <Label className="mb-2 block">Max prenotazioni per slot</Label>
                 <Select
-                  value={reservationSettings.advance_booking_days.toString()}
-                  onValueChange={(v) => setReservationSettings({
-                    ...reservationSettings,
-                    advance_booking_days: parseInt(v)
-                  })}
+                  value={reservationSettings.max_reservations_per_slot.toString()}
+                  onValueChange={(v) => setReservationSettings({ ...reservationSettings, max_reservations_per_slot: parseInt(v) })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[7, 14, 21, 30, 60, 90].map(n => (
-                      <SelectItem key={n} value={n.toString()}>{n} giorni</SelectItem>
+                    {[1, 2, 3, 5, 10, 15, 20].map(max => (
+                      <SelectItem key={max} value={max.toString()}>{max}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -537,110 +571,128 @@ export const AdminTables = () => {
 
           <div className="flex justify-end">
             <Button onClick={saveReservationSettings} disabled={isSavingSettings}>
-              <Save className="w-4 h-4 mr-2" />
               {isSavingSettings ? "Salvataggio..." : "Salva Impostazioni"}
             </Button>
           </div>
         </TabsContent>
       </Tabs>
 
-      {/* Add/Edit Table Dialog - Now includes available hours */}
+      {/* Add/Edit Table Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingTable ? "Modifica Tavolo" : "Nuovo Tavolo"}</DialogTitle>
+            <DialogDescription>
+              {editingTable 
+                ? "Modifica le informazioni del tavolo e gli orari disponibili."
+                : "Configura il nuovo tavolo con numero, posti e orari disponibili."}
+            </DialogDescription>
           </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="bg-muted/50 rounded-lg p-4">
-              <TableVisual 
-                table={{ 
-                  id: "preview", 
-                  table_number: parseInt(formData.table_number) || 1, 
-                  seats: parseInt(formData.seats) || 4,
-                  is_active: formData.is_active,
-                  available_hours: formData.available_hours,
-                  created_at: "",
-                  updated_at: ""
-                }} 
-                isActive={formData.is_active} 
-              />
+          
+          <div className="space-y-6 py-4">
+            {/* Basic Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="mb-2 block">Numero Tavolo *</Label>
+                <Input
+                  type="number"
+                  value={formData.table_number}
+                  onChange={(e) => setFormData({ ...formData, table_number: e.target.value })}
+                  placeholder="1"
+                />
+              </div>
+              <div>
+                <Label className="mb-2 block">Numero Posti *</Label>
+                <Select
+                  value={formData.seats}
+                  onValueChange={(v) => setFormData({ ...formData, seats: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[2, 4, 6, 8, 10, 12].map(seats => (
+                      <SelectItem key={seats} value={seats.toString()}>{seats} posti</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
+            {/* Available Hours - REQUIRED */}
             <div>
-              <label className="text-sm font-medium mb-1 block">Numero Tavolo *</label>
-              <Input
-                type="number"
-                value={formData.table_number}
-                onChange={(e) => setFormData({ ...formData, table_number: e.target.value })}
-                placeholder="1"
-              />
-            </div>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-primary" />
+                  Orari Disponibili *
+                </Label>
+                <span className="text-sm text-muted-foreground">
+                  {formData.available_hours.length} selezionati
+                </span>
+              </div>
+              
+              {/* Quick select buttons */}
+              <div className="flex gap-2 mb-3">
+                <Button type="button" variant="outline" size="sm" onClick={() => selectAllHours('lunch')}>
+                  Pranzo
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => selectAllHours('dinner')}>
+                  Cena
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => selectAllHours('all')}>
+                  Tutti
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => selectAllHours('none')}>
+                  Nessuno
+                </Button>
+              </div>
 
-            <div>
-              <label className="text-sm font-medium mb-1 block">Numero Posti *</label>
-              <Select 
-                value={formData.seats} 
-                onValueChange={(v) => setFormData({ ...formData, seats: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2">2 posti (piccolo)</SelectItem>
-                  <SelectItem value="4">4 posti (standard)</SelectItem>
-                  <SelectItem value="6">6 posti (grande)</SelectItem>
-                  <SelectItem value="8">8 posti (extra large)</SelectItem>
-                  <SelectItem value="10">10 posti (tavolo lungo)</SelectItem>
-                  <SelectItem value="12">12 posti (tavolata)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Available Hours Selection */}
-            <div>
-              <label className="text-sm font-medium mb-2 block flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary" />
-                Orari Disponibili per Prenotazione *
-              </label>
-              <p className="text-xs text-muted-foreground mb-3">
-                Seleziona gli orari in cui questo tavolo può essere prenotato.
-              </p>
-              <div className="grid grid-cols-4 gap-2">
-                {ALL_TIME_SLOTS.map((hour) => (
-                  <Button
+              <div className="grid grid-cols-4 gap-2 p-3 bg-muted/50 rounded-lg">
+                {ALL_TIME_SLOTS.map(hour => (
+                  <div
                     key={hour}
-                    type="button"
-                    variant={formData.available_hours.includes(hour) ? "default" : "outline"}
-                    size="sm"
+                    className={`p-2 text-center rounded cursor-pointer transition-all text-sm font-medium ${
+                      formData.available_hours.includes(hour)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background hover:bg-muted'
+                    }`}
                     onClick={() => toggleFormHour(hour)}
-                    className="text-xs"
                   >
                     {hour}
-                  </Button>
+                  </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {formData.available_hours.length} orari selezionati
-              </p>
+              
+              {formData.available_hours.length === 0 && (
+                <p className="text-sm text-destructive mt-2 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  Seleziona almeno un orario
+                </p>
+              )}
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Attivo</label>
+            {/* Active Status */}
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div>
+                <Label>Tavolo Attivo</Label>
+                <p className="text-sm text-muted-foreground">
+                  I tavoli disattivi non sono prenotabili
+                </p>
+              </div>
               <Switch
                 checked={formData.is_active}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
               />
             </div>
+          </div>
 
-            <div className="flex gap-2 justify-end pt-4">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                <X className="w-4 h-4 mr-2" /> Annulla
-              </Button>
-              <Button onClick={handleSave}>
-                <Save className="w-4 h-4 mr-2" /> Salva
-              </Button>
-            </div>
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Annulla
+            </Button>
+            <Button onClick={handleSave}>
+              {editingTable ? "Salva Modifiche" : "Crea Tavolo"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
