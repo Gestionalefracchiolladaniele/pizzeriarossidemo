@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, MapPin, Clock, Trash2, Plus, Minus, Check, Bike, Store } from "lucide-react";
+import { ShoppingCart, MapPin, Clock, Trash2, Plus, Minus, Check, Bike, Store, User } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useCart, MenuItem } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface MenuCategory {
   id: string;
@@ -41,7 +42,6 @@ const Ordina = () => {
   const { user } = useAuth();
   const [step, setStep] = useState<"menu" | "checkout" | "confirmed">("menu");
   const [activeCategory, setActiveCategory] = useState("");
-  const [orderCode, setOrderCode] = useState("");
   const [orderNumber, setOrderNumber] = useState<number | null>(null);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -126,6 +126,29 @@ const Ordina = () => {
 
   const handleConfirmOrder = async () => {
     if (isSubmitting) return;
+    
+    // Validate required fields
+    if (!customerName.trim()) {
+      toast.error("Inserisci il tuo nome");
+      return;
+    }
+    if (!customerPhone.trim()) {
+      toast.error("Inserisci il tuo telefono");
+      return;
+    }
+    if (!customerEmail.trim()) {
+      toast.error("Inserisci la tua email");
+      return;
+    }
+    if (cart.deliveryType === "delivery" && !deliveryAddress.trim()) {
+      toast.error("Inserisci l'indirizzo di consegna");
+      return;
+    }
+    if (cart.deliveryType === "takeaway" && !cart.pickupTime) {
+      toast.error("Seleziona un orario di ritiro");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const deliveryFee = cart.deliveryType === "delivery" ? 2.50 : 0;
@@ -146,7 +169,7 @@ const Ordina = () => {
         .insert({
           user_id: user?.id || null,
           customer_name: customerName,
-          customer_email: customerEmail || `${Date.now()}@guest.pizzeria.com`,
+          customer_email: customerEmail,
           customer_phone: customerPhone,
           delivery_type: cart.deliveryType,
           delivery_address: cart.deliveryType === "delivery" ? deliveryAddress : null,
@@ -169,7 +192,6 @@ const Ordina = () => {
       }
 
       setOrderNumber(data.order_number);
-      setOrderCode(`ORD${data.order_number}`);
       setStep("confirmed");
       clearCart();
       toast.success("Ordine inviato con successo!");
@@ -211,42 +233,17 @@ const Ordina = () => {
               </p>
             </Card>
             
-            <Button variant="outline" onClick={() => window.location.href = "/"}>
-              Torna alla Home
-            </Button>
-          </motion.div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  // If user not logged in, show login prompt
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="pt-24 pb-16">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="container mx-auto px-4 text-center max-w-lg"
-          >
-            <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShoppingCart className="w-10 h-10 text-primary" />
-            </div>
-            
-            <h1 className="text-3xl font-bold mb-4">Accedi per ordinare</h1>
-            <p className="text-muted-foreground mb-6">
-              Per effettuare un ordine devi prima accedere al tuo account o registrarti.
-            </p>
-            
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" onClick={() => window.location.href = "/auth"}>
-                Accedi
-              </Button>
-              <Button variant="outline" size="lg" onClick={() => window.location.href = "/menu"}>
-                Sfoglia il Menu
+              {user && (
+                <Link to="/profilo">
+                  <Button variant="outline">
+                    <User className="w-4 h-4 mr-2" />
+                    Vedi nel Profilo
+                  </Button>
+                </Link>
+              )}
+              <Button variant="outline" onClick={() => window.location.href = "/"}>
+                Torna alla Home
               </Button>
             </div>
           </motion.div>
@@ -288,6 +285,16 @@ const Ordina = () => {
             <p className="text-muted-foreground text-lg">
               Asporto o consegna a domicilio. Scegli dal nostro menu e ordina in pochi click.
             </p>
+            
+            {/* Info banner for non-logged users */}
+            {!user && (
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg inline-flex items-center gap-2 text-sm">
+                <User className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">
+                  <Link to="/auth" className="text-primary hover:underline font-medium">Accedi</Link> per salvare i tuoi ordini nel profilo
+                </span>
+              </div>
+            )}
           </motion.div>
         </div>
       </section>
@@ -469,6 +476,7 @@ const Ordina = () => {
                     placeholder="Email *"
                   />
                   <Input
+                    type="tel"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="Telefono *"
@@ -477,63 +485,79 @@ const Ordina = () => {
                     value={orderNotes}
                     onChange={(e) => setOrderNotes(e.target.value)}
                     placeholder="Note per l'ordine (opzionale)"
-                    rows={2}
+                    rows={3}
                   />
                 </Card>
 
-                <Card className="p-4 bg-muted/50">
-                  <p className="text-sm text-muted-foreground text-center">
-                    💳 Pagamento alla consegna o al ritiro (contanti o carta)
-                  </p>
-                </Card>
+                <Button
+                  size="lg"
+                  className="w-full"
+                  onClick={handleConfirmOrder}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Invio in corso..." : `Conferma Ordine - €${finalTotal.toFixed(2)}`}
+                </Button>
               </motion.div>
             )}
           </div>
 
           {/* Cart Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="p-4 sticky top-24">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+            <Card className="p-6 sticky top-24">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
                 Il Tuo Ordine
-              </h3>
-              
+              </h2>
+
               {cart.items.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  Il carrello è vuoto
-                </p>
+                <div className="text-center py-8 text-muted-foreground">
+                  <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Il carrello è vuoto</p>
+                  <p className="text-sm">Aggiungi qualcosa dal menu</p>
+                </div>
               ) : (
                 <>
-                  <div className="space-y-3 max-h-[40vh] overflow-auto">
+                  <div className="space-y-3 mb-4 max-h-80 overflow-y-auto">
                     {cart.items.map((item) => (
-                      <div key={item.menuItem.id} className="flex items-center gap-3 p-2 bg-secondary/30 rounded-lg">
-                        <img
-                          src={item.menuItem.image}
-                          alt={item.menuItem.name}
-                          className="w-12 h-12 object-cover rounded"
-                        />
+                      <div key={item.menuItem.id} className="flex items-center justify-between gap-2 pb-3 border-b">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{item.menuItem.name}</p>
                           <p className="text-xs text-muted-foreground">
                             €{item.menuItem.price.toFixed(2)} × {item.quantity}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-sm">
-                            €{(item.menuItem.price * item.quantity).toFixed(2)}
-                          </p>
-                          <button
-                            onClick={() => removeItem(item.menuItem.id)}
-                            className="text-destructive hover:underline text-xs"
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => updateQuantity(item.menuItem.id, item.quantity - 1)}
                           >
-                            Rimuovi
-                          </button>
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="w-6 text-center text-sm">{item.quantity}</span>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => updateQuantity(item.menuItem.id, item.quantity + 1)}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive"
+                            onClick={() => removeItem(item.menuItem.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  
-                  <div className="border-t mt-4 pt-4 space-y-2">
+
+                  <div className="space-y-2 pt-4 border-t">
                     <div className="flex justify-between text-sm">
                       <span>Subtotale</span>
                       <span>€{totalPrice.toFixed(2)}</span>
@@ -541,38 +565,23 @@ const Ordina = () => {
                     {cart.deliveryType === "delivery" && (
                       <div className="flex justify-between text-sm">
                         <span>Consegna</span>
-                        <span>€{deliveryFee.toFixed(2)}</span>
+                        <span>€2.50</span>
                       </div>
                     )}
-                    <div className="flex justify-between font-bold text-lg border-t pt-2">
+                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
                       <span>Totale</span>
                       <span className="text-primary">€{finalTotal.toFixed(2)}</span>
                     </div>
                   </div>
-                  
-                  {step === "menu" ? (
+
+                  {step === "menu" && (
                     <Button
-                      className="w-full mt-4"
+                      className="w-full mt-6"
                       size="lg"
                       onClick={() => setStep("checkout")}
                       disabled={totalItems === 0}
                     >
                       Procedi al Checkout
-                    </Button>
-                  ) : (
-                    <Button
-                      className="w-full mt-4"
-                      size="lg"
-                      onClick={handleConfirmOrder}
-                      disabled={
-                        isSubmitting ||
-                        !customerName || !customerPhone || !customerEmail ||
-                        (cart.deliveryType === "takeaway" && !cart.pickupTime) ||
-                        (cart.deliveryType === "delivery" && !deliveryAddress)
-                      }
-                    >
-                      <Check className="w-4 h-4 mr-2" />
-                      {isSubmitting ? "Invio in corso..." : "Conferma Ordine"}
                     </Button>
                   )}
                 </>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, Users, Check, User, AlertCircle, SquareStack } from "lucide-react";
+import { Calendar, Users, Check, User, AlertCircle, SquareStack, Clock } from "lucide-react";
 import { format, addDays, isSameDay, getDay } from "date-fns";
 import { it } from "date-fns/locale";
 import Navbar from "@/components/landing/Navbar";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface RestaurantTableWithHours {
   id: string;
@@ -25,7 +26,6 @@ interface RestaurantTableWithHours {
 }
 
 interface ReservationSettings {
-  time_slots: string[];
   days_available: {
     monday: boolean;
     tuesday: boolean;
@@ -35,12 +35,11 @@ interface ReservationSettings {
     saturday: boolean;
     sunday: boolean;
   };
-  max_reservations_per_slot: number;
   advance_booking_days: number;
 }
 
-interface TableAvailability {
-  [tableId: string]: boolean; // true = available, false = booked
+interface TableWithAvailability extends RestaurantTableWithHours {
+  availableSlots: string[]; // Hours still available for this table on selected date
 }
 
 const DAY_KEYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
@@ -49,9 +48,9 @@ const peopleOptions = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12];
 
 interface BookingData {
   date: Date | null;
-  time: string;
   people: number;
   tableId: string;
+  selectedTime: string;
   name: string;
   phone: string;
   email: string;
@@ -59,24 +58,23 @@ interface BookingData {
 }
 
 const DEFAULT_SETTINGS: ReservationSettings = {
-  time_slots: ["18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"],
   days_available: {
     monday: true, tuesday: true, wednesday: true, thursday: true,
     friday: true, saturday: true, sunday: false,
   },
-  max_reservations_per_slot: 5,
   advance_booking_days: 14,
 };
 
 // Visual table representation for selection
-const TableVisual = ({ table, isSelected, isAvailable, onClick }: { 
+const TableVisual = ({ table, isSelected, availableSlots, onClick }: { 
   table: RestaurantTableWithHours; 
   isSelected: boolean;
-  isAvailable: boolean;
+  availableSlots: string[];
   onClick: () => void;
 }) => {
   const seats = table.seats;
   const tableNumber = table.table_number;
+  const hasSlots = availableSlots.length > 0;
   
   const getSeatPositions = () => {
     const positions: { top?: string; bottom?: string; left?: string; right?: string; transform?: string }[] = [];
@@ -118,33 +116,45 @@ const TableVisual = ({ table, isSelected, isAvailable, onClick }: {
   
   return (
     <motion.div
-      className={`relative w-20 h-20 mx-auto cursor-pointer transition-all ${
-        !isAvailable ? 'opacity-40 cursor-not-allowed' : ''
+      className={`relative cursor-pointer transition-all ${
+        !hasSlots ? 'opacity-40 cursor-not-allowed' : ''
       }`}
-      onClick={isAvailable ? onClick : undefined}
-      whileHover={isAvailable ? { scale: 1.1 } : undefined}
-      whileTap={isAvailable ? { scale: 0.95 } : undefined}
+      onClick={hasSlots ? onClick : undefined}
+      whileHover={hasSlots ? { scale: 1.05 } : undefined}
+      whileTap={hasSlots ? { scale: 0.95 } : undefined}
     >
-      {/* Table surface */}
-      <div
-        className={`absolute inset-2 ${isRound ? 'rounded-full' : 'rounded-lg'} 
-          ${isSelected ? 'bg-primary ring-4 ring-primary/30' : isAvailable ? 'bg-gradient-to-br from-amber-600 to-amber-800' : 'bg-muted'} 
-          shadow-lg flex items-center justify-center border-4 ${isSelected ? 'border-primary-foreground/30' : 'border-amber-900/30'}`}
-      >
-        <span className={`text-sm font-bold ${isSelected || isAvailable ? 'text-white' : 'text-muted-foreground'}`}>
-          {tableNumber}
-        </span>
+      <div className="w-24 h-24 mx-auto relative">
+        {/* Table surface */}
+        <div
+          className={`absolute inset-2 ${isRound ? 'rounded-full' : 'rounded-lg'} 
+            ${isSelected ? 'bg-primary ring-4 ring-primary/30' : hasSlots ? 'bg-gradient-to-br from-amber-600 to-amber-800' : 'bg-muted'} 
+            shadow-lg flex items-center justify-center border-4 ${isSelected ? 'border-primary-foreground/30' : 'border-amber-900/30'}`}
+        >
+          <span className={`text-lg font-bold ${isSelected || hasSlots ? 'text-white' : 'text-muted-foreground'}`}>
+            {tableNumber}
+          </span>
+        </div>
+        
+        {/* Seats */}
+        {seatPositions.slice(0, seats).map((pos, idx) => (
+          <div
+            key={idx}
+            className={`absolute w-3 h-3 rounded-full shadow-sm
+              ${isSelected ? 'bg-primary' : hasSlots ? 'bg-gradient-to-br from-gray-600 to-gray-800' : 'bg-gray-400'}`}
+            style={pos}
+          />
+        ))}
       </div>
       
-      {/* Seats */}
-      {seatPositions.slice(0, seats).map((pos, idx) => (
-        <div
-          key={idx}
-          className={`absolute w-3 h-3 rounded-full shadow-sm
-            ${isSelected ? 'bg-primary' : isAvailable ? 'bg-gradient-to-br from-gray-600 to-gray-800' : 'bg-gray-400'}`}
-          style={pos}
-        />
-      ))}
+      {/* Info below table */}
+      <div className="text-center mt-2">
+        <p className="text-sm font-medium">{seats} posti</p>
+        {hasSlots ? (
+          <p className="text-xs text-muted-foreground">{availableSlots.length} orari</p>
+        ) : (
+          <p className="text-xs text-destructive">Non disponibile</p>
+        )}
+      </div>
     </motion.div>
   );
 };
@@ -155,9 +165,9 @@ const Prenota = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [booking, setBooking] = useState<BookingData>({
     date: null,
-    time: "",
     people: 2,
     tableId: "",
+    selectedTime: "",
     name: "",
     phone: "",
     email: "",
@@ -167,7 +177,7 @@ const Prenota = () => {
   const [settings, setSettings] = useState<ReservationSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [tables, setTables] = useState<RestaurantTableWithHours[]>([]);
-  const [tableAvailability, setTableAvailability] = useState<TableAvailability>({});
+  const [bookedSlots, setBookedSlots] = useState<Map<string, Set<string>>>(new Map()); // tableId -> Set of booked times
 
   useEffect(() => {
     fetchSettings();
@@ -185,12 +195,12 @@ const Prenota = () => {
     }
   }, [user]);
 
-  // Fetch table availability when date, time and people are selected
+  // Fetch booked slots when date is selected
   useEffect(() => {
-    if (booking.date && booking.time && booking.people > 0) {
-      fetchTableAvailability(booking.date, booking.time);
+    if (booking.date) {
+      fetchBookedSlots(booking.date);
     }
-  }, [booking.date, booking.time, booking.people]);
+  }, [booking.date]);
 
   const fetchSettings = async () => {
     setIsLoading(true);
@@ -207,7 +217,7 @@ const Prenota = () => {
     }
 
     if (data?.reservation_settings) {
-      const fetched = data.reservation_settings as unknown as ReservationSettings;
+      const fetched = data.reservation_settings as any;
       setSettings({
         ...DEFAULT_SETTINGS,
         ...fetched,
@@ -235,35 +245,33 @@ const Prenota = () => {
     setTables((data || []) as RestaurantTableWithHours[]);
   };
 
-  const fetchTableAvailability = async (date: Date, time: string) => {
+  const fetchBookedSlots = async (date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd");
     
     const { data, error } = await supabase
       .from("reservations")
-      .select("table_id")
+      .select("table_id, reservation_time")
       .eq("reservation_date", dateStr)
-      .eq("reservation_time", time)
       .neq("status", "cancelled")
       .not("table_id", "is", null);
 
     if (error) {
-      console.error("Error fetching table reservations:", error);
+      console.error("Error fetching reservations:", error);
       return;
     }
 
-    const bookedTableIds = new Set((data || []).map(r => r.table_id));
-    
-    const availability: TableAvailability = {};
-    tables.forEach(table => {
-      // Table is available if:
-      // 1. Not booked for this date/time
-      // 2. Has enough seats for the party
-      // 3. Has this time in its available_hours
-      const hasTime = (table.available_hours || []).includes(time);
-      availability[table.id] = !bookedTableIds.has(table.id) && table.seats >= booking.people && hasTime;
+    // Group booked times by table
+    const booked = new Map<string, Set<string>>();
+    (data || []).forEach(r => {
+      if (!booked.has(r.table_id!)) {
+        booked.set(r.table_id!, new Set());
+      }
+      // Normalize time format (remove seconds if present)
+      const time = r.reservation_time.slice(0, 5);
+      booked.get(r.table_id!)!.add(time);
     });
-
-    setTableAvailability(availability);
+    
+    setBookedSlots(booked);
   };
 
   const isDayAvailable = (date: Date) => {
@@ -275,32 +283,42 @@ const Prenota = () => {
   const dates = Array.from({ length: settings.advance_booking_days }, (_, i) => addDays(new Date(), i + 1))
     .filter(isDayAvailable);
 
-  // Calculate available time slots based on tables that can accommodate the party size
-  const availableTimeSlots = useMemo(() => {
-    // Get tables that have enough seats for the party
-    const suitableTables = tables.filter(t => t.seats >= booking.people);
+  // Calculate available tables with their available time slots
+  const tablesWithAvailability: TableWithAvailability[] = useMemo(() => {
+    if (!booking.date) return [];
     
-    if (suitableTables.length === 0) return [];
-    
-    // Get union of all available hours from suitable tables
-    const allHours = new Set<string>();
-    suitableTables.forEach(table => {
-      (table.available_hours || []).forEach(hour => allHours.add(hour));
-    });
-    
-    // Sort and return
-    return Array.from(allHours).sort();
-  }, [tables, booking.people]);
+    return tables
+      .filter(t => t.seats >= booking.people) // Only tables with enough seats
+      .map(table => {
+        const tableBookedTimes = bookedSlots.get(table.id) || new Set();
+        const tableHours = table.available_hours || [];
+        
+        // Available slots = table's hours minus already booked
+        const availableSlots = tableHours.filter(hour => !tableBookedTimes.has(hour));
+        
+        return {
+          ...table,
+          availableSlots,
+        };
+      })
+      .sort((a, b) => {
+        // Sort: available first, then by seats ascending
+        if (a.availableSlots.length > 0 && b.availableSlots.length === 0) return -1;
+        if (a.availableSlots.length === 0 && b.availableSlots.length > 0) return 1;
+        return a.seats - b.seats;
+      });
+  }, [tables, booking.date, booking.people, bookedSlots]);
 
-  // Filter tables suitable for the number of people AND have the selected time
-  const suitableTables = tables.filter(t => 
-    t.seats >= booking.people && 
-    (t.available_hours || []).includes(booking.time)
-  );
-  const availableTables = suitableTables.filter(t => tableAvailability[t.id]);
+  const selectedTableData = tablesWithAvailability.find(t => t.id === booking.tableId);
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
+    
+    if (!booking.name.trim() || !booking.phone.trim()) {
+      toast.error("Inserisci nome e telefono");
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -312,7 +330,7 @@ const Prenota = () => {
           guest_email: booking.email || `${Date.now()}@guest.pizzeria.com`,
           guest_phone: booking.phone,
           reservation_date: booking.date ? format(booking.date, "yyyy-MM-dd") : "",
-          reservation_time: booking.time,
+          reservation_time: booking.selectedTime,
           guests_count: booking.people,
           table_id: booking.tableId || null,
           notes: booking.notes || null,
@@ -342,8 +360,8 @@ const Prenota = () => {
 
   const canProceed = () => {
     switch (step) {
-      case 1: return booking.people > 0 && booking.date !== null && booking.time !== "";
-      case 2: return booking.tableId !== "" || availableTables.length === 0;
+      case 1: return booking.people > 0 && booking.date !== null;
+      case 2: return booking.tableId !== "" && booking.selectedTime !== "";
       case 3: return booking.name && booking.phone;
       default: return false;
     }
@@ -388,15 +406,15 @@ const Prenota = () => {
       </section>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Progress Steps - simplified to 4 steps */}
+        {/* Progress Steps */}
         {step < 5 && (
           <div className="flex justify-between mb-12 relative">
             <div className="absolute top-5 left-0 right-0 h-0.5 bg-border -z-10" />
             {[
-              { num: 1, icon: Users, label: "Dettagli" },
+              { num: 1, icon: Calendar, label: "Data" },
               { num: 2, icon: SquareStack, label: "Tavolo" },
               { num: 3, icon: User, label: "Dati" },
-              { num: 4, icon: Check, label: "Riepilogo" },
+              { num: 4, icon: Check, label: "Conferma" },
             ].map((s) => (
               <div key={s.num} className="flex flex-col items-center">
                 <div
@@ -416,7 +434,7 @@ const Prenota = () => {
           </div>
         )}
 
-        {/* Step 1: People, Date & Time Selection - All in one */}
+        {/* Step 1: People & Date */}
         {step === 1 && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -436,7 +454,7 @@ const Prenota = () => {
                     variant={booking.people === num ? "default" : "outline"}
                     size="lg"
                     className="w-14 h-14 text-lg font-bold"
-                    onClick={() => setBooking({ ...booking, people: num, tableId: "", time: "" })}
+                    onClick={() => setBooking({ ...booking, people: num, tableId: "", selectedTime: "" })}
                   >
                     {num}
                   </Button>
@@ -467,7 +485,7 @@ const Prenota = () => {
                           ? "border-primary bg-primary/10"
                           : ""
                       }`}
-                      onClick={() => setBooking({ ...booking, date, tableId: "", time: "" })}
+                      onClick={() => setBooking({ ...booking, date, tableId: "", selectedTime: "" })}
                     >
                       <div className="text-xs text-muted-foreground uppercase">
                         {format(date, "EEE", { locale: it })}
@@ -482,173 +500,171 @@ const Prenota = () => {
               )}
             </div>
 
-            {/* Time Selection - filtered based on table availability */}
-            {booking.date && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+            <div className="flex justify-center pt-4">
+              <Button
+                size="lg"
+                onClick={() => setStep(2)}
+                disabled={!canProceed()}
               >
-                <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
-                  <Clock className="w-6 h-6 text-primary" />
-                  A che ora?
-                </h2>
-                {availableTimeSlots.length === 0 ? (
-                  <Card className="p-6 text-center">
-                    <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">
-                      Nessun orario disponibile per {booking.people} persone.
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Prova a selezionare un numero diverso di persone.
-                    </p>
-                  </Card>
-                ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 max-w-xl mx-auto">
-                    {availableTimeSlots.map((time) => (
-                      <Button
-                        key={time}
-                        variant={booking.time === time ? "default" : "outline"}
-                        size="lg"
-                        onClick={() => setBooking({ ...booking, time, tableId: "" })}
-                        className="text-lg"
-                      >
-                        {time}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            )}
+                Continua
+              </Button>
+            </div>
           </motion.div>
         )}
 
-        {/* Step 2: Table Selection */}
+        {/* Step 2: Table & Time Selection */}
         {step === 2 && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-8"
+          >
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" onClick={() => setStep(1)}>
+                ← Indietro
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                {booking.people} {booking.people === 1 ? "persona" : "persone"} • {booking.date && format(booking.date, "d MMMM", { locale: it })}
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-bold text-center flex items-center justify-center gap-2">
+              <SquareStack className="w-6 h-6 text-primary" />
+              Scegli il tuo tavolo
+            </h2>
+
+            {tablesWithAvailability.length === 0 ? (
+              <Card className="p-8 text-center">
+                <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-4">
+                  Nessun tavolo disponibile per {booking.people} persone in questa data.
+                </p>
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  Prova un'altra data
+                </Button>
+              </Card>
+            ) : (
+              <>
+                {/* Tables Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                  {tablesWithAvailability.map((table) => (
+                    <TableVisual
+                      key={table.id}
+                      table={table}
+                      isSelected={booking.tableId === table.id}
+                      availableSlots={table.availableSlots}
+                      onClick={() => setBooking({ ...booking, tableId: table.id, selectedTime: "" })}
+                    />
+                  ))}
+                </div>
+
+                {/* Time Selection - shown after table is selected */}
+                {booking.tableId && selectedTableData && selectedTableData.availableSlots.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-8"
+                  >
+                    <h3 className="text-xl font-bold text-center mb-4 flex items-center justify-center gap-2">
+                      <Clock className="w-5 h-5 text-primary" />
+                      Scegli l'orario per Tavolo {selectedTable?.table_number}
+                    </h3>
+                    <div className="flex flex-wrap justify-center gap-3">
+                      {selectedTableData.availableSlots.map((time) => (
+                        <Button
+                          key={time}
+                          variant={booking.selectedTime === time ? "default" : "outline"}
+                          size="lg"
+                          onClick={() => setBooking({ ...booking, selectedTime: time })}
+                        >
+                          {time}
+                        </Button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </>
+            )}
+
+            <div className="flex justify-center pt-4">
+              <Button
+                size="lg"
+                onClick={() => setStep(3)}
+                disabled={!canProceed()}
+              >
+                Continua
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 3: Personal Data */}
+        {step === 3 && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-2">Seleziona il tavolo</h2>
-              <p className="text-muted-foreground">
-                {format(booking.date!, "EEEE d MMMM", { locale: it })} alle {booking.time} • {booking.people} {booking.people === 1 ? 'persona' : 'persone'}
-              </p>
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" onClick={() => setStep(2)}>
+                ← Indietro
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                Tavolo {selectedTable?.table_number} • {booking.selectedTime}
+              </div>
             </div>
 
-            {suitableTables.length === 0 ? (
-              <Card className="p-8 text-center">
-                <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-2">
-                  Nessun tavolo disponibile per {booking.people} persone alle {booking.time}.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Prova a selezionare un orario diverso.
-                </p>
-                <Button variant="outline" className="mt-4" onClick={() => setStep(1)}>
-                  Cambia orario
-                </Button>
-              </Card>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                  {suitableTables.map((table) => {
-                    const isAvailable = tableAvailability[table.id] ?? false;
-                    const isSelected = booking.tableId === table.id;
+            <h2 className="text-2xl font-bold text-center flex items-center justify-center gap-2">
+              <User className="w-6 h-6 text-primary" />
+              I tuoi dati
+            </h2>
 
-                    return (
-                      <Card
-                        key={table.id}
-                        className={`p-4 transition-all ${
-                          isSelected
-                            ? "border-primary bg-primary/5 ring-2 ring-primary"
-                            : isAvailable
-                            ? "hover:border-primary cursor-pointer"
-                            : "opacity-50"
-                        }`}
-                      >
-                        <TableVisual
-                          table={table}
-                          isSelected={isSelected}
-                          isAvailable={isAvailable}
-                          onClick={() => setBooking({ ...booking, tableId: table.id })}
-                        />
-                        <div className="text-center mt-3">
-                          <p className="font-semibold">Tavolo {table.table_number}</p>
-                          <p className="text-sm text-muted-foreground">{table.seats} posti</p>
-                          {!isAvailable && (
-                            <Badge variant="secondary" className="mt-1 text-xs">
-                              Occupato
-                            </Badge>
-                          )}
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-
-                {availableTables.length === 0 && suitableTables.length > 0 && (
-                  <Card className="p-4 bg-muted/50 text-center">
-                    <p className="text-muted-foreground">
-                      Tutti i tavoli per {booking.people} persone sono già prenotati alle {booking.time}.
-                    </p>
-                    <Button variant="link" onClick={() => setStep(1)}>
-                      Scegli un altro orario
-                    </Button>
-                  </Card>
-                )}
-              </>
-            )}
-          </motion.div>
-        )}
-
-        {/* Step 3: Personal Info */}
-        {step === 3 && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6 max-w-md mx-auto"
-          >
-            <h2 className="text-2xl font-bold text-center mb-8">I tuoi dati</h2>
-
-            <div className="space-y-4">
+            <Card className="p-6 space-y-4 max-w-md mx-auto">
               <div>
-                <label className="text-sm font-medium mb-1 block">Nome e Cognome *</label>
+                <label className="text-sm font-medium mb-1 block">Nome *</label>
                 <Input
                   value={booking.name}
                   onChange={(e) => setBooking({ ...booking, name: e.target.value })}
                   placeholder="Mario Rossi"
                 />
               </div>
-
               <div>
                 <label className="text-sm font-medium mb-1 block">Telefono *</label>
                 <Input
+                  type="tel"
                   value={booking.phone}
                   onChange={(e) => setBooking({ ...booking, phone: e.target.value })}
                   placeholder="+39 333 1234567"
                 />
               </div>
-
               <div>
                 <label className="text-sm font-medium mb-1 block">Email</label>
                 <Input
                   type="email"
                   value={booking.email}
                   onChange={(e) => setBooking({ ...booking, email: e.target.value })}
-                  placeholder="mario@email.com"
+                  placeholder="mario@example.com"
                 />
               </div>
-
               <div>
                 <label className="text-sm font-medium mb-1 block">Note (opzionale)</label>
                 <Textarea
                   value={booking.notes}
                   onChange={(e) => setBooking({ ...booking, notes: e.target.value })}
-                  placeholder="Allergie, richieste speciali..."
+                  placeholder="Es. seggiolone, allergie, occasione speciale..."
                   rows={3}
                 />
               </div>
+            </Card>
+
+            <div className="flex justify-center pt-4">
+              <Button
+                size="lg"
+                onClick={() => setStep(4)}
+                disabled={!canProceed()}
+              >
+                Continua
+              </Button>
             </div>
           </motion.div>
         )}
@@ -658,123 +674,108 @@ const Prenota = () => {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="space-y-6 max-w-md mx-auto"
+            className="space-y-6"
           >
-            <h2 className="text-2xl font-bold text-center mb-8">Riepilogo Prenotazione</h2>
+            <Button variant="ghost" onClick={() => setStep(3)}>
+              ← Indietro
+            </Button>
 
-            <Card className="p-6 space-y-4">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Data</span>
-                <span className="font-semibold">
-                  {booking.date && format(booking.date, "EEEE d MMMM yyyy", { locale: it })}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Orario</span>
-                <span className="font-semibold">{booking.time}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Persone</span>
-                <span className="font-semibold">{booking.people}</span>
-              </div>
-              {selectedTable && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tavolo</span>
-                  <span className="font-semibold">
-                    Tavolo {selectedTable.table_number} ({selectedTable.seats} posti)
+            <h2 className="text-2xl font-bold text-center flex items-center justify-center gap-2">
+              <Check className="w-6 h-6 text-primary" />
+              Riepilogo Prenotazione
+            </h2>
+
+            <Card className="p-6 max-w-md mx-auto">
+              <div className="space-y-4">
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-muted-foreground">Data</span>
+                  <span className="font-medium">
+                    {booking.date && format(booking.date, "EEEE d MMMM yyyy", { locale: it })}
                   </span>
                 </div>
-              )}
-              <div className="border-t pt-4">
-                <div className="flex justify-between">
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-muted-foreground">Orario</span>
+                  <span className="font-medium">{booking.selectedTime}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-muted-foreground">Persone</span>
+                  <span className="font-medium">{booking.people}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-muted-foreground">Tavolo</span>
+                  <span className="font-medium">N° {selectedTable?.table_number} ({selectedTable?.seats} posti)</span>
+                </div>
+                <div className="flex justify-between py-2 border-b">
                   <span className="text-muted-foreground">Nome</span>
-                  <span className="font-semibold">{booking.name}</span>
+                  <span className="font-medium">{booking.name}</span>
                 </div>
-                <div className="flex justify-between mt-2">
+                <div className="flex justify-between py-2 border-b">
                   <span className="text-muted-foreground">Telefono</span>
-                  <span className="font-semibold">{booking.phone}</span>
+                  <span className="font-medium">{booking.phone}</span>
                 </div>
-                {booking.email && (
-                  <div className="flex justify-between mt-2">
-                    <span className="text-muted-foreground">Email</span>
-                    <span className="font-semibold">{booking.email}</span>
-                  </div>
-                )}
                 {booking.notes && (
-                  <div className="mt-2">
-                    <span className="text-muted-foreground">Note:</span>
-                    <p className="text-sm mt-1 italic">"{booking.notes}"</p>
+                  <div className="py-2">
+                    <span className="text-muted-foreground block mb-1">Note</span>
+                    <span className="text-sm">{booking.notes}</span>
                   </div>
                 )}
               </div>
             </Card>
 
-            <Card className="p-4 bg-muted/50">
-              <p className="text-sm text-muted-foreground text-center">
-                Riceverai una conferma via email una volta che la prenotazione sarà accettata.
-              </p>
-            </Card>
+            <div className="flex justify-center pt-4">
+              <Button
+                size="lg"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Invio in corso..." : "Conferma Prenotazione"}
+              </Button>
+            </div>
           </motion.div>
         )}
 
         {/* Step 5: Confirmation */}
         {step === 5 && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center max-w-md mx-auto"
+            className="text-center"
           >
-            <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Check className="w-10 h-10 text-green-600" />
+            <div className="w-20 h-20 bg-basil/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Check className="w-10 h-10 text-basil" />
             </div>
-
-            <h1 className="text-3xl font-bold mb-4">Prenotazione Inviata!</h1>
-
-            <Card className="p-6 mb-6">
+            
+            <h1 className="text-3xl font-bold mb-4">Prenotazione Confermata!</h1>
+            
+            <Card className="p-6 mb-6 max-w-md mx-auto">
               <div className="text-sm text-muted-foreground mb-2">Codice prenotazione</div>
-              <div className="text-3xl font-mono font-bold text-primary mb-4">{bookingCode}</div>
-              <p className="text-muted-foreground">
-                Ti contatteremo per confermare la prenotazione per il{" "}
-                <strong>
-                  {booking.date && format(booking.date, "d MMMM", { locale: it })} alle {booking.time}
-                </strong>
-                .
-              </p>
+              <div className="text-2xl font-mono font-bold text-primary mb-4">{bookingCode}</div>
+              <div className="text-left space-y-2">
+                <p><strong>Data:</strong> {booking.date && format(booking.date, "EEEE d MMMM", { locale: it })}</p>
+                <p><strong>Orario:</strong> {booking.selectedTime}</p>
+                <p><strong>Tavolo:</strong> N° {selectedTable?.table_number}</p>
+                <p><strong>Persone:</strong> {booking.people}</p>
+              </div>
             </Card>
-
-            <Button variant="outline" onClick={() => window.location.href = "/"}>
-              Torna alla Home
-            </Button>
+            
+            <p className="text-muted-foreground mb-6">
+              Riceverai una conferma quando la prenotazione sarà approvata.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {user && (
+                <Link to="/profilo">
+                  <Button variant="outline">
+                    <User className="w-4 h-4 mr-2" />
+                    Vedi nel Profilo
+                  </Button>
+                </Link>
+              )}
+              <Button variant="outline" onClick={() => window.location.href = "/"}>
+                Torna alla Home
+              </Button>
+            </div>
           </motion.div>
-        )}
-
-        {/* Navigation Buttons */}
-        {step < 5 && (
-          <div className="flex justify-between mt-12">
-            {step > 1 ? (
-              <Button variant="outline" onClick={() => setStep(step - 1)}>
-                ← Indietro
-              </Button>
-            ) : (
-              <div />
-            )}
-
-            {step < 4 ? (
-              <Button
-                onClick={() => setStep(step + 1)}
-                disabled={!canProceed()}
-              >
-                Avanti →
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Invio in corso..." : "Conferma Prenotazione"}
-              </Button>
-            )}
-          </div>
         )}
       </div>
 

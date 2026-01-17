@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Leaf, Flame, WheatOff, Search, ShoppingCart, LogIn } from "lucide-react";
+import { Leaf, Flame, WheatOff, Search, ShoppingCart, Plus, Minus } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/hooks/useCart";
-import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 interface MenuItem {
@@ -40,7 +38,6 @@ const tagConfig: Record<string, { icon: typeof Leaf; label: string; className: s
 };
 
 const Menu = () => {
-  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
@@ -86,17 +83,7 @@ const Menu = () => {
   };
 
   const handleAddItem = (item: MenuItem) => {
-    if (!user) {
-      toast.error("Accedi per aggiungere prodotti al carrello", {
-        action: {
-          label: "Accedi",
-          onClick: () => window.location.href = "/auth"
-        }
-      });
-      return;
-    }
-    
-    // Convert to cart format - use 'pizze' as default category for cart compatibility
+    // Convert to cart format
     addItem({
       id: item.id,
       name: item.name,
@@ -122,6 +109,9 @@ const Menu = () => {
       activeFilters.every(filter => (item.tags || []).includes(filter));
     return matchesCategory && matchesSearch && matchesFilters;
   });
+
+  // Get cart item for a menu item
+  const getCartItem = (itemId: string) => cart.items.find(ci => ci.menuItem.id === itemId);
 
   if (isLoading) {
     return (
@@ -205,74 +195,88 @@ const Menu = () => {
 
         {/* Menu Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredItems.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className="bg-card rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-lg transition-all group"
-            >
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img
-                  src={item.image_url || "/placeholder.svg"}
-                  alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-3 py-1 rounded-full font-bold text-sm">
-                  €{item.price.toFixed(2)}
+          {filteredItems.map((item, index) => {
+            const cartItem = getCartItem(item.id);
+            
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                className="bg-card rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-lg transition-all group"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img
+                    src={item.image_url || "/placeholder.svg"}
+                    alt={item.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-3 py-1 rounded-full font-bold text-sm">
+                    €{item.price.toFixed(2)}
+                  </div>
+                  {item.is_popular && (
+                    <div className="absolute top-2 left-2 bg-tomato text-white px-2 py-1 rounded-full text-xs font-medium">
+                      Popolare
+                    </div>
+                  )}
                 </div>
-                {item.is_popular && (
-                  <div className="absolute top-2 left-2 bg-tomato text-white px-2 py-1 rounded-full text-xs font-medium">
-                    Popolare
-                  </div>
-                )}
-              </div>
-              
-              <div className="p-4">
-                <h3 className="font-display text-lg font-bold text-foreground mb-1">
-                  {item.name}
-                </h3>
-                <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                  {item.description}
-                </p>
                 
-                {(item.tags || []).length > 0 && (
-                  <div className="flex gap-1 flex-wrap mb-3">
-                    {(item.tags || []).map((tag) => {
-                      const config = tagConfig[tag];
-                      if (!config) return null;
-                      return (
-                        <Badge key={tag} variant="outline" className={`text-xs ${config.className}`}>
-                          <config.icon className="w-3 h-3 mr-1" />
-                          {config.label}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                )}
-                
-                <Button
-                  className="w-full"
-                  onClick={() => handleAddItem(item)}
-                  variant={user ? "default" : "secondary"}
-                >
-                  {user ? (
-                    <>
+                <div className="p-4">
+                  <h3 className="font-display text-lg font-bold text-foreground mb-1">
+                    {item.name}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                    {item.description}
+                  </p>
+                  
+                  {(item.tags || []).length > 0 && (
+                    <div className="flex gap-1 flex-wrap mb-3">
+                      {(item.tags || []).map((tag) => {
+                        const config = tagConfig[tag];
+                        if (!config) return null;
+                        return (
+                          <Badge key={tag} variant="outline" className={`text-xs ${config.className}`}>
+                            <config.icon className="w-3 h-3 mr-1" />
+                            {config.label}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
+                  {cartItem ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <span className="font-bold">{cartItem.quantity}</span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      onClick={() => handleAddItem(item)}
+                    >
                       <ShoppingCart className="w-4 h-4 mr-2" />
                       Aggiungi
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Accedi per ordinare
-                    </>
+                    </Button>
                   )}
-                </Button>
-              </div>
-            </motion.div>
-          ))}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
         {filteredItems.length === 0 && (
