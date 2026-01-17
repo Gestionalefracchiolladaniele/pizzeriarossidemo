@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, MapPin, Clock, Trash2, Plus, Minus, Check, Bike, Store, User } from "lucide-react";
+import { ShoppingCart, MapPin, Clock, Trash2, Plus, Minus, Check, Bike, Store, User, UtensilsCrossed } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,7 @@ const Ordina = () => {
     totalPrice,
     setDeliveryType,
     setPickupTime,
+    setTableNumber,
     clearCart,
   } = useCart();
 
@@ -187,7 +188,9 @@ const Ordina = () => {
           subtotal: totalPrice,
           delivery_fee: deliveryFee,
           total: finalTotal,
-          notes: orderNotes || null,
+          notes: cart.deliveryType === "dine_in" && cart.tableNumber 
+            ? `Tavolo: ${cart.tableNumber}${orderNotes ? ` - ${orderNotes}` : ""}`
+            : orderNotes || null,
           status: "received",
         })
         .select("order_number")
@@ -215,6 +218,14 @@ const Ordina = () => {
   const deliveryFee = cart.deliveryType === "delivery" ? 2.50 : 0;
   const finalTotal = totalPrice + deliveryFee;
 
+  const getDeliveryTypeLabel = () => {
+    switch (cart.deliveryType) {
+      case 'delivery': return 'Consegna';
+      case 'dine_in': return 'Al Tavolo';
+      default: return 'Ritiro';
+    }
+  };
+
   if (step === "confirmed") {
     return (
       <div className="min-h-screen bg-background">
@@ -237,6 +248,8 @@ const Ordina = () => {
               <p className="text-muted-foreground">
                 {cart.deliveryType === "delivery" 
                   ? "Il tuo ordine è in preparazione. Arriverà in circa 30-45 minuti."
+                  : cart.deliveryType === "dine_in"
+                  ? "Il tuo ordine è in preparazione. Ti verrà portato al tavolo."
                   : `Il tuo ordine sarà pronto per il ritiro alle ${cart.pickupTime || "ora selezionata"}.`
                 }
               </p>
@@ -292,18 +305,8 @@ const Ordina = () => {
               Ordina <span className="text-primary">Online</span>
             </h1>
             <p className="text-muted-foreground text-lg">
-              Asporto o consegna a domicilio. Scegli dal nostro menu e ordina in pochi click.
+              Asporto, consegna a domicilio o direttamente al tavolo. Scegli dal nostro menu.
             </p>
-            
-            {/* Info banner for non-logged users */}
-            {!user && (
-              <div className="mt-4 p-3 bg-muted/50 rounded-lg inline-flex items-center gap-2 text-sm">
-                <User className="w-4 h-4 text-primary" />
-                <span className="text-muted-foreground">
-                  <Link to="/auth" className="text-primary hover:underline font-medium">Accedi</Link> per salvare i tuoi ordini nel profilo
-                </span>
-              </div>
-            )}
           </motion.div>
         </div>
       </section>
@@ -314,17 +317,22 @@ const Ordina = () => {
           <div className="lg:col-span-2">
             {step === "menu" && (
               <>
-                {/* Delivery Type Selection */}
+                {/* Delivery Type Selection - Now with 3 options */}
                 <Card className="p-4 mb-6">
-                  <Tabs value={cart.deliveryType} onValueChange={(v) => setDeliveryType(v as 'takeaway' | 'delivery')}>
-                    <TabsList className="w-full">
+                  <Tabs value={cart.deliveryType} onValueChange={(v) => setDeliveryType(v as 'takeaway' | 'delivery' | 'dine_in')}>
+                    <TabsList className="w-full grid grid-cols-3">
                       <TabsTrigger value="takeaway" className="flex-1">
                         <Store className="w-4 h-4 mr-2" />
-                        Ritiro
+                        <span className="hidden sm:inline">Ritiro</span>
                       </TabsTrigger>
                       <TabsTrigger value="delivery" className="flex-1">
                         <Bike className="w-4 h-4 mr-2" />
-                        Consegna (+€2.50)
+                        <span className="hidden sm:inline">Consegna</span>
+                        <span className="text-xs ml-1">(+€2.50)</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="dine_in" className="flex-1">
+                        <UtensilsCrossed className="w-4 h-4 mr-2" />
+                        <span className="hidden sm:inline">Al Tavolo</span>
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
@@ -411,7 +419,10 @@ const Ordina = () => {
                                     </Button>
                                   </div>
                                 ) : (
-                                  <Button size="sm" onClick={() => addItem(toCartItem(item))}>
+                                  <Button size="sm" onClick={() => {
+                                    addItem(toCartItem(item));
+                                    toast.success(`${item.name} aggiunto al carrello`);
+                                  }}>
                                     <Plus className="w-4 h-4 mr-1" />
                                     Aggiungi
                                   </Button>
@@ -439,7 +450,7 @@ const Ordina = () => {
                 
                 <h2 className="text-2xl font-bold">Completa l'ordine</h2>
                 
-                {cart.deliveryType === "takeaway" ? (
+                {cart.deliveryType === "takeaway" && (
                   <Card className="p-4">
                     <h3 className="font-bold mb-3 flex items-center gap-2">
                       <Clock className="w-5 h-5 text-primary" />
@@ -457,7 +468,9 @@ const Ordina = () => {
                       ))}
                     </div>
                   </Card>
-                ) : (
+                )}
+
+                {cart.deliveryType === "delivery" && (
                   <Card className="p-4">
                     <h3 className="font-bold mb-3 flex items-center gap-2">
                       <MapPin className="w-5 h-5 text-primary" />
@@ -467,6 +480,24 @@ const Ordina = () => {
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
                       placeholder="Via Roma 123, Milano"
+                    />
+                  </Card>
+                )}
+
+                {cart.deliveryType === "dine_in" && (
+                  <Card className="p-4">
+                    <h3 className="font-bold mb-3 flex items-center gap-2">
+                      <UtensilsCrossed className="w-5 h-5 text-primary" />
+                      Al Tavolo
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Inserisci il numero del tuo tavolo (opzionale)
+                    </p>
+                    <Input
+                      value={cart.tableNumber || ""}
+                      onChange={(e) => setTableNumber(e.target.value)}
+                      placeholder="Es. 5"
+                      className="max-w-[120px]"
                     />
                   </Card>
                 )}
@@ -516,6 +547,11 @@ const Ordina = () => {
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
                 Il Tuo Ordine
+                {cart.deliveryType && (
+                  <Badge variant="secondary" className="ml-auto text-xs">
+                    {getDeliveryTypeLabel()}
+                  </Badge>
+                )}
               </h2>
 
               {cart.items.length === 0 ? (

@@ -21,9 +21,10 @@ export interface CartItem {
 
 export interface Cart {
   items: CartItem[];
-  deliveryType: 'takeaway' | 'delivery';
+  deliveryType: 'takeaway' | 'delivery' | 'dine_in';
   deliveryAddress?: string;
   pickupTime?: string;
+  tableNumber?: string; // For dine-in orders
 }
 
 const CART_STORAGE_KEY = 'pizzeria-cart';
@@ -101,7 +102,7 @@ export const useCart = () => {
     }));
   }, []);
 
-  const setDeliveryType = useCallback((type: 'takeaway' | 'delivery') => {
+  const setDeliveryType = useCallback((type: 'takeaway' | 'delivery' | 'dine_in') => {
     setCart(prev => ({ ...prev, deliveryType: type }));
   }, []);
 
@@ -111,6 +112,10 @@ export const useCart = () => {
 
   const setPickupTime = useCallback((time: string) => {
     setCart(prev => ({ ...prev, pickupTime: time }));
+  }, []);
+
+  const setTableNumber = useCallback((tableNumber: string) => {
+    setCart(prev => ({ ...prev, tableNumber }));
   }, []);
 
   const clearCart = useCallback(() => {
@@ -132,6 +137,7 @@ export const useCart = () => {
     setDeliveryType,
     setDeliveryAddress,
     setPickupTime,
+    setTableNumber,
     clearCart,
     totalItems,
     totalPrice,
