@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { User, Package, Calendar, LogOut, ArrowLeft, Settings } from "lucide-react";
+import { User, Package, Calendar, LogOut, ArrowLeft, Settings, History, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,14 @@ import { NotificationPromptDialog } from "@/components/NotificationPromptDialog"
 
 type Order = Tables<"orders">;
 type Reservation = Tables<"reservations">;
+
+interface HistoryItem {
+  id: string;
+  type: 'order' | 'reservation';
+  date: Date;
+  status: string;
+  details: Order | Reservation;
+}
 
 const statusColors: Record<string, string> = {
   received: "bg-blue-500",
@@ -38,6 +46,12 @@ const reservationStatusLabels: Record<string, string> = {
   confirmed: "Confermata",
   cancelled: "Annullata",
   completed: "Completata",
+};
+
+const deliveryTypeLabels: Record<string, string> = {
+  takeaway: "Ritiro",
+  delivery: "Consegna",
+  dine_in: "Al Tavolo",
 };
 
 const Profilo = () => {
@@ -81,6 +95,38 @@ const Profilo = () => {
     setLoadingData(false);
   };
 
+  // Unified history combining orders and reservations
+  const historyItems: HistoryItem[] = useMemo(() => {
+    const items: HistoryItem[] = [];
+    
+    orders.forEach(order => {
+      items.push({
+        id: order.id,
+        type: 'order',
+        date: new Date(order.created_at),
+        status: order.status,
+        details: order,
+      });
+    });
+    
+    reservations.forEach(reservation => {
+      items.push({
+        id: reservation.id,
+        type: 'reservation',
+        date: new Date(reservation.created_at),
+        status: reservation.status,
+        details: reservation,
+      });
+    });
+    
+    // Sort by date descending
+    return items.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [orders, reservations]);
+
+  // Count active orders/reservations
+  const activeOrdersCount = orders.filter(o => !['delivered', 'cancelled', 'done'].includes(o.status)).length;
+  const activeReservationsCount = reservations.filter(r => !['completed', 'cancelled'].includes(r.status)).length;
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -120,13 +166,13 @@ const Profilo = () => {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl mx-auto"
         >
-          {/* User Info Card */}
+          {/* User Info Card with Quick Actions */}
           <Card className="p-6 mb-8">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="w-8 h-8 text-primary" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h2 className="text-2xl font-bold">
                   {user.user_metadata?.full_name || "Utente"}
                 </h2>
@@ -137,19 +183,45 @@ const Profilo = () => {
                   </p>
                 )}
               </div>
+              
+              {/* Quick Action Buttons - Always visible */}
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button onClick={() => navigate("/ordina")} className="flex-1 sm:flex-none">
+                  <Package className="w-4 h-4 mr-2" />
+                  Nuovo Ordine
+                </Button>
+                <Button variant="outline" onClick={() => navigate("/prenota")} className="flex-1 sm:flex-none">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Prenota Tavolo
+                </Button>
+              </div>
             </div>
           </Card>
 
-          {/* Tabs for Orders, Reservations and Settings */}
-          <Tabs defaultValue="orders" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+          {/* Tabs for History, Orders, Reservations and Settings */}
+          <Tabs defaultValue="history" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="history" className="flex items-center gap-2">
+                <History className="w-4 h-4" />
+                <span className="hidden sm:inline">Storico</span>
+              </TabsTrigger>
               <TabsTrigger value="orders" className="flex items-center gap-2">
                 <Package className="w-4 h-4" />
-                <span className="hidden sm:inline">Ordini</span> ({orders.length})
+                <span className="hidden sm:inline">Ordini</span>
+                {activeOrdersCount > 0 && (
+                  <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {activeOrdersCount}
+                  </Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="reservations" className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                <span className="hidden sm:inline">Prenotazioni</span> ({reservations.length})
+                <span className="hidden sm:inline">Prenotazioni</span>
+                {activeReservationsCount > 0 && (
+                  <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {activeReservationsCount}
+                  </Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-2">
                 <Settings className="w-4 h-4" />
@@ -157,15 +229,120 @@ const Profilo = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="orders" className="mt-6">
-              {/* Always visible button to create new order */}
-              <div className="mb-6">
-                <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate("/ordina")}>
-                  <Package className="w-4 h-4 mr-2" />
-                  Nuovo Ordine
-                </Button>
-              </div>
+            {/* History Tab - Unified view */}
+            <TabsContent value="history" className="mt-6">
+              {loadingData ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                </div>
+              ) : historyItems.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <History className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-4">Nessuna attività ancora</p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button onClick={() => navigate("/ordina")}>
+                      <Package className="w-4 h-4 mr-2" />
+                      Fai un ordine
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate("/prenota")}>
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Prenota un tavolo
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {historyItems.map((item) => (
+                    <Card key={`${item.type}-${item.id}`} className="p-4">
+                      <div className="flex items-start gap-4">
+                        {/* Icon */}
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          item.type === 'order' ? 'bg-primary/10' : 'bg-secondary'
+                        }`}>
+                          {item.type === 'order' ? (
+                            <Package className="w-5 h-5 text-primary" />
+                          ) : (
+                            <Calendar className="w-5 h-5 text-secondary-foreground" />
+                          )}
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold">
+                              {item.type === 'order' 
+                                ? `Ordine #${(item.details as Order).order_number}`
+                                : `Prenotazione ${new Date((item.details as Reservation).reservation_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}`
+                              }
+                            </span>
+                            <Badge className={
+                              item.type === 'order' 
+                                ? statusColors[item.status] || "bg-gray-500"
+                                : item.status === 'confirmed' ? 'bg-green-500' 
+                                : item.status === 'pending' ? 'bg-yellow-500' 
+                                : item.status === 'cancelled' ? 'bg-red-500' 
+                                : 'bg-gray-500'
+                            }>
+                              {item.type === 'order' 
+                                ? statusLabels[item.status] || item.status
+                                : reservationStatusLabels[item.status] || item.status
+                              }
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            {item.date.toLocaleDateString('it-IT', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                          
+                          {item.type === 'order' && (
+                            <p className="text-sm mt-1 truncate">
+                              {Array.isArray((item.details as Order).items) && 
+                                ((item.details as Order).items as any[]).slice(0, 3).map((i: any, idx: number) => (
+                                  <span key={idx}>
+                                    {i.quantity}x {i.name}
+                                    {idx < Math.min(((item.details as Order).items as any[]).length, 3) - 1 ? ", " : ""}
+                                  </span>
+                                ))
+                              }
+                              {Array.isArray((item.details as Order).items) && ((item.details as Order).items as any[]).length > 3 && "..."}
+                            </p>
+                          )}
+                          
+                          {item.type === 'reservation' && (
+                            <p className="text-sm mt-1">
+                              Ore {(item.details as Reservation).reservation_time.slice(0, 5)} • {(item.details as Reservation).guests_count} {(item.details as Reservation).guests_count === 1 ? 'persona' : 'persone'}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Right side - amount or details */}
+                        <div className="text-right">
+                          {item.type === 'order' && (
+                            <>
+                              <p className="text-lg font-bold text-primary">
+                                €{(item.details as Order).total.toFixed(2)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {deliveryTypeLabels[(item.details as Order).delivery_type] || (item.details as Order).delivery_type}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
 
+            <TabsContent value="orders" className="mt-6">
               {loadingData ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -212,7 +389,7 @@ const Profilo = () => {
                             €{order.total.toFixed(2)}
                           </p>
                           <p className="text-xs text-muted-foreground capitalize">
-                            {order.delivery_type === 'delivery' ? 'Consegna' : 'Ritiro'}
+                            {deliveryTypeLabels[order.delivery_type] || order.delivery_type}
                           </p>
                         </div>
                       </div>
@@ -223,14 +400,6 @@ const Profilo = () => {
             </TabsContent>
 
             <TabsContent value="reservations" className="mt-6">
-              {/* Always visible button to create new reservation */}
-              <div className="mb-6">
-                <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate("/prenota")}>
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Nuova Prenotazione
-                </Button>
-              </div>
-
               {loadingData ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>

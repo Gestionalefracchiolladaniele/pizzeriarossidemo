@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Users, Check, User, AlertCircle, SquareStack, Clock } from "lucide-react";
-import { format, addDays, isSameDay, getDay } from "date-fns";
+import { format, addDays, isSameDay, getDay, startOfDay, isAfter } from "date-fns";
 import { it } from "date-fns/locale";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -39,7 +38,7 @@ interface ReservationSettings {
 }
 
 interface TableWithAvailability extends RestaurantTableWithHours {
-  availableSlots: string[]; // Hours still available for this table on selected date
+  availableSlots: string[];
 }
 
 const DAY_KEYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
@@ -182,11 +181,12 @@ const Prenota = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
+
   const [bookingCode, setBookingCode] = useState("");
   const [settings, setSettings] = useState<ReservationSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [tables, setTables] = useState<RestaurantTableWithHours[]>([]);
-  const [bookedSlots, setBookedSlots] = useState<Map<string, Set<string>>>(new Map()); // tableId -> Set of booked times
+  const [bookedSlots, setBookedSlots] = useState<Map<string, Set<string>>>(new Map());
 
   useEffect(() => {
     fetchSettings();
@@ -289,8 +289,21 @@ const Prenota = () => {
     return settings.days_available[dayKey];
   };
 
-  const dates = Array.from({ length: settings.advance_booking_days }, (_, i) => addDays(new Date(), i + 1))
-    .filter(isDayAvailable);
+  // Generate dates for the next 30 days (minimum), ignoring advance_booking_days if too low
+  const dates = useMemo(() => {
+    const minDays = Math.max(settings.advance_booking_days, 30); // Always show at least 30 days
+    const today = startOfDay(new Date());
+    const allDates = [];
+    
+    for (let i = 1; i <= minDays; i++) {
+      const date = addDays(today, i);
+      if (isDayAvailable(date)) {
+        allDates.push(date);
+      }
+    }
+    
+    return allDates;
+  }, [settings]);
 
   // Calculate available tables with their available time slots
   const tablesWithAvailability: TableWithAvailability[] = useMemo(() => {
@@ -319,6 +332,7 @@ const Prenota = () => {
   }, [tables, booking.date, booking.people, bookedSlots]);
 
   const selectedTableData = tablesWithAvailability.find(t => t.id === booking.tableId);
+  const selectedTable = tables.find(t => t.id === booking.tableId);
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
@@ -357,7 +371,7 @@ const Prenota = () => {
 
       const code = `PR${data.id.slice(0, 8).toUpperCase()}`;
       setBookingCode(code);
-      setStep(5); // Confirmation step
+      setStep(4); // Confirmation step (now step 4, not 5)
       toast.success("Prenotazione inviata con successo!");
     } catch (err) {
       console.error("Error:", err);
@@ -370,13 +384,10 @@ const Prenota = () => {
   const canProceed = () => {
     switch (step) {
       case 1: return booking.people > 0 && booking.date !== null;
-      case 2: return booking.tableId !== "" && booking.selectedTime !== "";
-      case 3: return booking.name && booking.phone;
+      case 2: return booking.tableId !== "" && booking.selectedTime !== "" && booking.name.trim() !== "" && booking.phone.trim() !== "";
       default: return false;
     }
   };
-
-  const selectedTable = tables.find(t => t.id === booking.tableId);
 
   if (isLoading) {
     return (
@@ -408,38 +419,43 @@ const Prenota = () => {
               Prenota il Tuo <span className="text-primary">Tavolo</span>
             </h1>
             <p className="text-muted-foreground text-lg">
-              Assicurati un posto nel nostro ristorante. Prenotazione facile e veloce.
+              Assicurati un posto nel nostro ristorante. Prenotazione facile e veloce in 3 step.
             </p>
           </motion.div>
         </div>
       </section>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Progress Steps */}
-        {step < 5 && (
-          <div className="flex justify-between mb-12 relative">
-            <div className="absolute top-5 left-0 right-0 h-0.5 bg-border -z-10" />
-            {[
-              { num: 1, icon: Calendar, label: "Data" },
-              { num: 2, icon: SquareStack, label: "Tavolo" },
-              { num: 3, icon: User, label: "Dati" },
-              { num: 4, icon: Check, label: "Conferma" },
-            ].map((s) => (
-              <div key={s.num} className="flex flex-col items-center">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    step >= s.num
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {step > s.num ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+        {/* Progress Steps - Only 3 steps now */}
+        {step < 4 && (
+          <div className="flex justify-center mb-12 relative">
+            <div className="flex items-center gap-8">
+              {[
+                { num: 1, icon: Calendar, label: "Quando e quanti?" },
+                { num: 2, icon: SquareStack, label: "Tavolo e orario" },
+                { num: 3, icon: Check, label: "Conferma" },
+              ].map((s, idx) => (
+                <div key={s.num} className="flex items-center">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                        step >= s.num
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {step > s.num ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+                    </div>
+                    <span className={`text-xs mt-2 text-center max-w-[80px] ${step >= s.num ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                      {s.label}
+                    </span>
+                  </div>
+                  {idx < 2 && (
+                    <div className={`w-16 h-0.5 mx-2 ${step > s.num ? "bg-primary" : "bg-muted"}`} />
+                  )}
                 </div>
-                <span className={`text-xs mt-2 ${step >= s.num ? "text-foreground" : "text-muted-foreground"}`}>
-                  {s.label}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
@@ -471,7 +487,7 @@ const Prenota = () => {
               </div>
             </div>
 
-            {/* Date Selection */}
+            {/* Date Selection - Now shows 30 days */}
             <div>
               <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
                 <Calendar className="w-6 h-6 text-primary" />
@@ -485,13 +501,13 @@ const Prenota = () => {
                   </p>
                 </Card>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-3">
-                  {dates.slice(0, 14).map((date) => (
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-2">
+                  {dates.slice(0, 21).map((date) => (
                     <Card
                       key={date.toISOString()}
-                      className={`p-3 text-center cursor-pointer transition-all hover:border-primary ${
+                      className={`p-2 text-center cursor-pointer transition-all hover:border-primary ${
                         booking.date && isSameDay(booking.date, date)
-                          ? "border-primary bg-primary/10"
+                          ? "border-primary bg-primary/10 ring-2 ring-primary"
                           : ""
                       }`}
                       onClick={() => setBooking({ ...booking, date, tableId: "", selectedTime: "" })}
@@ -499,7 +515,7 @@ const Prenota = () => {
                       <div className="text-xs text-muted-foreground uppercase">
                         {format(date, "EEE", { locale: it })}
                       </div>
-                      <div className="text-xl font-bold">{format(date, "d")}</div>
+                      <div className="text-lg font-bold">{format(date, "d")}</div>
                       <div className="text-xs text-muted-foreground">
                         {format(date, "MMM", { locale: it })}
                       </div>
@@ -513,7 +529,7 @@ const Prenota = () => {
               <Button
                 size="lg"
                 onClick={() => setStep(2)}
-                disabled={!canProceed()}
+                disabled={!booking.date || booking.people <= 0}
               >
                 Continua
               </Button>
@@ -521,7 +537,7 @@ const Prenota = () => {
           </motion.div>
         )}
 
-        {/* Step 2: Table & Time Selection */}
+        {/* Step 2: Table, Time & Personal Data (Combined) */}
         {step === 2 && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -539,17 +555,20 @@ const Prenota = () => {
 
             <h2 className="text-2xl font-bold text-center flex items-center justify-center gap-2">
               <SquareStack className="w-6 h-6 text-primary" />
-              Scegli il tuo tavolo
+              Scegli tavolo e orario
             </h2>
 
             {tablesWithAvailability.length === 0 ? (
               <Card className="p-8 text-center">
                 <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-2">
                   Nessun tavolo disponibile per {booking.people} persone in questa data.
                 </p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Prova con meno persone o un'altra data.
+                </p>
                 <Button variant="outline" onClick={() => setStep(1)}>
-                  Prova un'altra data
+                  Cambia data o persone
                 </Button>
               </Card>
             ) : (
@@ -576,7 +595,7 @@ const Prenota = () => {
                   >
                     <h3 className="text-xl font-bold text-center mb-4 flex items-center justify-center gap-2">
                       <Clock className="w-5 h-5 text-primary" />
-                      Scegli l'orario per Tavolo {selectedTable?.table_number}
+                      Orario per Tavolo {selectedTable?.table_number}
                     </h3>
                     <div className="flex flex-wrap justify-center gap-3">
                       {selectedTableData.availableSlots.map((time) => (
@@ -592,6 +611,57 @@ const Prenota = () => {
                     </div>
                   </motion.div>
                 )}
+
+                {/* Personal Data - shown after time is selected */}
+                {booking.selectedTime && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-8"
+                  >
+                    <h3 className="text-xl font-bold text-center mb-4 flex items-center justify-center gap-2">
+                      <User className="w-5 h-5 text-primary" />
+                      I tuoi dati
+                    </h3>
+                    <Card className="p-6 space-y-4 max-w-md mx-auto">
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Nome *</label>
+                        <Input
+                          value={booking.name}
+                          onChange={(e) => setBooking({ ...booking, name: e.target.value })}
+                          placeholder="Mario Rossi"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Telefono *</label>
+                        <Input
+                          type="tel"
+                          value={booking.phone}
+                          onChange={(e) => setBooking({ ...booking, phone: e.target.value })}
+                          placeholder="+39 333 1234567"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Email</label>
+                        <Input
+                          type="email"
+                          value={booking.email}
+                          onChange={(e) => setBooking({ ...booking, email: e.target.value })}
+                          placeholder="mario@example.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Note (opzionale)</label>
+                        <Textarea
+                          value={booking.notes}
+                          onChange={(e) => setBooking({ ...booking, notes: e.target.value })}
+                          placeholder="Es. seggiolone, allergie, occasione speciale..."
+                          rows={3}
+                        />
+                      </div>
+                    </Card>
+                  </motion.div>
+                )}
               </>
             )}
 
@@ -601,91 +671,20 @@ const Prenota = () => {
                 onClick={() => setStep(3)}
                 disabled={!canProceed()}
               >
-                Continua
+                Continua al Riepilogo
               </Button>
             </div>
           </motion.div>
         )}
 
-        {/* Step 3: Personal Data */}
+        {/* Step 3: Summary & Confirm */}
         {step === 3 && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
-            <div className="flex items-center justify-between">
-              <Button variant="ghost" onClick={() => setStep(2)}>
-                ← Indietro
-              </Button>
-              <div className="text-sm text-muted-foreground">
-                Tavolo {selectedTable?.table_number} • {booking.selectedTime}
-              </div>
-            </div>
-
-            <h2 className="text-2xl font-bold text-center flex items-center justify-center gap-2">
-              <User className="w-6 h-6 text-primary" />
-              I tuoi dati
-            </h2>
-
-            <Card className="p-6 space-y-4 max-w-md mx-auto">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Nome *</label>
-                <Input
-                  value={booking.name}
-                  onChange={(e) => setBooking({ ...booking, name: e.target.value })}
-                  placeholder="Mario Rossi"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Telefono *</label>
-                <Input
-                  type="tel"
-                  value={booking.phone}
-                  onChange={(e) => setBooking({ ...booking, phone: e.target.value })}
-                  placeholder="+39 333 1234567"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Email</label>
-                <Input
-                  type="email"
-                  value={booking.email}
-                  onChange={(e) => setBooking({ ...booking, email: e.target.value })}
-                  placeholder="mario@example.com"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Note (opzionale)</label>
-                <Textarea
-                  value={booking.notes}
-                  onChange={(e) => setBooking({ ...booking, notes: e.target.value })}
-                  placeholder="Es. seggiolone, allergie, occasione speciale..."
-                  rows={3}
-                />
-              </div>
-            </Card>
-
-            <div className="flex justify-center pt-4">
-              <Button
-                size="lg"
-                onClick={() => setStep(4)}
-                disabled={!canProceed()}
-              >
-                Continua
-              </Button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Step 4: Summary */}
-        {step === 4 && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
-          >
-            <Button variant="ghost" onClick={() => setStep(3)}>
+            <Button variant="ghost" onClick={() => setStep(2)}>
               ← Indietro
             </Button>
 
@@ -743,8 +742,8 @@ const Prenota = () => {
           </motion.div>
         )}
 
-        {/* Step 5: Confirmation */}
-        {step === 5 && (
+        {/* Step 4: Confirmation */}
+        {step === 4 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
