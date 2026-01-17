@@ -13,7 +13,7 @@ import { useCart, MenuItem } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface MenuCategory {
   id: string;
@@ -39,7 +39,8 @@ const pickupTimes = [
 ];
 
 const Ordina = () => {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState<"menu" | "checkout" | "confirmed">("menu");
   const [activeCategory, setActiveCategory] = useState("");
   const [orderNumber, setOrderNumber] = useState<number | null>(null);
@@ -66,6 +67,14 @@ const Ordina = () => {
     setPickupTime,
     clearCart,
   } = useCart();
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error("Devi accedere per ordinare");
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
 
   // Fetch menu data from Supabase
   useEffect(() => {

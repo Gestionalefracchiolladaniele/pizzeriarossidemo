@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface RestaurantTableWithHours {
   id: string;
@@ -160,7 +160,8 @@ const TableVisual = ({ table, isSelected, availableSlots, onClick }: {
 };
 
 const Prenota = () => {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [booking, setBooking] = useState<BookingData>({
@@ -173,6 +174,14 @@ const Prenota = () => {
     email: "",
     notes: "",
   });
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error("Devi accedere per prenotare un tavolo");
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
   const [bookingCode, setBookingCode] = useState("");
   const [settings, setSettings] = useState<ReservationSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
