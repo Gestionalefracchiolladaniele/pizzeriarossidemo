@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Pizzeria Design System - Rosso Pizzeria + Accenti Naturali */
+/* Pizzeria Design System - Premium Mastrociccio Style */
 
 @layer base {
   :root {
-    --background: 30 25% 97%;
+    --background: 35 30% 97%;
     --foreground: 20 14% 12%;
 
     --card: 0 0% 100%;
@@ -15,13 +15,13 @@
     --popover: 0 0% 100%;
     --popover-foreground: 20 14% 12%;
 
-    --primary: 4 70% 48%;
+    --primary: 358 72% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 25% 94%;
+    --secondary: 35 25% 94%;
     --secondary-foreground: 20 14% 12%;
 
-    --muted: 30 20% 92%;
+    --muted: 35 20% 92%;
     --muted-foreground: 20 10% 45%;
 
     --accent: 120 35% 32%;
@@ -30,16 +30,21 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 20% 88%;
-    --input: 30 20% 88%;
-    --ring: 4 70% 48%;
+    --border: 35 20% 88%;
+    --input: 35 20% 88%;
+    --ring: 358 72% 45%;
 
     --radius: 0.75rem;
 
-    /* Custom pizzeria tokens - Rosso Pizzeria */
-    --pizzeria-red: 4 70% 48%;
-    --pizzeria-red-light: 4 65% 58%;
-    --pizzeria-red-dark: 4 75% 38%;
+    /* Premium pizzeria tokens */
+    --pizzeria-red: 358 72% 45%;
+    --pizzeria-red-light: 358 65% 55%;
+    --pizzeria-red-dark: 358 78% 35%;
+    
+    /* Gold accent */
+    --gold: 43 74% 49%;
+    --gold-light: 43 85% 60%;
+    --gold-dark: 43 80% 40%;
     
     /* Ingredienti naturali */
     --basil-green: 120 35% 32%;
@@ -50,19 +55,20 @@
     --flour: 40 20% 92%;
     
     /* Sfondo caldo */
-    --cream: 35 35% 96%;
+    --cream: 38 40% 96%;
+    --cream-dark: 38 35% 90%;
     --charcoal: 20 14% 12%;
     --warm-gray: 25 12% 40%;
     --terracotta: 15 55% 50%;
 
-    --sidebar-background: 30 25% 97%;
+    --sidebar-background: 35 30% 97%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 4 70% 48%;
+    --sidebar-primary: 358 72% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 30 25% 94%;
+    --sidebar-accent: 35 25% 94%;
     --sidebar-accent-foreground: 20 14% 12%;
-    --sidebar-border: 30 20% 88%;
-    --sidebar-ring: 4 70% 48%;
+    --sidebar-border: 35 20% 88%;
+    --sidebar-ring: 358 72% 45%;
   }
 
   .dark {
@@ -75,7 +81,7 @@
     --popover: 20 14% 12%;
     --popover-foreground: 35 35% 96%;
 
-    --primary: 4 65% 55%;
+    --primary: 358 65% 55%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 20 14% 18%;
@@ -92,11 +98,15 @@
 
     --border: 20 14% 20%;
     --input: 20 14% 20%;
-    --ring: 4 65% 55%;
+    --ring: 358 65% 55%;
 
-    --pizzeria-red: 4 65% 55%;
-    --pizzeria-red-light: 4 60% 65%;
-    --pizzeria-red-dark: 4 70% 45%;
+    --pizzeria-red: 358 65% 55%;
+    --pizzeria-red-light: 358 60% 65%;
+    --pizzeria-red-dark: 358 70% 45%;
+    
+    --gold: 43 70% 50%;
+    --gold-light: 43 75% 60%;
+    --gold-dark: 43 65% 40%;
     
     --basil-green: 120 30% 40%;
     --basil-light: 120 25% 50%;
@@ -106,18 +116,19 @@
     --flour: 40 15% 18%;
     
     --cream: 35 20% 12%;
+    --cream-dark: 35 18% 16%;
     --charcoal: 35 35% 96%;
     --warm-gray: 30 15% 60%;
     --terracotta: 15 50% 45%;
 
     --sidebar-background: 20 14% 10%;
     --sidebar-foreground: 35 35% 96%;
-    --sidebar-primary: 4 65% 55%;
+    --sidebar-primary: 358 65% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 20 14% 18%;
     --sidebar-accent-foreground: 35 35% 96%;
     --sidebar-border: 20 14% 20%;
-    --sidebar-ring: 4 65% 55%;
+    --sidebar-ring: 358 65% 55%;
   }
 }
 
@@ -136,30 +147,67 @@
 }
 
 @layer utilities {
+  /* Text Gradients */
   .text-gradient-red {
     @apply bg-gradient-to-r from-[hsl(var(--pizzeria-red-dark))] via-[hsl(var(--pizzeria-red))] to-[hsl(var(--pizzeria-red-light))] bg-clip-text text-transparent;
   }
 
-  .bg-gradient-red {
-    @apply bg-gradient-to-r from-[hsl(var(--pizzeria-red-dark))] via-[hsl(var(--pizzeria-red))] to-[hsl(var(--pizzeria-red-light))];
-  }
-
-  .shadow-red {
-    box-shadow: 0 4px 20px -4px hsl(var(--pizzeria-red) / 0.3);
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-[hsl(var(--gold-dark))] via-[hsl(var(--gold))] to-[hsl(var(--gold-light))] bg-clip-text text-transparent;
   }
 
   .text-gradient-basil {
     @apply bg-gradient-to-r from-[hsl(var(--basil-green))] to-[hsl(var(--basil-light))] bg-clip-text text-transparent;
   }
 
+  /* Background Gradients */
+  .bg-gradient-red {
+    @apply bg-gradient-to-r from-[hsl(var(--pizzeria-red-dark))] via-[hsl(var(--pizzeria-red))] to-[hsl(var(--pizzeria-red-light))];
+  }
+
+  .bg-gradient-gold {
+    @apply bg-gradient-to-r from-[hsl(var(--gold-dark))] via-[hsl(var(--gold))] to-[hsl(var(--gold-light))];
+  }
+
   .bg-gradient-basil {
     @apply bg-gradient-to-r from-[hsl(var(--basil-green))] to-[hsl(var(--basil-light))];
+  }
+
+  .bg-gradient-cream {
+    @apply bg-gradient-to-b from-[hsl(var(--cream))] to-[hsl(var(--cream-dark))];
+  }
+
+  /* Shadows */
+  .shadow-red {
+    box-shadow: 0 4px 20px -4px hsl(var(--pizzeria-red) / 0.4);
+  }
+
+  .shadow-red-lg {
+    box-shadow: 0 8px 40px -8px hsl(var(--pizzeria-red) / 0.5);
+  }
+
+  .shadow-gold {
+    box-shadow: 0 4px 20px -4px hsl(var(--gold) / 0.4);
   }
 
   .shadow-basil {
     box-shadow: 0 4px 20px -4px hsl(var(--basil-green) / 0.3);
   }
 
+  /* Glow Effects */
+  .glow-red {
+    box-shadow: 0 0 20px hsl(var(--pizzeria-red) / 0.3),
+                0 0 40px hsl(var(--pizzeria-red) / 0.2),
+                0 0 60px hsl(var(--pizzeria-red) / 0.1);
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 20px hsl(var(--gold) / 0.3),
+                0 0 40px hsl(var(--gold) / 0.2),
+                0 0 60px hsl(var(--gold) / 0.1);
+  }
+
+  /* Ingredient backgrounds */
   .bg-ingredient-tomato {
     @apply bg-[hsl(var(--tomato-red))];
   }
@@ -174,5 +222,114 @@
 
   .bg-ingredient-olive {
     @apply bg-[hsl(var(--olive-oil))];
+  }
+
+  /* Premium hover effects */
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-2 hover:shadow-xl;
+  }
+
+  .hover-glow-red {
+    @apply transition-all duration-300 hover:shadow-red-lg;
+  }
+
+  .hover-glow-gold {
+    @apply transition-all duration-300 hover:shadow-gold;
+  }
+
+  /* Text stroke for display titles */
+  .text-stroke {
+    -webkit-text-stroke: 1px hsl(var(--foreground));
+    text-stroke: 1px hsl(var(--foreground));
+    color: transparent;
+  }
+
+  .text-stroke-white {
+    -webkit-text-stroke: 2px white;
+    text-stroke: 2px white;
+    color: transparent;
+  }
+
+  /* Pattern backgrounds */
+  .bg-pattern-dots {
+    background-image: radial-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .bg-pattern-grid {
+    background-image: 
+      linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Decorative borders */
+  .border-gradient-red {
+    border-image: linear-gradient(
+      135deg,
+      hsl(var(--pizzeria-red-dark)),
+      hsl(var(--pizzeria-red)),
+      hsl(var(--pizzeria-red-light))
+    ) 1;
+  }
+
+  .border-gradient-gold {
+    border-image: linear-gradient(
+      135deg,
+      hsl(var(--gold-dark)),
+      hsl(var(--gold)),
+      hsl(var(--gold-light))
+    ) 1;
+  }
+
+  /* Animated border */
+  @keyframes border-rotate {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .animate-border {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--pizzeria-red)),
+      hsl(var(--gold)),
+      hsl(var(--basil-green)),
+      hsl(var(--pizzeria-red))
+    );
+    background-size: 300% 300%;
+    animation: border-rotate 4s linear infinite;
+  }
+
+  /* Smooth scroll snap for carousels */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scroll-snap-center {
+    scroll-snap-align: center;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-black/50 backdrop-blur-md border border-white/10;
+  }
+
+  /* Premium card style */
+  .card-premium {
+    @apply bg-card rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+
+  /* Torn paper effect */
+  .torn-paper {
+    clip-path: polygon(
+      0% 0%, 5% 2%, 10% 0%, 15% 3%, 20% 1%, 25% 2%, 30% 0%, 35% 2%, 40% 0%, 45% 3%, 50% 1%, 55% 2%, 60% 0%, 65% 3%, 70% 1%, 75% 2%, 80% 0%, 85% 2%, 90% 0%, 95% 3%, 100% 0%,
+      100% 100%, 95% 98%, 90% 100%, 85% 97%, 80% 99%, 75% 98%, 70% 100%, 65% 97%, 60% 99%, 55% 98%, 50% 100%, 45% 97%, 40% 99%, 35% 98%, 30% 100%, 25% 97%, 20% 99%, 15% 98%, 10% 100%, 5% 97%, 0% 100%
+    );
   }
 }

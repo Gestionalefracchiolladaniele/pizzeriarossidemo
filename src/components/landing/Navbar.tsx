@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Phone, User, LogOut } from "lucide-react";
+import { Menu, X, Phone, User, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,6 @@ const navLinks = [
   { label: "Chi Siamo", href: "/#chi-siamo" },
   { label: "Menu", href: "/menu" },
   { label: "Prenota", href: "/prenota" },
-  { label: "Ordina", href: "/ordina" },
   { label: "Contatti", href: "/#contatti" },
 ];
 
@@ -19,7 +18,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const isHomePage = location.pathname === "/";
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,6 +40,8 @@ const Navbar = () => {
   };
 
   const NavItem = ({ link }: { link: typeof navLinks[0] }) => {
+    const isActive = location.pathname === link.href || (link.href === "/" && location.pathname === "/");
+    
     if (link.href.startsWith("/#")) {
       return (
         <a
@@ -51,38 +52,48 @@ const Navbar = () => {
               handleNavClick(link.href);
             }
           }}
-          className={`text-sm font-medium transition-colors hover:text-primary ${
+          className={`relative text-sm font-medium transition-all duration-300 hover:text-primary group ${
             isScrolled || !isHomePage ? "text-foreground" : "text-white/90"
           }`}
         >
           {link.label}
+          <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
         </a>
       );
     }
     return (
       <Link
         to={link.href}
-        className={`text-sm font-medium transition-colors hover:text-primary ${
+        className={`relative text-sm font-medium transition-all duration-300 hover:text-primary group ${
           isScrolled || !isHomePage ? "text-foreground" : "text-white/90"
-        } ${location.pathname === link.href ? "text-primary" : ""}`}
+        } ${isActive ? "text-primary" : ""}`}
       >
         {link.label}
+        <span className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all duration-300 ${
+          isActive ? "w-full" : "w-0 group-hover:w-full"
+        }`} />
       </Link>
     );
   };
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled || !isHomePage
-          ? "bg-background/95 backdrop-blur-md shadow-sm border-b border-border"
+          ? "bg-background/95 backdrop-blur-xl shadow-lg border-b border-border"
           : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-4">
-        <nav className="flex items-center justify-between h-16 lg:h-20">
+        <nav className="flex items-center justify-between h-20 lg:h-24">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-3 group">
+            <motion.div
+              whileHover={{ rotate: 10, scale: 1.1 }}
+              className="w-12 h-12 rounded-full bg-gradient-red flex items-center justify-center shadow-red"
+            >
+              <span className="text-2xl">🍕</span>
+            </motion.div>
             <span
               className={`font-display text-xl lg:text-2xl font-bold transition-colors ${
                 isScrolled || !isHomePage ? "text-foreground" : "text-white"
@@ -103,52 +114,65 @@ const Navbar = () => {
           <div className="hidden lg:flex items-center gap-4">
             <a
               href="tel:+39021234567"
-              className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary ${
                 isScrolled || !isHomePage ? "text-foreground" : "text-white/90"
               }`}
             >
               <Phone className="w-4 h-4 text-primary" />
-              02 1234567
+              <span className="hidden xl:inline">02 1234567</span>
             </a>
+            
             {user ? (
-              <div className="flex items-center gap-2">
-                <Link to="/profilo">
-                  <Button variant="ghost" className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}>
-                    <User className="w-4 h-4 mr-2" />
-                    Profilo
-                  </Button>
-                </Link>
-                <Link to="/prenota">
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
-                    Prenota Ora
-                  </Button>
-                </Link>
-              </div>
+              <Link to="/profilo">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Profilo
+                </Button>
+              </Link>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link to="/auth">
-                  <Button variant="ghost" className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}>
-                    <User className="w-4 h-4 mr-2" />
-                    Accedi
-                  </Button>
-                </Link>
-                <Link to="/prenota">
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
-                    Prenota Ora
-                  </Button>
-                </Link>
-              </div>
+              <Link to="/auth">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Accedi
+                </Button>
+              </Link>
             )}
+            
+            <Link to="/ordina">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red rounded-full px-6 group">
+                <ShoppingBag className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                Ordina
+              </Button>
+            </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - Animated Hamburger */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`lg:hidden p-2 transition-colors ${
+            className={`lg:hidden relative w-10 h-10 flex flex-col items-center justify-center gap-1.5 transition-colors ${
               isScrolled || !isHomePage ? "text-foreground" : "text-white"
             }`}
           >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            <motion.span
+              animate={isOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
+              className="w-6 h-0.5 bg-current origin-center"
+            />
+            <motion.span
+              animate={isOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
+              className="w-6 h-0.5 bg-current"
+            />
+            <motion.span
+              animate={isOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
+              className="w-6 h-0.5 bg-current origin-center"
+            />
           </button>
         </nav>
       </div>
@@ -163,73 +187,76 @@ const Navbar = () => {
             transition={{ duration: 0.3 }}
             className="lg:hidden bg-background border-b border-border overflow-hidden"
           >
-            <div className="container mx-auto px-4 py-4 space-y-2">
-              {navLinks.map((link) => (
-                link.href.startsWith("/#") ? (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    onClick={(e) => {
-                      if (isHomePage) {
-                        e.preventDefault();
-                        handleNavClick(link.href);
-                      }
-                    }}
-                    className="block py-3 text-foreground hover:text-primary font-medium transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={link.label}
-                    to={link.href}
-                    onClick={() => setIsOpen(false)}
-                    className={`block py-3 text-foreground hover:text-primary font-medium transition-colors ${
-                      location.pathname === link.href ? "text-primary" : ""
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                )
+            <div className="container mx-auto px-4 py-6 space-y-2">
+              {navLinks.map((link, index) => (
+                <motion.div
+                  key={link.label}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  {link.href.startsWith("/#") ? (
+                    <a
+                      href={link.href}
+                      onClick={(e) => {
+                        if (isHomePage) {
+                          e.preventDefault();
+                          handleNavClick(link.href);
+                        }
+                      }}
+                      className="block py-3 text-foreground hover:text-primary font-medium transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className={`block py-3 text-foreground hover:text-primary font-medium transition-colors ${
+                        location.pathname === link.href ? "text-primary" : ""
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  )}
+                </motion.div>
               ))}
-              <div className="pt-4 space-y-3">
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="pt-6 space-y-3 border-t border-border mt-4"
+              >
                 <a
                   href="tel:+39021234567"
-                  className="flex items-center gap-2 text-foreground"
+                  className="flex items-center gap-2 text-foreground py-2"
                 >
                   <Phone className="w-4 h-4 text-primary" />
                   02 1234567
                 </a>
                 {user ? (
-                  <>
-                    <Link to="/profilo" onClick={() => setIsOpen(false)}>
-                      <Button variant="outline" className="w-full">
-                        <User className="w-4 h-4 mr-2" />
-                        Il Mio Profilo
-                      </Button>
-                    </Link>
-                    <Link to="/prenota" onClick={() => setIsOpen(false)}>
-                      <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
-                        Prenota Ora
-                      </Button>
-                    </Link>
-                  </>
+                  <Link to="/profilo" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      <User className="w-4 h-4 mr-2" />
+                      Il Mio Profilo
+                    </Button>
+                  </Link>
                 ) : (
-                  <>
-                    <Link to="/auth" onClick={() => setIsOpen(false)}>
-                      <Button variant="outline" className="w-full">
-                        <User className="w-4 h-4 mr-2" />
-                        Accedi / Registrati
-                      </Button>
-                    </Link>
-                    <Link to="/prenota" onClick={() => setIsOpen(false)}>
-                      <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-red">
-                        Prenota Ora
-                      </Button>
-                    </Link>
-                  </>
+                  <Link to="/auth" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      <User className="w-4 h-4 mr-2" />
+                      Accedi / Registrati
+                    </Button>
+                  </Link>
                 )}
-              </div>
+                <Link to="/ordina" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-red mt-2">
+                    <ShoppingBag className="w-4 h-4 mr-2" />
+                    Ordina Ora
+                  </Button>
+                </Link>
+              </motion.div>
             </div>
           </motion.div>
         )}
