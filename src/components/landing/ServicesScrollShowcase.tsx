@@ -40,42 +40,76 @@ const services = [
 interface ServiceItemProps {
   service: typeof services[0];
   index: number;
+  totalServices: number;
 }
 
-const ServiceItem = ({ service, index }: ServiceItemProps) => {
+const ServiceItem = ({ service, index, totalServices }: ServiceItemProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(itemRef, { once: true, margin: "-10% 0px -10% 0px" });
+  
+  // Scroll-based animations like PizzaScrollShowcase
+  const { scrollYProgress } = useScroll({
+    target: itemRef,
+    offset: ["start end", "end start"]
+  });
+
+  // Spring config for smooth animations
+  const springConfig = { stiffness: 50, damping: 20 };
+
+  // Transforms like PizzaScrollShowcase
+  const rawOpacity = useTransform(scrollYProgress, [0, 0.2, 0.5, 0.8, 1], [0, 1, 1, 1, 0]);
+  const rawY = useTransform(scrollYProgress, [0, 0.2, 0.5, 0.8, 1], [80, 0, 0, 0, -80]);
+  
+  const opacity = useSpring(rawOpacity, springConfig);
+  const y = useSpring(rawY, springConfig);
+
+  // Text animations
+  const textOpacity = useTransform(scrollYProgress, [0.1, 0.3, 0.5, 0.7, 0.9], [0, 1, 1, 1, 0]);
+  const textX = useTransform(scrollYProgress, [0.1, 0.3], [index % 2 === 0 ? -30 : 30, 0]);
+  
+  const smoothTextOpacity = useSpring(textOpacity, springConfig);
+  const smoothTextX = useSpring(textX, springConfig);
 
   // Alternate layout direction
   const isEven = index % 2 === 0;
 
   return (
-    <div ref={itemRef} className="py-16 lg:py-24 flex items-center justify-center relative">
-      <div className={`container mx-auto px-4 grid lg:grid-cols-2 gap-8 lg:gap-16 items-center ${isEven ? '' : 'lg:flex-row-reverse'}`}>
+    <div ref={itemRef} className="min-h-[80vh] flex items-center justify-center relative py-12">
+      {/* Scroll indicator dots - like PizzaScrollShowcase */}
+      <div className="hidden lg:flex fixed right-8 top-1/2 -translate-y-1/2 flex-col gap-3 z-20">
+        {[...Array(totalServices)].map((_, i) => (
+          <motion.div
+            key={i}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              i === index ? 'bg-white scale-150' : 'bg-white/30'
+            }`}
+          />
+        ))}
+      </div>
+
+      <div className={`container mx-auto px-4 grid lg:grid-cols-2 gap-8 lg:gap-16 items-center`}>
         
-        {/* Image Side - Simplified fade-in animation */}
+        {/* Image Side with scroll-based animation */}
         <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className={`relative flex justify-center ${isEven ? 'lg:order-1' : 'lg:order-2'}`}
+          style={{ opacity, y }}
+          className={`relative flex justify-center will-change-transform ${isEven ? 'lg:order-1' : 'lg:order-2'}`}
         >
-          {/* Glow effect behind image */}
+          {/* Pulsing glow effect behind image - like PizzaScrollShowcase */}
           <motion.div
             animate={{ 
-              scale: isInView ? [1, 1.1, 1] : 1,
-              opacity: isInView ? [0.3, 0.5, 0.3] : 0 
+              scale: [1, 1.15, 1],
+              opacity: [0.3, 0.5, 0.3] 
             }}
-            transition={{ duration: 3, repeat: Infinity }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <div className="w-[90%] h-[90%] rounded-3xl bg-gradient-to-br from-white/30 via-white/20 to-transparent blur-3xl" />
+            <div className="w-[85%] h-[85%] rounded-3xl bg-gradient-to-br from-white/40 via-white/20 to-transparent blur-3xl" />
           </motion.div>
           
           {/* Main Image */}
           <div className="relative w-full max-w-md lg:max-w-lg">
             <motion.div
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.03 }}
+              transition={{ type: "spring", stiffness: 200 }}
               className="relative rounded-3xl overflow-hidden aspect-[4/5] shadow-2xl"
             >
               <img
@@ -84,13 +118,14 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
                 className="w-full h-full object-cover"
               />
               {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
               
-              {/* Icon Badge */}
+              {/* Icon Badge - animated */}
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: isInView ? 1 : 0 }}
-                transition={{ delay: 0.3, type: "spring" }}
+                initial={{ scale: 0, rotate: -180 }}
+                whileInView={{ scale: 1, rotate: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
                 className="absolute bottom-4 right-4 w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white shadow-lg"
               >
                 <service.icon className="w-8 h-8" />
@@ -100,24 +135,23 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
             {/* Decorative elements */}
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
               className="absolute -top-4 -left-4 w-16 h-16 border-2 border-dashed border-white/30 rounded-full"
             />
             <div className="absolute -bottom-4 -right-4 w-24 h-24 border-2 border-white/20 rounded-3xl" />
           </div>
         </motion.div>
 
-        {/* Content Side - Simplified fade-in animation */}
+        {/* Content Side with scroll-based animation */}
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-          className={`space-y-6 ${isEven ? 'lg:order-2' : 'lg:order-1'} ${isEven ? 'lg:text-left' : 'lg:text-right'}`}
+          style={{ opacity: smoothTextOpacity, x: smoothTextX }}
+          className={`space-y-6 will-change-transform ${isEven ? 'lg:order-2' : 'lg:order-1'} ${isEven ? 'lg:text-left' : 'lg:text-right'}`}
         >
           {/* Subtitle Badge */}
           <motion.div 
-            initial={{ opacity: 0, x: isEven ? -20 : 20 }}
-            animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : (isEven ? -20 : 20) }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
             transition={{ delay: 0.2 }}
             className={`inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-white/20 ${isEven ? '' : 'lg:ml-auto'}`}
           >
@@ -128,8 +162,9 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
           {/* Title */}
           <motion.h2 
             initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
-            transition={{ delay: 0.3 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3, type: "spring", stiffness: 80 }}
             className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white"
           >
             {service.title}
@@ -138,7 +173,8 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
           {/* Description */}
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ delay: 0.4 }}
             className="text-white/80 text-lg lg:text-xl leading-relaxed max-w-lg"
           >
@@ -148,25 +184,31 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
           {/* Features */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ delay: 0.5 }}
             className={`flex flex-wrap gap-3 ${isEven ? '' : 'lg:justify-end'}`}
           >
             {service.features.map((feature, i) => (
-              <span 
+              <motion.span 
                 key={i}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.5 + i * 0.1 }}
                 className="px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-sm text-white/90"
               >
                 {feature}
-              </span>
+              </motion.span>
             ))}
           </motion.div>
           
           {/* CTA Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
-            transition={{ delay: 0.6 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.7 }}
           >
             <Link to={service.cta.link}>
               <Button 
@@ -214,8 +256,8 @@ const ServicesScrollShowcase = () => {
         className="absolute bottom-40 right-10 w-48 h-48 rounded-full bg-white/10 blur-3xl"
       />
       
-      {/* Section Header - Non-sticky, normal flow */}
-      <div className="pt-20 pb-12">
+      {/* Section Header */}
+      <div className="pt-20 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -234,14 +276,19 @@ const ServicesScrollShowcase = () => {
         </motion.div>
       </div>
       
-      {/* Services Items - Normal scroll flow */}
+      {/* Services Items - with scroll animations */}
       <div ref={containerRef}>
         {services.map((service, index) => (
-          <ServiceItem key={service.id} service={service} index={index} />
+          <ServiceItem 
+            key={service.id} 
+            service={service} 
+            index={index} 
+            totalServices={services.length}
+          />
         ))}
       </div>
       
-      {/* Bottom Spacer with CTA */}
+      {/* Bottom CTA */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
