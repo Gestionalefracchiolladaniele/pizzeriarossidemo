@@ -1,15 +1,8 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Quote, Flame, Clock, Award, Leaf } from "lucide-react";
+import { Quote } from "lucide-react";
 import { useRef } from "react";
 import { WaveDivider } from "@/components/ui/WaveDivider";
 import { Button } from "@/components/ui/button";
-
-const features = [
-  { icon: Flame, title: "Forno a Legna", description: "485°C per una cottura perfetta in 90 secondi", color: "from-orange-500 to-red-500" },
-  { icon: Clock, title: "Impasto 72h", description: "Lievitazione lenta per massima digeribilità", color: "from-amber-500 to-orange-500" },
-  { icon: Award, title: "Ingredienti DOP", description: "Solo prodotti certificati e selezionati", color: "from-yellow-500 to-amber-500" },
-  { icon: Leaf, title: "100% Fresco", description: "Ingredienti freschi ogni giorno", color: "from-green-500 to-emerald-500" },
-];
 
 const AboutSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -23,11 +16,11 @@ const AboutSection = () => {
 
   return (
     <>
-      {/* First part - Light pink/rose background with image */}
-      <section id="chi-siamo" ref={sectionRef} className="py-20 lg:py-28 relative overflow-hidden bg-gradient-to-br from-[hsl(var(--section-rose))] via-[hsl(var(--section-rose-light))] to-[hsl(var(--section-rose))]">
+      {/* First part - Strong Orange background with image */}
+      <section id="chi-siamo" ref={sectionRef} className="py-20 lg:py-28 relative overflow-hidden bg-gradient-to-br from-[hsl(var(--section-orange-strong))] via-[hsl(var(--section-orange-strong-light))] to-[hsl(var(--section-orange-strong))]">
         {/* Subtle shimmer overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_hsl(var(--section-rose-light)/0.6)_0%,_transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,_hsl(var(--cream)/0.3)_0%,_transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_hsl(var(--section-orange-strong-light)/0.6)_0%,_transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,_hsl(var(--gold)/0.15)_0%,_transparent_50%)]" />
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             {/* Image Side with Parallax */}
@@ -106,26 +99,6 @@ const AboutSection = () => {
                 extravergine d'oliva della nostra terra.
               </p>
 
-              {/* Features Grid - Premium Style */}
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                {features.map((feature, index) => (
-                  <motion.div
-                    key={feature.title}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.15 }}
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    className="group p-5 rounded-2xl bg-primary/5 border border-primary/10 hover:border-primary/30 hover:shadow-[0_8px_30px_-8px_hsl(var(--pizzeria-red)/0.15)] transition-all duration-300"
-                  >
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center shrink-0 mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
-                      <feature.icon className="w-7 h-7 text-white" />
-                    </div>
-                    <div className="font-bold text-foreground text-base mb-1">{feature.title}</div>
-                    <div className="text-sm text-muted-foreground leading-relaxed">{feature.description}</div>
-                  </motion.div>
-                ))}
-              </div>
             </motion.div>
           </div>
         </div>

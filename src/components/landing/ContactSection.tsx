@@ -6,30 +6,30 @@ import { Textarea } from "@/components/ui/textarea";
 
 const ContactSection = () => {
   return (
-    <section id="contatti" className="py-20 lg:py-28 bg-gradient-to-br from-[hsl(var(--section-red-dark))] via-[hsl(var(--section-red))] to-[hsl(var(--section-red-dark))] relative overflow-hidden">
+    <section id="contatti" className="py-20 lg:py-28 bg-gradient-to-br from-[hsl(var(--section-orange-strong))] via-[hsl(var(--section-orange-strong-light))] to-[hsl(var(--section-orange-strong))] relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_hsl(var(--pizzeria-red-light)/0.2)_0%,_transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,_hsl(var(--cream)/0.08)_0%,_transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_hsl(var(--gold)/0.15)_0%,_transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,_hsl(var(--section-orange-strong-light)/0.4)_0%,_transparent_50%)]" />
       
       {/* Decorative dots pattern */}
       <div 
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 opacity-15"
         style={{
-          backgroundImage: `radial-gradient(circle, hsl(var(--cream)) 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(circle, hsl(var(--pizzeria-red)) 1px, transparent 1px)`,
           backgroundSize: '30px 30px'
         }}
       />
       
       {/* Floating decorative elements */}
       <motion.div
-        animate={{ y: [0, -20, 0], opacity: [0.1, 0.2, 0.1] }}
+        animate={{ y: [0, -20, 0], opacity: [0.15, 0.25, 0.15] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-20 right-20 w-48 h-48 rounded-full bg-[hsl(var(--pizzeria-red))]/20 blur-3xl"
+        className="absolute top-20 right-20 w-48 h-48 rounded-full bg-[hsl(var(--gold))]/20 blur-3xl"
       />
       <motion.div
-        animate={{ y: [0, 20, 0], opacity: [0.1, 0.15, 0.1] }}
+        animate={{ y: [0, 20, 0], opacity: [0.1, 0.2, 0.1] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-20 left-20 w-56 h-56 rounded-full bg-[hsl(var(--gold))]/10 blur-3xl"
+        className="absolute bottom-20 left-20 w-56 h-56 rounded-full bg-[hsl(var(--pizzeria-red))]/15 blur-3xl"
       />
       
       <div className="container mx-auto px-4 relative z-10">
@@ -41,13 +41,13 @@ const ContactSection = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12 lg:mb-16"
         >
-          <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm text-white/90 text-sm font-semibold rounded-full mb-4 border border-white/20">
+          <div className="inline-block px-4 py-2 bg-foreground/10 backdrop-blur-sm text-foreground/90 text-sm font-semibold rounded-full mb-4 border border-foreground/20">
             Contatti
           </div>
-          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Vieni a <span className="text-[hsl(var(--pizzeria-red-light))]">Trovarci</span>
+          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+            Vieni a <span className="text-primary">Trovarci</span>
           </h2>
-          <p className="text-white/60 text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Siamo nel cuore di Milano. Passa a trovarci o contattaci per qualsiasi informazione
           </p>
         </motion.div>
@@ -62,7 +62,7 @@ const ContactSection = () => {
             className="space-y-6"
           >
             {/* Map */}
-            <div className="relative rounded-2xl overflow-hidden h-64 lg:h-80 border-2 border-white/20">
+            <div className="relative rounded-2xl overflow-hidden h-64 lg:h-80 border-2 border-foreground/15 shadow-lg">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2798.0515!2d9.1900!3d45.4642!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjnCsDI3JzUxLjEiTiA5wrAxMScyNC4wIkU!5e0!3m2!1sit!2sit!4v1600000000000!5m2!1sit!2sit"
                 width="100%"
@@ -90,17 +90,17 @@ const ContactSection = () => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ x: 4, scale: 1.01 }}
-                  className="bg-white/5 backdrop-blur-sm rounded-2xl p-5 border-2 border-white/10 hover:border-[hsl(var(--pizzeria-red))]/40 hover:bg-white/10 hover:shadow-[0_8px_30px_-8px_hsl(var(--pizzeria-red)/0.2)] transition-all duration-300"
+                  className="bg-card/80 backdrop-blur-sm rounded-2xl p-5 border border-border hover:border-primary/40 hover:shadow-lg transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-[hsl(var(--pizzeria-red))]/20 flex items-center justify-center text-[hsl(var(--pizzeria-red-light))] shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-primary shrink-0">
                       <item.icon className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-white mb-0.5">{item.title}</h4>
-                      <p className="text-sm text-white/60">
+                      <h4 className="font-bold text-foreground mb-0.5">{item.title}</h4>
+                      <p className="text-sm text-muted-foreground">
                         {item.line1}
-                        <span className="mx-2 text-white/30">•</span>
+                        <span className="mx-2 text-muted-foreground/50">•</span>
                         {item.line2}
                       </p>
                     </div>
@@ -117,62 +117,62 @@ const ContactSection = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-6 lg:p-8 border-2 border-white/15 shadow-[0_8px_30px_-8px_rgba(0,0,0,0.3)]">
-              <div className="inline-block px-3 py-1 bg-[hsl(var(--pizzeria-red))]/20 text-[hsl(var(--pizzeria-red-light))] text-xs font-semibold rounded-full mb-4">
+            <div className="bg-card/90 backdrop-blur-sm rounded-3xl p-6 lg:p-8 border border-border shadow-xl">
+              <div className="inline-block px-3 py-1 bg-primary/15 text-primary text-xs font-semibold rounded-full mb-4">
                 Prenotazione
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">
+              <h3 className="text-2xl font-bold text-foreground mb-2">
                 Prenota il Tuo Tavolo
               </h3>
-              <p className="text-white/60 mb-6">
+              <p className="text-muted-foreground mb-6">
                 Compila il form e ti ricontatteremo per confermare la prenotazione
               </p>
 
               <form className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Nome *
                     </label>
                     <Input 
                       placeholder="Il tuo nome" 
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[hsl(var(--pizzeria-red))] focus:ring-[hsl(var(--pizzeria-red))]"
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Telefono *
                     </label>
                     <Input 
                       placeholder="+39 333 1234567" 
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[hsl(var(--pizzeria-red))] focus:ring-[hsl(var(--pizzeria-red))]"
+                      className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
                     />
                   </div>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Data *
                     </label>
                     <Input 
                       type="date" 
-                      className="bg-white/10 border-white/20 text-white focus:border-[hsl(var(--pizzeria-red))] focus:ring-[hsl(var(--pizzeria-red))] [color-scheme:dark]"
+                      className="bg-background border-border text-foreground focus:border-primary focus:ring-primary"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Ora *
                     </label>
                     <Input 
                       type="time" 
-                      className="bg-white/10 border-white/20 text-white focus:border-[hsl(var(--pizzeria-red))] focus:ring-[hsl(var(--pizzeria-red))] [color-scheme:dark]"
+                      className="bg-background border-border text-foreground focus:border-primary focus:ring-primary"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white/80 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Numero persone *
                   </label>
                   <Input 
@@ -180,31 +180,31 @@ const ContactSection = () => {
                     min="1" 
                     max="20" 
                     placeholder="2" 
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[hsl(var(--pizzeria-red))] focus:ring-[hsl(var(--pizzeria-red))]"
+                    className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white/80 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Note (opzionale)
                   </label>
                   <Textarea 
                     placeholder="Allergie, richieste speciali, occasioni particolari..."
                     rows={3}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[hsl(var(--pizzeria-red))] focus:ring-[hsl(var(--pizzeria-red))] resize-none"
+                    className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary resize-none"
                   />
                 </div>
 
                 <Button 
                   type="submit" 
                   size="lg" 
-                  className="w-full bg-[hsl(var(--pizzeria-red))] hover:bg-[hsl(var(--pizzeria-red-light))] text-white shadow-[0_4px_20px_-4px_hsl(var(--pizzeria-red)/0.5)]"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-red"
                 >
                   Invia Richiesta
                   <Send className="w-4 h-4 ml-2" />
                 </Button>
 
-                <p className="text-xs text-white/50 text-center">
+                <p className="text-xs text-muted-foreground text-center">
                   Ti contatteremo entro 2 ore per confermare la prenotazione
                 </p>
               </form>

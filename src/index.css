@@ -71,11 +71,13 @@
     --section-charcoal: 20 18% 10%;
     --section-cream-warm: 35 45% 94%;
     
-    /* New section colors - Rose (pink) and Orange */
+    /* New section colors - Strong Orange (unified) */
     --section-rose: 10 50% 92%;
     --section-rose-light: 10 60% 95%;
-    --section-orange: 30 65% 90%;
-    --section-orange-light: 32 70% 93%;
+    --section-orange: 28 70% 85%;
+    --section-orange-light: 30 65% 88%;
+    --section-orange-strong: 25 75% 82%;
+    --section-orange-strong-light: 28 70% 86%;
 
     --sidebar-background: 35 30% 97%;
     --sidebar-foreground: 240 5.3% 26.1%;
