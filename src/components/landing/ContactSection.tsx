@@ -6,8 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 
 const ContactSection = () => {
   return (
-    <section id="contatti" className="py-20 lg:py-28 bg-secondary/30">
-      <div className="container mx-auto px-4">
+    <section id="contatti" className="py-20 lg:py-28 bg-gradient-cream relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-pattern-dots opacity-20" />
+      
+      <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -16,11 +19,11 @@ const ContactSection = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12 lg:mb-16"
         >
-          <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
+          <div className="inline-block px-4 py-2 bg-primary/10 text-primary text-sm font-semibold rounded-full mb-4">
             Contatti
           </div>
           <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Vieni a <span className="text-primary">Trovarci</span>
+            Vieni a <span className="text-gradient-red">Trovarci</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Siamo nel cuore di Milano. Passa a trovarci o contattaci per qualsiasi informazione
@@ -50,67 +53,38 @@ const ContactSection = () => {
               />
             </div>
 
-            {/* Info Cards */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="bg-card rounded-xl p-5 border border-border hover:border-primary/30 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <MapPin className="w-5 h-5" />
+            {/* Info Cards - Premium Vertical List */}
+            <div className="space-y-4">
+              {[
+                { icon: MapPin, title: "Indirizzo", line1: "Via Roma 123", line2: "20121 Milano (MI)" },
+                { icon: Phone, title: "Telefono", line1: "02 1234567", line2: "WhatsApp attivo" },
+                { icon: Mail, title: "Email", line1: "info@pizzeriarossi.it", line2: "ordini@pizzeriarossi.it" },
+                { icon: Clock, title: "Orari", line1: "Mar-Dom: 18:00-23:00", line2: "Lunedì: Chiuso" },
+              ].map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ x: 4, scale: 1.01 }}
+                  className="bg-card rounded-2xl p-5 border-2 border-border hover:border-primary/30 hover:shadow-[0_8px_30px_-8px_hsl(var(--pizzeria-red)/0.1)] transition-all duration-300"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                      <item.icon className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-foreground mb-0.5">{item.title}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {item.line1}
+                        <span className="mx-2 text-border">•</span>
+                        {item.line2}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Indirizzo</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Via Roma 123<br />
-                      20121 Milano (MI)
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-card rounded-xl p-5 border border-border hover:border-primary/30 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <Phone className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Telefono</h4>
-                    <p className="text-sm text-muted-foreground">
-                      02 1234567<br />
-                      WhatsApp attivo
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-card rounded-xl p-5 border border-border hover:border-primary/30 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <Mail className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Email</h4>
-                    <p className="text-sm text-muted-foreground">
-                      info@pizzeriarossi.it<br />
-                      ordini@pizzeriarossi.it
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-card rounded-xl p-5 border border-border hover:border-primary/30 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Orari</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Mar-Dom: 18:00-23:00<br />
-                      Lunedì: Chiuso
-                    </p>
-                  </div>
-                </div>
-              </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
 
@@ -121,9 +95,12 @@ const ContactSection = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <div className="bg-card rounded-2xl p-6 lg:p-8 border border-border">
-              <h3 className="text-xl font-bold text-foreground mb-2">
-                Prenotazione Rapida
+            <div className="bg-card rounded-3xl p-6 lg:p-8 border-2 border-border shadow-[0_8px_30px_-8px_rgba(0,0,0,0.08)]">
+              <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full mb-4">
+                Prenotazione
+              </div>
+              <h3 className="text-2xl font-bold text-foreground mb-2">
+                Prenota il Tuo Tavolo
               </h3>
               <p className="text-muted-foreground mb-6">
                 Compila il form e ti ricontatteremo per confermare la prenotazione

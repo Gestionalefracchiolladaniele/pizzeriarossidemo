@@ -67,15 +67,17 @@ const TestimonialsSection = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          {/* Large decorative quotes */}
+          {/* Large decorative quotes - Enhanced */}
           <div className="relative inline-block mb-6">
             <motion.div
               initial={{ scale: 0, rotate: -20 }}
               whileInView={{ scale: 1, rotate: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2, type: "spring" }}
+              className="relative"
             >
-              <Quote className="w-16 h-16 text-primary/20" />
+              <Quote className="w-20 h-20 lg:w-24 lg:h-24 text-primary/30" />
+              <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl -z-10" />
             </motion.div>
           </div>
 
@@ -87,32 +89,40 @@ const TestimonialsSection = () => {
             Cosa Dicono i <span className="text-gradient-red">Nostri Clienti</span>
           </h2>
           
-          {/* Google Rating Badge */}
+          {/* Google Rating Badge - Enhanced */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="inline-flex items-center gap-4 mt-6 px-6 py-3 bg-card rounded-full border border-border shadow-lg"
+            className="inline-flex flex-col sm:flex-row items-center gap-4 mt-6 px-6 py-5 bg-card rounded-2xl border-2 border-primary/20 shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)]"
           >
             <div className="flex flex-col items-center">
-              <span className="text-2xl font-bold text-foreground">ECCELLENTE</span>
-              <div className="flex items-center gap-1 mt-1">
+              <span className="text-2xl lg:text-3xl font-bold text-gradient-red">ECCELLENTE</span>
+              <div className="flex items-center gap-1 mt-2">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-[hsl(var(--gold))] text-[hsl(var(--gold))]" />
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0, rotate: -30 }}
+                    whileInView={{ scale: 1, rotate: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.4 + i * 0.1, type: "spring" }}
+                  >
+                    <Star className="w-6 h-6 fill-[hsl(var(--gold))] text-[hsl(var(--gold))]" />
+                  </motion.div>
                 ))}
               </div>
             </div>
-            <div className="h-12 w-px bg-border" />
-            <div className="text-left">
+            <div className="hidden sm:block h-14 w-px bg-border" />
+            <div className="text-center sm:text-left">
               <div className="text-sm text-muted-foreground">In base a</div>
-              <div className="font-semibold text-foreground">523 recensioni</div>
+              <div className="font-bold text-xl text-primary">523 recensioni</div>
             </div>
-            <div className="h-12 w-px bg-border" />
+            <div className="hidden sm:block h-14 w-px bg-border" />
             <img 
               src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" 
               alt="Google" 
-              className="h-6"
+              className="h-7"
             />
           </motion.div>
         </motion.div>
@@ -193,32 +203,33 @@ const TestimonialsSection = () => {
           ))}
         </div>
 
-        {/* Stats */}
+        {/* Stats - Enhanced */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mt-16 grid grid-cols-3 gap-8 max-w-3xl mx-auto"
+          className="mt-16 grid grid-cols-3 gap-4 lg:gap-8 max-w-3xl mx-auto"
         >
           {[
-            { value: "4.9", label: "Valutazione Media", suffix: "/5" },
-            { value: "500+", label: "Recensioni", suffix: "" },
-            { value: "98%", label: "Ci Raccomandano", suffix: "" },
+            { value: "4.9", label: "Valutazione Media", suffix: "/5", color: "text-gradient-red" },
+            { value: "500+", label: "Recensioni", suffix: "", color: "text-[hsl(var(--gold))]" },
+            { value: "98%", label: "Ci Raccomandano", suffix: "", color: "text-gradient-red" },
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.2 + index * 0.1 }}
-              className="text-center"
+              transition={{ delay: 0.2 + index * 0.15 }}
+              whileHover={{ scale: 1.05 }}
+              className="text-center p-4 lg:p-6 rounded-2xl bg-card/50 border border-border/50"
             >
-              <div className="text-4xl lg:text-5xl font-bold text-gradient-red">
+              <div className={`text-3xl lg:text-5xl font-bold ${stat.color}`}>
                 {stat.value}
-                <span className="text-2xl">{stat.suffix}</span>
+                <span className="text-xl lg:text-2xl">{stat.suffix}</span>
               </div>
-              <div className="text-muted-foreground mt-1">{stat.label}</div>
+              <div className="text-sm lg:text-base text-muted-foreground mt-2">{stat.label}</div>
             </motion.div>
           ))}
         </motion.div>

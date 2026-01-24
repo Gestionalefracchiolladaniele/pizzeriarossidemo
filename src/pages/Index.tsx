@@ -2,8 +2,8 @@ import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
 import StatsSection from "@/components/landing/StatsSection";
 import AboutSection from "@/components/landing/AboutSection";
-import ServicesSection from "@/components/landing/ServicesSection";
 import PizzaScrollShowcase from "@/components/landing/PizzaScrollShowcase";
+import ServicesScrollShowcase from "@/components/landing/ServicesScrollShowcase";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FAQSection from "@/components/landing/FAQSection";
 import ContactSection from "@/components/landing/ContactSection";
@@ -24,9 +24,12 @@ const Index = () => {
       </div>
       <PizzaScrollShowcase />
       <div className="relative">
+        <WaveDivider variant="bottom" color="hsl(var(--cream))" />
+      </div>
+      <ServicesScrollShowcase />
+      <div className="relative bg-[hsl(var(--cream))]">
         <WaveDivider variant="bottom" color="hsl(var(--background))" />
       </div>
-      <ServicesSection />
       <TestimonialsSection />
       <FAQSection />
       <ContactSection />

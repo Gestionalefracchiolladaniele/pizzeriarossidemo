@@ -325,6 +325,25 @@
     @apply bg-card rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300;
   }
 
+  /* Soft shadows - Premium style */
+  .shadow-soft {
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .shadow-soft-lg {
+    box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Featured border */
+  .border-featured {
+    @apply border-2 border-primary/30;
+  }
+
+  /* Primary soft background */
+  .bg-primary-soft {
+    @apply bg-primary/5;
+  }
+
   /* Torn paper effect */
   .torn-paper {
     clip-path: polygon(
