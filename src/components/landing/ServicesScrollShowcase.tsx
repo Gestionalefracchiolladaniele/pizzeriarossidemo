@@ -44,36 +44,20 @@ interface ServiceItemProps {
 
 const ServiceItem = ({ service, index }: ServiceItemProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(itemRef, { margin: "-40% 0px -40% 0px" });
-  
-  const { scrollYProgress } = useScroll({
-    target: itemRef,
-    offset: ["start end", "end start"],
-  });
-
-  // Smooth spring animations
-  const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
-  
-  const rawScale = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.7, 1], [0.7, 0.95, 1, 0.95, 0.7]);
-  const rawOpacity = useTransform(scrollYProgress, [0, 0.25, 0.5, 0.75, 1], [0, 0.9, 1, 0.9, 0]);
-  const rawRotate = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.7, 1], [-8, -2, 0, 2, 8]);
-  const rawY = useTransform(scrollYProgress, [0, 0.5, 1], [80, 0, -80]);
-  
-  const scale = useSpring(rawScale, springConfig);
-  const opacity = useSpring(rawOpacity, springConfig);
-  const rotate = useSpring(rawRotate, springConfig);
-  const y = useSpring(rawY, springConfig);
+  const isInView = useInView(itemRef, { once: true, margin: "-10% 0px -10% 0px" });
 
   // Alternate layout direction
   const isEven = index % 2 === 0;
 
   return (
-    <div ref={itemRef} className="h-screen flex items-center justify-center relative">
+    <div ref={itemRef} className="py-16 lg:py-24 flex items-center justify-center relative">
       <div className={`container mx-auto px-4 grid lg:grid-cols-2 gap-8 lg:gap-16 items-center ${isEven ? '' : 'lg:flex-row-reverse'}`}>
         
-        {/* Image Side */}
+        {/* Image Side - Simplified fade-in animation */}
         <motion.div 
-          style={{ scale, opacity, rotate, y }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, ease: "easeOut" }}
           className={`relative flex justify-center ${isEven ? 'lg:order-1' : 'lg:order-2'}`}
         >
           {/* Glow effect behind image */}
@@ -123,9 +107,11 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
           </div>
         </motion.div>
 
-        {/* Content Side */}
+        {/* Content Side - Simplified fade-in animation */}
         <motion.div 
-          style={{ opacity, y }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           className={`space-y-6 ${isEven ? 'lg:order-2' : 'lg:order-1'} ${isEven ? 'lg:text-left' : 'lg:text-right'}`}
         >
           {/* Subtitle Badge */}
@@ -228,16 +214,13 @@ const ServicesScrollShowcase = () => {
         className="absolute bottom-40 right-10 w-48 h-48 rounded-full bg-white/10 blur-3xl"
       />
       
-      {/* Section Header - Sticky with SOLID background */}
-      <div className="sticky top-0 z-30 bg-[hsl(var(--section-green))] pt-20 pb-16">
-        {/* Bottom fade overlay */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-[hsl(var(--section-green))] to-[hsl(var(--section-green)/0.95)]" />
-        
+      {/* Section Header - Non-sticky, normal flow */}
+      <div className="pt-20 pb-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="container mx-auto px-4 text-center relative z-10"
+          className="container mx-auto px-4 text-center"
         >
           <div className="inline-block px-4 py-2 bg-white/15 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-white/20 mb-4">
             I Nostri Servizi
@@ -251,8 +234,8 @@ const ServicesScrollShowcase = () => {
         </motion.div>
       </div>
       
-      {/* Services Items */}
-      <div ref={containerRef} className="-mt-20">
+      {/* Services Items - Normal scroll flow */}
+      <div ref={containerRef}>
         {services.map((service, index) => (
           <ServiceItem key={service.id} service={service} index={index} />
         ))}

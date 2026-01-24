@@ -67,24 +67,21 @@ interface PizzaItemProps {
 
 const PizzaItem = ({ pizza, index, totalPizzas }: PizzaItemProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { margin: "-40% 0px -40% 0px" });
+  const isInView = useInView(ref, { once: true, margin: "-20% 0px -20% 0px" });
   
+  // Optimized spring config for smoother animations
+  const springConfig = { stiffness: 50, damping: 20 };
+  
+  // Simplified transforms - only opacity and y for performance
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"]
   });
 
-  // Smooth spring animations
-  const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
+  const rawOpacity = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.7, 1], [0.3, 1, 1, 1, 0.3]);
+  const rawY = useTransform(scrollYProgress, [0, 0.5, 1], [60, 0, -60]);
   
-  const rawScale = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.7, 1], [0.6, 0.9, 1, 0.9, 0.6]);
-  const rawOpacity = useTransform(scrollYProgress, [0, 0.25, 0.5, 0.75, 1], [0, 0.8, 1, 0.8, 0]);
-  const rawRotate = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.7, 1], [15, 5, 0, -5, -15]);
-  const rawY = useTransform(scrollYProgress, [0, 0.5, 1], [150, 0, -150]);
-  
-  const scale = useSpring(rawScale, springConfig);
   const opacity = useSpring(rawOpacity, springConfig);
-  const rotate = useSpring(rawRotate, springConfig);
   const y = useSpring(rawY, springConfig);
 
   // Text animations
@@ -102,15 +99,15 @@ const PizzaItem = ({ pizza, index, totalPizzas }: PizzaItemProps) => {
   return (
     <div 
       ref={ref}
-      className="h-screen flex items-center justify-center relative"
+      className="py-16 lg:py-24 flex items-center justify-center relative will-change-transform"
     >
       <div className="container mx-auto px-4">
         <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center justify-center gap-8 lg:gap-16`}>
           
-          {/* Pizza Image - Floating without container */}
+          {/* Pizza Image - Simplified animations */}
           <motion.div
-            style={{ scale, opacity, rotate, y }}
-            className="relative w-[75vw] max-w-[500px] lg:w-[45vw] lg:max-w-[550px] aspect-square"
+            style={{ opacity, y }}
+            className="relative w-[75vw] max-w-[500px] lg:w-[45vw] lg:max-w-[550px] aspect-square will-change-transform"
           >
             {/* Glow effect behind pizza */}
             <motion.div
@@ -257,17 +254,17 @@ const PizzaScrollShowcase = () => {
   const isHeaderInView = useInView(headerRef, { once: true });
 
   return (
-    <section ref={containerRef} className="relative bg-gradient-to-br from-[hsl(var(--section-orange))] via-[hsl(var(--section-orange-light))] to-[hsl(var(--section-orange))]">
+    <section ref={containerRef} className="relative bg-gradient-to-br from-[hsl(var(--section-orange-strong))] via-[hsl(var(--section-orange-strong-light))] to-[hsl(var(--section-orange-strong))]">
       {/* Background gradients for depth */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,_hsl(var(--section-orange-light)/0.8)_0%,_transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,_hsl(var(--gold)/0.15)_0%,_transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,_hsl(var(--section-orange-strong-light)/0.8)_0%,_transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,_hsl(var(--gold)/0.2)_0%,_transparent_50%)]" />
       
       {/* Background pattern */}
       <div className="absolute inset-0 bg-pattern-dots opacity-20" />
       
       {/* Ambient glow decorations */}
-      <div className="absolute top-1/4 left-0 w-96 h-96 bg-[hsl(var(--gold))]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-[hsl(var(--section-orange-light))]/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-0 w-96 h-96 bg-[hsl(var(--gold))]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-[hsl(var(--section-orange-strong-light))]/25 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header - Sticky */}
       <div 

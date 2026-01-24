@@ -3,22 +3,71 @@ import { Facebook, Instagram, Phone, Mail, MapPin, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MultiWaveDivider } from "@/components/ui/WaveDivider";
 
+// SVG Basil leaf path for the pattern
+const basilLeafSVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+  <path d="M20 5C15 5 10 10 8 18C6 26 10 35 20 35C30 35 34 26 32 18C30 10 25 5 20 5Z" fill="currentColor" opacity="0.6"/>
+  <path d="M20 8C18 10 16 15 16 22C16 29 18 32 20 35" stroke="currentColor" stroke-width="0.5" fill="none" opacity="0.4"/>
+</svg>
+`;
+
 const Footer = () => {
   return (
     <footer className="relative bg-[hsl(var(--pizzeria-red))] text-white pt-32 pb-8 overflow-hidden">
-      {/* Wave Divider at top - from red contact section */}
-      <MultiWaveDivider variant="top" primaryColor="hsl(var(--section-red-dark))" />
+      {/* Wave Divider at top - from orange contact section */}
+      <MultiWaveDivider variant="top" primaryColor="hsl(var(--section-orange-strong))" />
       
-      {/* Background pattern */}
+      {/* Basil leaves pattern overlay */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Large scattered basil leaves */}
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: i * 0.05 }}
+            className="absolute text-[hsl(var(--basil-green))]"
+            style={{
+              left: `${(i * 17) % 100}%`,
+              top: `${(i * 23 + 10) % 90}%`,
+              transform: `rotate(${(i * 47) % 360}deg) scale(${0.8 + (i % 3) * 0.3})`,
+            }}
+          >
+            <svg width="50" height="50" viewBox="0 0 40 40" className="opacity-40">
+              <path d="M20 5C15 5 10 10 8 18C6 26 10 35 20 35C30 35 34 26 32 18C30 10 25 5 20 5Z" fill="currentColor"/>
+              <path d="M20 8C18 10 16 15 16 22C16 29 18 32 20 35" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.6"/>
+            </svg>
+          </motion.div>
+        ))}
+        
+        {/* Smaller accent leaves */}
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={`small-${i}`}
+            className="absolute text-[hsl(var(--basil-light))]"
+            style={{
+              left: `${(i * 29 + 5) % 100}%`,
+              top: `${(i * 31 + 15) % 85}%`,
+              transform: `rotate(${(i * 73) % 360}deg) scale(${0.5 + (i % 2) * 0.2})`,
+            }}
+          >
+            <svg width="30" height="30" viewBox="0 0 40 40" className="opacity-25">
+              <path d="M20 5C15 5 10 10 8 18C6 26 10 35 20 35C30 35 34 26 32 18C30 10 25 5 20 5Z" fill="currentColor"/>
+            </svg>
+          </div>
+        ))}
+      </div>
+      
+      {/* Light red texture overlay */}
       <div 
         className="absolute inset-0 opacity-10"
         style={{
-          backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
-          backgroundSize: '25px 25px'
+          backgroundImage: `radial-gradient(circle, hsl(var(--pizzeria-red-light)) 1px, transparent 1px)`,
+          backgroundSize: '20px 20px'
         }}
       />
       
-      {/* Decorative elements */}
+      {/* Decorative rotating circles */}
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 60, repeat: Infinity, ease: "linear" }}

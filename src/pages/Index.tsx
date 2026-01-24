@@ -22,11 +22,11 @@ const Index = () => {
       <PizzaScrollShowcase />
       
       {/* Transition to Green Services Section */}
-      <div className="relative bg-[hsl(var(--section-orange))]">
+      <div className="relative bg-[hsl(var(--section-orange-strong))]">
         <CurveDivider 
           variant="bottom" 
           color="hsl(var(--section-green))" 
-          accentColor="hsl(var(--section-orange-light))"
+          accentColor="hsl(var(--section-orange-strong-light))"
         />
       </div>
       
@@ -53,12 +53,12 @@ const Index = () => {
       {/* FAQ - Gold Background */}
       <FAQSection />
       
-      {/* Transition to Red Contact */}
+      {/* Transition to Orange Contact */}
       <div className="relative bg-[hsl(var(--section-gold))]">
-        <BlobDivider variant="bottom" color="hsl(var(--section-red-dark))" />
+        <BlobDivider variant="bottom" color="hsl(var(--section-orange-strong))" />
       </div>
       
-      {/* Contact - Red Dark Background */}
+      {/* Contact - Orange Background */}
       <ContactSection />
       
       {/* Footer with Red Background */}
