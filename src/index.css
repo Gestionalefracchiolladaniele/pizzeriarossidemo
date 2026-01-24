@@ -70,6 +70,12 @@
     --section-gold-light: 45 80% 55%;
     --section-charcoal: 20 18% 10%;
     --section-cream-warm: 35 45% 94%;
+    
+    /* New section colors - Rose (pink) and Orange */
+    --section-rose: 10 50% 92%;
+    --section-rose-light: 10 60% 95%;
+    --section-orange: 30 65% 90%;
+    --section-orange-light: 32 70% 93%;
 
     --sidebar-background: 35 30% 97%;
     --sidebar-foreground: 240 5.3% 26.1%;

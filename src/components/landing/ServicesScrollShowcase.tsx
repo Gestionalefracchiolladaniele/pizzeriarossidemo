@@ -228,13 +228,16 @@ const ServicesScrollShowcase = () => {
         className="absolute bottom-40 right-10 w-48 h-48 rounded-full bg-white/10 blur-3xl"
       />
       
-      {/* Section Header - Sticky */}
-      <div className="sticky top-0 z-20 bg-gradient-to-b from-[hsl(var(--section-green))] via-[hsl(var(--section-green))] to-transparent pt-20 pb-32">
+      {/* Section Header - Sticky with SOLID background */}
+      <div className="sticky top-0 z-30 bg-[hsl(var(--section-green))] pt-20 pb-16">
+        {/* Bottom fade overlay */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-b from-[hsl(var(--section-green))] to-[hsl(var(--section-green)/0.95)]" />
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="container mx-auto px-4 text-center"
+          className="container mx-auto px-4 text-center relative z-10"
         >
           <div className="inline-block px-4 py-2 bg-white/15 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-white/20 mb-4">
             I Nostri Servizi

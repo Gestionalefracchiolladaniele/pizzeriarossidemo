@@ -257,13 +257,17 @@ const PizzaScrollShowcase = () => {
   const isHeaderInView = useInView(headerRef, { once: true });
 
   return (
-    <section ref={containerRef} className="relative bg-gradient-cream">
+    <section ref={containerRef} className="relative bg-gradient-to-br from-[hsl(var(--section-orange))] via-[hsl(var(--section-orange-light))] to-[hsl(var(--section-orange))]">
+      {/* Background gradients for depth */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,_hsl(var(--section-orange-light)/0.8)_0%,_transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,_hsl(var(--gold)/0.15)_0%,_transparent_50%)]" />
+      
       {/* Background pattern */}
-      <div className="absolute inset-0 bg-pattern-dots opacity-30" />
+      <div className="absolute inset-0 bg-pattern-dots opacity-20" />
       
       {/* Ambient glow decorations */}
-      <div className="fixed top-1/4 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed bottom-1/4 right-0 w-80 h-80 bg-[hsl(var(--gold))]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-0 w-96 h-96 bg-[hsl(var(--gold))]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-[hsl(var(--section-orange-light))]/20 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header - Sticky */}
       <div 

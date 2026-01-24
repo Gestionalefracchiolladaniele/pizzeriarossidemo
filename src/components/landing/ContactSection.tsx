@@ -6,10 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 
 const ContactSection = () => {
   return (
-    <section id="contatti" className="py-20 lg:py-28 bg-[hsl(var(--section-charcoal))] relative overflow-hidden">
+    <section id="contatti" className="py-20 lg:py-28 bg-gradient-to-br from-[hsl(var(--section-red-dark))] via-[hsl(var(--section-red))] to-[hsl(var(--section-red-dark))] relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_hsl(var(--section-charcoal)/0.8)_0%,_transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,_hsl(var(--pizzeria-red)/0.15)_0%,_transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_hsl(var(--pizzeria-red-light)/0.2)_0%,_transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,_hsl(var(--cream)/0.08)_0%,_transparent_50%)]" />
       
       {/* Decorative dots pattern */}
       <div 
