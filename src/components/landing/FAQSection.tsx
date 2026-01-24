@@ -35,8 +35,11 @@ const faqs = [
 
 const FAQSection = () => {
   return (
-    <section id="faq" className="py-20 lg:py-28 bg-background">
-      <div className="container mx-auto px-4">
+    <section id="faq" className="py-20 lg:py-28 bg-background relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-pattern-dots opacity-20" />
+      
+      <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
           {/* Left Column - Header */}
           <motion.div
@@ -46,34 +49,49 @@ const FAQSection = () => {
             transition={{ duration: 0.6 }}
           >
             <div className="lg:sticky lg:top-24">
-              <div className="inline-block px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
+              <div className="inline-block px-4 py-2 bg-[hsl(var(--gold))]/10 text-[hsl(var(--gold-dark))] text-sm font-semibold rounded-full mb-4">
                 FAQ
               </div>
               <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-                Domande <span className="text-primary">Frequenti</span>
+                Domande <span className="text-gradient-red">Frequenti</span>
               </h2>
-              <p className="text-muted-foreground text-lg mb-6">
+              <p className="text-muted-foreground text-lg mb-8">
                 Trova le risposte alle domande più comuni. Non trovi quello che cerchi? 
                 Contattaci direttamente!
               </p>
-              <div className="bg-primary/5 rounded-xl p-6 border border-primary/20">
-                <h3 className="font-semibold text-foreground mb-2">
+              
+              {/* Contact Card - Premium Style */}
+              <motion.div 
+                whileHover={{ y: -4 }}
+                className="bg-primary/5 rounded-2xl p-6 lg:p-8 border-2 border-primary/20 shadow-[0_8px_30px_-8px_hsl(var(--pizzeria-red)/0.15)]"
+              >
+                <h3 className="font-bold text-foreground text-lg mb-2">
                   Hai altre domande?
                 </h3>
-                <p className="text-muted-foreground text-sm mb-4">
+                <p className="text-muted-foreground mb-6">
                   Il nostro team è sempre pronto ad aiutarti
                 </p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-foreground">
-                    <span className="font-medium">📞</span>
-                    <span>02 1234567</span>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 p-3 bg-card rounded-xl border border-border">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-lg">📞</span>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Telefono</div>
+                      <div className="font-semibold text-foreground">02 1234567</div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-foreground">
-                    <span className="font-medium">✉️</span>
-                    <span>info@pizzeriarossi.it</span>
+                  <div className="flex items-center gap-4 p-3 bg-card rounded-xl border border-border">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-lg">✉️</span>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Email</div>
+                      <div className="font-semibold text-foreground">info@pizzeriarossi.it</div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
 
@@ -86,18 +104,25 @@ const FAQSection = () => {
           >
             <Accordion type="single" collapsible className="space-y-4">
               {faqs.map((faq, index) => (
-                <AccordionItem
+                <motion.div
                   key={index}
-                  value={`item-${index}`}
-                  className="bg-card border border-border rounded-xl px-6 data-[state=open]:border-primary/30 data-[state=open]:shadow-lg transition-all duration-300"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
                 >
-                  <AccordionTrigger className="text-left text-foreground hover:text-primary hover:no-underline py-4">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
+                  <AccordionItem
+                    value={`item-${index}`}
+                    className="bg-card border-2 border-border rounded-2xl px-6 data-[state=open]:border-primary/40 data-[state=open]:shadow-[0_8px_30px_-8px_hsl(var(--pizzeria-red)/0.15)] transition-all duration-300"
+                  >
+                    <AccordionTrigger className="text-left text-foreground hover:text-primary hover:no-underline py-5 font-semibold">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                </motion.div>
               ))}
             </Accordion>
           </motion.div>
