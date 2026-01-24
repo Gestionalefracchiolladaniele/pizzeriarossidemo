@@ -3,12 +3,13 @@ import HeroSection from "@/components/landing/HeroSection";
 import StatsSection from "@/components/landing/StatsSection";
 import AboutSection from "@/components/landing/AboutSection";
 import ServicesSection from "@/components/landing/ServicesSection";
-import PizzaShowcase from "@/components/landing/PizzaShowcase";
+import PizzaScrollShowcase from "@/components/landing/PizzaScrollShowcase";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FAQSection from "@/components/landing/FAQSection";
 import ContactSection from "@/components/landing/ContactSection";
 import Footer from "@/components/landing/Footer";
 import { FloatingElements } from "@/components/animations/FloatingElements";
+import WaveDivider from "@/components/ui/WaveDivider";
 
 const Index = () => {
   return (
@@ -18,7 +19,13 @@ const Index = () => {
       <HeroSection />
       <StatsSection />
       <AboutSection />
-      <PizzaShowcase />
+      <div className="relative">
+        <WaveDivider variant="bottom" color="hsl(var(--cream))" />
+      </div>
+      <PizzaScrollShowcase />
+      <div className="relative">
+        <WaveDivider variant="bottom" color="hsl(var(--background))" />
+      </div>
       <ServicesSection />
       <TestimonialsSection />
       <FAQSection />
