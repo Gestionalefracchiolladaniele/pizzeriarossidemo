@@ -23,8 +23,11 @@ const AboutSection = () => {
 
   return (
     <>
-      {/* First part - Light background with image */}
-      <section id="chi-siamo" ref={sectionRef} className="py-20 lg:py-28 bg-background overflow-hidden">
+      {/* First part - Light pink/rose background with image */}
+      <section id="chi-siamo" ref={sectionRef} className="py-20 lg:py-28 relative overflow-hidden bg-gradient-to-br from-[hsl(var(--section-rose))] via-[hsl(var(--section-rose-light))] to-[hsl(var(--section-rose))]">
+        {/* Subtle shimmer overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_hsl(var(--section-rose-light)/0.6)_0%,_transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,_hsl(var(--cream)/0.3)_0%,_transparent_50%)]" />
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             {/* Image Side with Parallax */}

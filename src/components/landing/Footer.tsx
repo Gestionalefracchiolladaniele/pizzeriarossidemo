@@ -6,8 +6,8 @@ import { MultiWaveDivider } from "@/components/ui/WaveDivider";
 const Footer = () => {
   return (
     <footer className="relative bg-[hsl(var(--pizzeria-red))] text-white pt-32 pb-8 overflow-hidden">
-      {/* Wave Divider at top - from dark section */}
-      <MultiWaveDivider variant="top" primaryColor="hsl(var(--section-charcoal))" />
+      {/* Wave Divider at top - from red contact section */}
+      <MultiWaveDivider variant="top" primaryColor="hsl(var(--section-red-dark))" />
       
       {/* Background pattern */}
       <div 

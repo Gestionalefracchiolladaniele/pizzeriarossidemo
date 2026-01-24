@@ -1,6 +1,5 @@
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
-import StatsSection from "@/components/landing/StatsSection";
 import AboutSection from "@/components/landing/AboutSection";
 import PizzaScrollShowcase from "@/components/landing/PizzaScrollShowcase";
 import ServicesScrollShowcase from "@/components/landing/ServicesScrollShowcase";
@@ -17,21 +16,17 @@ const Index = () => {
       <FloatingElements />
       <Navbar />
       <HeroSection />
-      <StatsSection />
       <AboutSection />
       
-      {/* Pizza Showcase - Cream background */}
-      <div className="relative bg-[hsl(var(--cream))]">
-        <MultiWaveDivider variant="top" primaryColor="hsl(var(--background))" />
-      </div>
+      {/* Pizza Showcase - Light Orange background */}
       <PizzaScrollShowcase />
       
       {/* Transition to Green Services Section */}
-      <div className="relative bg-[hsl(var(--cream))]">
+      <div className="relative bg-[hsl(var(--section-orange))]">
         <CurveDivider 
           variant="bottom" 
           color="hsl(var(--section-green))" 
-          accentColor="hsl(var(--cream))"
+          accentColor="hsl(var(--section-orange-light))"
         />
       </div>
       
@@ -58,12 +53,12 @@ const Index = () => {
       {/* FAQ - Gold Background */}
       <FAQSection />
       
-      {/* Transition to Dark Contact */}
+      {/* Transition to Red Contact */}
       <div className="relative bg-[hsl(var(--section-gold))]">
-        <BlobDivider variant="bottom" color="hsl(var(--section-charcoal))" />
+        <BlobDivider variant="bottom" color="hsl(var(--section-red-dark))" />
       </div>
       
-      {/* Contact - Dark Charcoal Background */}
+      {/* Contact - Red Dark Background */}
       <ContactSection />
       
       {/* Footer with Red Background */}
