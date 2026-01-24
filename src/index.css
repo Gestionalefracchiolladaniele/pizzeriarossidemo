@@ -61,6 +61,16 @@
     --warm-gray: 25 12% 40%;
     --terracotta: 15 55% 50%;
 
+    /* Section backgrounds - Pizza inspired */
+    --section-red: 358 72% 45%;
+    --section-red-dark: 358 78% 35%;
+    --section-green: 142 45% 28%;
+    --section-green-light: 142 40% 35%;
+    --section-gold: 43 74% 49%;
+    --section-gold-light: 45 80% 55%;
+    --section-charcoal: 20 18% 10%;
+    --section-cream-warm: 35 45% 94%;
+
     --sidebar-background: 35 30% 97%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 358 72% 45%;

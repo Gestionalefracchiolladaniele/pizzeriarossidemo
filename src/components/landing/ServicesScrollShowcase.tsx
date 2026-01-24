@@ -85,7 +85,7 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
             transition={{ duration: 3, repeat: Infinity }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <div className="w-[90%] h-[90%] rounded-3xl bg-gradient-to-br from-primary/30 via-primary/20 to-transparent blur-3xl" />
+            <div className="w-[90%] h-[90%] rounded-3xl bg-gradient-to-br from-white/30 via-white/20 to-transparent blur-3xl" />
           </motion.div>
           
           {/* Main Image */}
@@ -107,7 +107,7 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
                 initial={{ scale: 0 }}
                 animate={{ scale: isInView ? 1 : 0 }}
                 transition={{ delay: 0.3, type: "spring" }}
-                className="absolute bottom-4 right-4 w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-red-lg"
+                className="absolute bottom-4 right-4 w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white shadow-lg"
               >
                 <service.icon className="w-8 h-8" />
               </motion.div>
@@ -117,9 +117,9 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute -top-4 -left-4 w-16 h-16 border-2 border-dashed border-primary/30 rounded-full"
+              className="absolute -top-4 -left-4 w-16 h-16 border-2 border-dashed border-white/30 rounded-full"
             />
-            <div className="absolute -bottom-4 -right-4 w-24 h-24 border-2 border-primary/20 rounded-3xl" />
+            <div className="absolute -bottom-4 -right-4 w-24 h-24 border-2 border-white/20 rounded-3xl" />
           </div>
         </motion.div>
 
@@ -133,7 +133,7 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
             initial={{ opacity: 0, x: isEven ? -20 : 20 }}
             animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : (isEven ? -20 : 20) }}
             transition={{ delay: 0.2 }}
-            className={`inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-full ${isEven ? '' : 'lg:ml-auto'}`}
+            className={`inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-white/20 ${isEven ? '' : 'lg:ml-auto'}`}
           >
             <service.icon className="w-4 h-4" />
             {service.subtitle}
@@ -144,7 +144,7 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
             transition={{ delay: 0.3 }}
-            className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground"
+            className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white"
           >
             {service.title}
           </motion.h2>
@@ -154,7 +154,7 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
             transition={{ delay: 0.4 }}
-            className="text-muted-foreground text-lg lg:text-xl leading-relaxed max-w-lg"
+            className="text-white/80 text-lg lg:text-xl leading-relaxed max-w-lg"
           >
             {service.description}
           </motion.p>
@@ -169,7 +169,7 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
             {service.features.map((feature, i) => (
               <span 
                 key={i}
-                className="px-3 py-1.5 bg-card border border-border rounded-full text-sm text-muted-foreground"
+                className="px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-sm text-white/90"
               >
                 {feature}
               </span>
@@ -185,7 +185,7 @@ const ServiceItem = ({ service, index }: ServiceItemProps) => {
             <Link to={service.cta.link}>
               <Button 
                 size="lg" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 shadow-red group"
+                className="bg-white hover:bg-white/90 text-[hsl(var(--section-green))] rounded-full px-8 shadow-lg group"
               >
                 {service.cta.text}
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -202,30 +202,47 @@ const ServicesScrollShowcase = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   
   return (
-    <section id="servizi" className="relative bg-gradient-cream">
+    <section id="servizi" className="relative bg-[hsl(var(--section-green))]">
       {/* Background decorations */}
-      <div className="absolute inset-0 bg-pattern-dots opacity-20" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_hsl(var(--section-green-light)/0.4)_0%,_transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,_hsl(var(--section-green-light)/0.3)_0%,_transparent_50%)]" />
       
-      {/* Fixed decorative elements */}
-      <div className="fixed top-1/4 left-8 w-3 h-3 rounded-full bg-primary/40 pointer-events-none z-10" />
-      <div className="fixed top-1/2 left-8 w-2 h-2 rounded-full bg-primary/30 pointer-events-none z-10" />
-      <div className="fixed bottom-1/4 left-8 w-3 h-3 rounded-full bg-primary/40 pointer-events-none z-10" />
+      {/* Decorative dots pattern */}
+      <div 
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
+          backgroundSize: '30px 30px'
+        }}
+      />
+      
+      {/* Floating decorative circles */}
+      <motion.div
+        animate={{ y: [0, -20, 0], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-40 left-10 w-32 h-32 rounded-full bg-white/10 blur-2xl"
+      />
+      <motion.div
+        animate={{ y: [0, 20, 0], opacity: [0.15, 0.3, 0.15] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-40 right-10 w-48 h-48 rounded-full bg-white/10 blur-3xl"
+      />
       
       {/* Section Header - Sticky */}
-      <div className="sticky top-0 z-20 bg-gradient-to-b from-[hsl(var(--cream))] via-[hsl(var(--cream))] to-transparent pt-20 pb-32">
+      <div className="sticky top-0 z-20 bg-gradient-to-b from-[hsl(var(--section-green))] via-[hsl(var(--section-green))] to-transparent pt-20 pb-32">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="container mx-auto px-4 text-center"
         >
-          <div className="inline-block px-4 py-2 bg-[hsl(var(--gold))]/10 text-[hsl(var(--gold-dark))] text-sm font-medium rounded-full mb-4">
+          <div className="inline-block px-4 py-2 bg-white/15 backdrop-blur-sm text-white text-sm font-medium rounded-full border border-white/20 mb-4">
             I Nostri Servizi
           </div>
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-            Come Vuoi la Tua <span className="text-gradient-red">Pizza</span>?
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            Come Vuoi la Tua <span className="text-[hsl(var(--gold-light))]">Pizza</span>?
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-white/70 text-lg max-w-2xl mx-auto">
             Scegli il modo che preferisci per gustare le nostre specialità artigianali
           </p>
         </motion.div>
@@ -245,13 +262,13 @@ const ServicesScrollShowcase = () => {
         viewport={{ once: true }}
         className="py-20 text-center"
       >
-        <p className="text-muted-foreground mb-6">
+        <p className="text-white/70 mb-6">
           Non sai cosa scegliere? Chiamaci!
         </p>
         <Button 
           variant="outline" 
           size="lg" 
-          className="rounded-full border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground"
+          className="rounded-full border-white/30 text-white hover:bg-white hover:text-[hsl(var(--section-green))] bg-transparent"
         >
           📞 02 1234567
         </Button>

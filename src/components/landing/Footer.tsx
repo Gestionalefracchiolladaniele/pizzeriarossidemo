@@ -1,16 +1,22 @@
 import { motion } from "framer-motion";
 import { Facebook, Instagram, Phone, Mail, MapPin, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
-import { WaveDivider } from "@/components/ui/WaveDivider";
+import { MultiWaveDivider } from "@/components/ui/WaveDivider";
 
 const Footer = () => {
   return (
-    <footer className="relative bg-primary text-primary-foreground pt-24 pb-8 overflow-hidden">
-      {/* Wave Divider at top */}
-      <WaveDivider variant="top" color="hsl(var(--background))" />
+    <footer className="relative bg-[hsl(var(--pizzeria-red))] text-white pt-32 pb-8 overflow-hidden">
+      {/* Wave Divider at top - from dark section */}
+      <MultiWaveDivider variant="top" primaryColor="hsl(var(--section-charcoal))" />
       
       {/* Background pattern */}
-      <div className="absolute inset-0 bg-pattern-dots opacity-5" />
+      <div 
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
+          backgroundSize: '25px 25px'
+        }}
+      />
       
       {/* Decorative elements */}
       <motion.div
