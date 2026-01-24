@@ -3,80 +3,112 @@ import { Facebook, Instagram, Phone, Mail, MapPin, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MultiWaveDivider } from "@/components/ui/WaveDivider";
 
-// SVG Basil leaf path for the pattern
-const basilLeafSVG = `
-<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-  <path d="M20 5C15 5 10 10 8 18C6 26 10 35 20 35C30 35 34 26 32 18C30 10 25 5 20 5Z" fill="currentColor" opacity="0.6"/>
-  <path d="M20 8C18 10 16 15 16 22C16 29 18 32 20 35" stroke="currentColor" stroke-width="0.5" fill="none" opacity="0.4"/>
-</svg>
-`;
+// Basil leaf SVG component for realistic leaves
+const BasilLeaf = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
+  <svg 
+    viewBox="0 0 50 70" 
+    className={className}
+    style={style}
+    fill="currentColor"
+  >
+    {/* Main leaf shape */}
+    <path d="M25 2C15 5 8 20 6 35C4 50 12 65 25 68C38 65 46 50 44 35C42 20 35 5 25 2Z" opacity="0.9"/>
+    {/* Central vein */}
+    <path d="M25 8C25 8 25 60 25 65" stroke="currentColor" strokeWidth="1.2" fill="none" opacity="0.5"/>
+    {/* Side veins */}
+    <path d="M25 20C20 22 14 28 12 32" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.4"/>
+    <path d="M25 20C30 22 36 28 38 32" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.4"/>
+    <path d="M25 35C18 38 12 45 10 50" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.4"/>
+    <path d="M25 35C32 38 38 45 40 50" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.4"/>
+  </svg>
+);
 
 const Footer = () => {
+  // Generate positions for basil leaves
+  const largeLeaves = [
+    { left: '5%', top: '15%', rotate: 25, scale: 1.2 },
+    { left: '15%', top: '45%', rotate: -35, scale: 1 },
+    { left: '25%', top: '70%', rotate: 45, scale: 0.9 },
+    { left: '40%', top: '20%', rotate: -20, scale: 1.1 },
+    { left: '55%', top: '55%', rotate: 60, scale: 1 },
+    { left: '65%', top: '25%', rotate: -45, scale: 1.3 },
+    { left: '75%', top: '65%', rotate: 30, scale: 0.95 },
+    { left: '85%', top: '35%', rotate: -60, scale: 1.15 },
+    { left: '92%', top: '75%', rotate: 15, scale: 0.85 },
+    { left: '10%', top: '80%', rotate: -25, scale: 1.05 },
+    { left: '50%', top: '85%', rotate: 40, scale: 0.9 },
+    { left: '80%', top: '10%', rotate: -50, scale: 1 },
+  ];
+
+  const smallLeaves = [
+    { left: '8%', top: '30%', rotate: 50, scale: 0.6 },
+    { left: '20%', top: '60%', rotate: -70, scale: 0.5 },
+    { left: '35%', top: '40%', rotate: 35, scale: 0.55 },
+    { left: '48%', top: '10%', rotate: -30, scale: 0.65 },
+    { left: '60%', top: '70%', rotate: 80, scale: 0.5 },
+    { left: '72%', top: '45%', rotate: -55, scale: 0.6 },
+    { left: '88%', top: '55%', rotate: 25, scale: 0.55 },
+    { left: '30%', top: '15%', rotate: -40, scale: 0.5 },
+    { left: '95%', top: '20%', rotate: 65, scale: 0.45 },
+    { left: '3%', top: '65%', rotate: -15, scale: 0.6 },
+  ];
+
   return (
     <footer className="relative bg-[hsl(var(--pizzeria-red))] text-white pt-32 pb-8 overflow-hidden">
       {/* Wave Divider at top - from orange contact section */}
       <MultiWaveDivider variant="top" primaryColor="hsl(var(--section-orange-strong))" />
       
-      {/* Basil leaves pattern overlay */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Large scattered basil leaves */}
-        {[...Array(20)].map((_, i) => (
+      {/* Large Green Basil Leaves */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {largeLeaves.map((leaf, i) => (
           <motion.div
-            key={i}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: i * 0.05 }}
-            className="absolute text-[hsl(var(--basil-green))]"
+            key={`large-${i}`}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.08, duration: 0.5 }}
+            className="absolute"
             style={{
-              left: `${(i * 17) % 100}%`,
-              top: `${(i * 23 + 10) % 90}%`,
-              transform: `rotate(${(i * 47) % 360}deg) scale(${0.8 + (i % 3) * 0.3})`,
+              left: leaf.left,
+              top: leaf.top,
             }}
           >
-            <svg width="50" height="50" viewBox="0 0 40 40" className="opacity-40">
-              <path d="M20 5C15 5 10 10 8 18C6 26 10 35 20 35C30 35 34 26 32 18C30 10 25 5 20 5Z" fill="currentColor"/>
-              <path d="M20 8C18 10 16 15 16 22C16 29 18 32 20 35" stroke="currentColor" strokeWidth="0.8" fill="none" opacity="0.6"/>
-            </svg>
+            <BasilLeaf 
+              className="text-[#2E7D32] w-12 h-16 md:w-14 md:h-20"
+              style={{
+                transform: `rotate(${leaf.rotate}deg) scale(${leaf.scale})`,
+                filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.3))',
+              }}
+            />
           </motion.div>
         ))}
         
-        {/* Smaller accent leaves */}
-        {[...Array(15)].map((_, i) => (
+        {/* Small Accent Basil Leaves */}
+        {smallLeaves.map((leaf, i) => (
           <div
             key={`small-${i}`}
-            className="absolute text-[hsl(var(--basil-light))]"
+            className="absolute"
             style={{
-              left: `${(i * 29 + 5) % 100}%`,
-              top: `${(i * 31 + 15) % 85}%`,
-              transform: `rotate(${(i * 73) % 360}deg) scale(${0.5 + (i % 2) * 0.2})`,
+              left: leaf.left,
+              top: leaf.top,
             }}
           >
-            <svg width="30" height="30" viewBox="0 0 40 40" className="opacity-25">
-              <path d="M20 5C15 5 10 10 8 18C6 26 10 35 20 35C30 35 34 26 32 18C30 10 25 5 20 5Z" fill="currentColor"/>
-            </svg>
+            <BasilLeaf 
+              className="text-[#4CAF50] w-6 h-9 md:w-8 md:h-11 opacity-70"
+              style={{
+                transform: `rotate(${leaf.rotate}deg) scale(${leaf.scale})`,
+              }}
+            />
           </div>
         ))}
       </div>
       
-      {/* Light red texture overlay */}
+      {/* Subtle red texture overlay */}
       <div 
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 opacity-[0.08] pointer-events-none"
         style={{
           backgroundImage: `radial-gradient(circle, hsl(var(--pizzeria-red-light)) 1px, transparent 1px)`,
-          backgroundSize: '20px 20px'
+          backgroundSize: '24px 24px'
         }}
-      />
-      
-      {/* Decorative rotating circles */}
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-        className="absolute top-20 right-20 w-64 h-64 border border-white/10 rounded-full"
-      />
-      <motion.div
-        animate={{ rotate: -360 }}
-        transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
-        className="absolute bottom-20 left-10 w-48 h-48 border border-white/5 rounded-full"
       />
 
       <div className="container mx-auto px-4 relative z-10">

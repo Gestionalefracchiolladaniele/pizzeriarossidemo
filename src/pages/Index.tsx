@@ -8,7 +8,7 @@ import FAQSection from "@/components/landing/FAQSection";
 import ContactSection from "@/components/landing/ContactSection";
 import Footer from "@/components/landing/Footer";
 import { FloatingElements } from "@/components/animations/FloatingElements";
-import { MultiWaveDivider, TornDivider, CurveDivider, DiagonalDivider, BlobDivider } from "@/components/ui/WaveDivider";
+import { CurveDivider, MultiWaveDivider } from "@/components/ui/WaveDivider";
 
 const Index = () => {
   return (
@@ -18,44 +18,51 @@ const Index = () => {
       <HeroSection />
       <AboutSection />
       
-      {/* Pizza Showcase - Light Orange background */}
+      {/* Pizza Showcase - Strong Orange background */}
       <PizzaScrollShowcase />
       
-      {/* Transition to Green Services Section */}
+      {/* Transition from Orange to Green Services Section */}
       <div className="relative bg-[hsl(var(--section-orange-strong))]">
-        <CurveDivider 
+        <MultiWaveDivider 
           variant="bottom" 
-          color="hsl(var(--section-green))" 
-          accentColor="hsl(var(--section-orange-strong-light))"
+          primaryColor="hsl(var(--section-green))" 
         />
       </div>
       
       {/* Services - Green Basil Background */}
       <ServicesScrollShowcase />
       
-      {/* Transition to Cream Testimonials */}
+      {/* Transition from Green to Cream Testimonials */}
       <div className="relative bg-[hsl(var(--section-green))]">
-        <TornDivider variant="bottom" color="hsl(var(--cream))" />
+        <CurveDivider 
+          variant="bottom" 
+          color="hsl(var(--cream))" 
+          showDots={false}
+        />
       </div>
       
       {/* Testimonials - Cream Background */}
       <TestimonialsSection />
       
-      {/* Transition to Gold FAQ */}
+      {/* Transition from Cream to Gold FAQ */}
       <div className="relative bg-[hsl(var(--cream))]">
-        <DiagonalDivider 
+        <CurveDivider 
           variant="bottom" 
           color="hsl(var(--section-gold))" 
-          stripeColor="hsl(var(--gold-dark))"
+          showDots={false}
         />
       </div>
       
       {/* FAQ - Gold Background */}
       <FAQSection />
       
-      {/* Transition to Orange Contact */}
+      {/* Transition from Gold to Orange Contact */}
       <div className="relative bg-[hsl(var(--section-gold))]">
-        <BlobDivider variant="bottom" color="hsl(var(--section-orange-strong))" />
+        <CurveDivider 
+          variant="bottom" 
+          color="hsl(var(--section-orange-strong))" 
+          showDots={false}
+        />
       </div>
       
       {/* Contact - Orange Background */}
