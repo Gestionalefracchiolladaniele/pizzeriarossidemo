@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, MapPin, Clock, Trash2, Plus, Minus, Check, Bike, Store, User, UtensilsCrossed } from "lucide-react";
+import { ShoppingCart, MapPin, Clock, Trash2, Plus, Minus, Check, User, UtensilsCrossed, Copy } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCart, MenuItem } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
+import { nanoid } from "nanoid";
+import { ProductDetailDialog } from "@/components/ordina/ProductDetailDialog";
+import { DeliveryTypeSelector } from "@/components/ordina/DeliveryTypeSelector";
 
 interface MenuCategory {
   id: string;
@@ -44,9 +46,12 @@ const Ordina = () => {
   const [step, setStep] = useState<"menu" | "checkout" | "confirmed">("menu");
   const [activeCategory, setActiveCategory] = useState("");
   const [orderNumber, setOrderNumber] = useState<number | null>(null);
+  const [confirmationCode, setConfirmationCode] = useState<string>("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<DbMenuItem | null>(null);
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [customerEmail, setCustomerEmail] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -173,6 +178,9 @@ const Ordina = () => {
       notes: item.notes,
     }));
 
+    // Generate confirmation code
+    const generatedCode = `ORD-${nanoid(6).toUpperCase()}`;
+
     try {
       const { data, error } = await supabase
         .from("orders")
@@ -191,7 +199,7 @@ const Ordina = () => {
           notes: cart.deliveryType === "dine_in" && cart.tableNumber 
             ? `Tavolo: ${cart.tableNumber}${orderNotes ? ` - ${orderNotes}` : ""}`
             : orderNotes || null,
-          status: "received",
+          status: "pending", // Changed from "received" to "pending" - shows as "Inviato" to user
         })
         .select("order_number")
         .single();
@@ -204,6 +212,7 @@ const Ordina = () => {
       }
 
       setOrderNumber(data.order_number);
+      setConfirmationCode(generatedCode);
       setStep("confirmed");
       clearCart();
       toast.success("Ordine inviato con successo!");
@@ -240,17 +249,42 @@ const Ordina = () => {
               <Check className="w-10 h-10 text-basil" />
             </div>
             
-            <h1 className="text-3xl font-bold mb-4">Ordine Confermato!</h1>
+            <h1 className="text-3xl font-bold mb-2">Ordine Inviato!</h1>
+            <p className="text-muted-foreground mb-6">Il ristorante ha ricevuto il tuo ordine</p>
             
             <Card className="p-6 mb-6">
-              <div className="text-sm text-muted-foreground mb-2">Numero ordine</div>
-              <div className="text-3xl font-mono font-bold text-primary mb-4">#{orderNumber}</div>
-              <p className="text-muted-foreground">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">Numero ordine</div>
+                  <div className="text-2xl font-mono font-bold text-primary">#{orderNumber}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">Codice conferma</div>
+                  <div className="text-lg font-mono font-bold text-foreground flex items-center justify-center gap-2">
+                    {confirmationCode}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7"
+                      onClick={() => {
+                        navigator.clipboard.writeText(confirmationCode);
+                        toast.success("Codice copiato!");
+                      }}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              <Badge className="bg-amber-500 text-white mb-4">Inviato - In attesa di conferma</Badge>
+              
+              <p className="text-muted-foreground text-sm">
                 {cart.deliveryType === "delivery" 
-                  ? "Il tuo ordine è in preparazione. Arriverà in circa 30-45 minuti."
+                  ? "Riceverai una notifica quando l'ordine sarà confermato. Arriverà in circa 30-45 minuti."
                   : cart.deliveryType === "dine_in"
-                  ? "Il tuo ordine è in preparazione. Ti verrà portato al tavolo."
-                  : `Il tuo ordine sarà pronto per il ritiro alle ${cart.pickupTime || "ora selezionata"}.`
+                  ? "Riceverai una notifica quando l'ordine sarà confermato e ti verrà portato al tavolo."
+                  : `Riceverai una notifica quando l'ordine sarà confermato. Ritiro previsto alle ${cart.pickupTime || "ora selezionata"}.`
                 }
               </p>
             </Card>
@@ -317,26 +351,14 @@ const Ordina = () => {
           <div className="lg:col-span-2">
             {step === "menu" && (
               <>
-                {/* Delivery Type Selection - Now with 3 options */}
-                <Card className="p-4 mb-6">
-                  <Tabs value={cart.deliveryType} onValueChange={(v) => setDeliveryType(v as 'takeaway' | 'delivery' | 'dine_in')}>
-                    <TabsList className="w-full grid grid-cols-3">
-                      <TabsTrigger value="takeaway" className="flex-1">
-                        <Store className="w-4 h-4 mr-2" />
-                        <span className="hidden sm:inline">Ritiro</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="delivery" className="flex-1">
-                        <Bike className="w-4 h-4 mr-2" />
-                        <span className="hidden sm:inline">Consegna</span>
-                        <span className="text-xs ml-1">(+€2.50)</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="dine_in" className="flex-1">
-                        <UtensilsCrossed className="w-4 h-4 mr-2" />
-                        <span className="hidden sm:inline">Al Tavolo</span>
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </Card>
+                {/* Delivery Type Selection - 3 Clear Cards */}
+                <div className="mb-6">
+                  <h2 className="text-lg font-bold mb-4">Come vuoi ricevere il tuo ordine?</h2>
+                  <DeliveryTypeSelector 
+                    value={cart.deliveryType} 
+                    onChange={(type) => setDeliveryType(type)} 
+                  />
+                </div>
 
                 {/* Category Tabs */}
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -370,7 +392,13 @@ const Ordina = () => {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                         >
-                          <Card className="p-4 flex gap-4">
+                          <Card 
+                            className="p-4 flex gap-4 cursor-pointer hover:shadow-md transition-shadow"
+                            onClick={() => {
+                              setSelectedProduct(item);
+                              setIsProductDialogOpen(true);
+                            }}
+                          >
                             <img
                               src={item.image_url || "/placeholder.svg"}
                               alt={item.name}
@@ -401,7 +429,7 @@ const Ordina = () => {
                                 )}
                                 
                                 {cartItem ? (
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                     <Button
                                       size="sm"
                                       variant="outline"
@@ -419,7 +447,8 @@ const Ordina = () => {
                                     </Button>
                                   </div>
                                 ) : (
-                                  <Button size="sm" onClick={() => {
+                                  <Button size="sm" onClick={(e) => {
+                                    e.stopPropagation();
                                     addItem(toCartItem(item));
                                     toast.success(`${item.name} aggiunto al carrello`);
                                   }}>
@@ -635,6 +664,21 @@ const Ordina = () => {
           </div>
         </div>
       </div>
+
+      {/* Product Detail Dialog */}
+      <ProductDetailDialog
+        item={selectedProduct}
+        isOpen={isProductDialogOpen}
+        onClose={() => {
+          setIsProductDialogOpen(false);
+          setSelectedProduct(null);
+        }}
+        onAddToCart={(item, quantity) => {
+          addItem(toCartItem(item as unknown as DbMenuItem), quantity);
+          toast.success(`${item.name} aggiunto al carrello`);
+        }}
+        currentQuantity={selectedProduct ? cart.items.find(ci => ci.menuItem.id === selectedProduct.id)?.quantity : 0}
+      />
 
       <Footer />
     </div>
