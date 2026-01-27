@@ -1,16 +1,20 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { User, Package, Calendar, LogOut, ArrowLeft, Settings, History, Clock } from "lucide-react";
+import { User, Package, Calendar, LogOut, ArrowLeft, Settings, History, Clock, ChevronDown, ChevronUp, AlertCircle, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { NotificationPromptDialog } from "@/components/NotificationPromptDialog";
+import { HistoryCalendarDialog } from "@/components/HistoryCalendarDialog";
+import { toast } from "sonner";
 
 type Order = Tables<"orders">;
 type Reservation = Tables<"reservations">;
@@ -24,6 +28,7 @@ interface HistoryItem {
 }
 
 const statusColors: Record<string, string> = {
+  pending: "bg-amber-500",
   received: "bg-blue-500",
   read: "bg-purple-500",
   preparing: "bg-orange-500",
@@ -33,6 +38,7 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
+  pending: "Inviato",
   received: "Ricevuto",
   read: "Letto",
   preparing: "In Preparazione",
@@ -54,12 +60,23 @@ const deliveryTypeLabels: Record<string, string> = {
   dine_in: "Al Tavolo",
 };
 
+const VISIBLE_ITEMS_COUNT = 5;
+
 const Profilo = () => {
   const { user, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [showAllHistory, setShowAllHistory] = useState(false);
+  
+  // Profile editing state
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [needsProfileUpdate, setNeedsProfileUpdate] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -70,6 +87,16 @@ const Profilo = () => {
   useEffect(() => {
     if (user) {
       fetchUserData();
+      
+      // Initialize profile form
+      const fullName = user.user_metadata?.full_name || "";
+      const nameParts = fullName.split(" ");
+      setFirstName(nameParts[0] || "");
+      setLastName(nameParts.slice(1).join(" ") || "");
+      setPhone(user.user_metadata?.phone || "");
+      
+      // Check if profile needs update (no name)
+      setNeedsProfileUpdate(!fullName.trim());
     }
   }, [user]);
 
@@ -93,6 +120,43 @@ const Profilo = () => {
     setOrders(ordersData || []);
     setReservations(reservationsData || []);
     setLoadingData(false);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error("Nome e cognome sono obbligatori");
+      return;
+    }
+
+    setIsSavingProfile(true);
+    
+    const fullName = `${firstName.trim()} ${lastName.trim()}`;
+    
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        full_name: fullName,
+        phone: phone.trim(),
+      }
+    });
+
+    if (error) {
+      toast.error("Errore nel salvataggio del profilo");
+      setIsSavingProfile(false);
+      return;
+    }
+
+    // Also update profiles table if it exists
+    await supabase
+      .from("profiles")
+      .update({
+        full_name: fullName,
+        phone: phone.trim(),
+      })
+      .eq("user_id", user?.id);
+
+    setNeedsProfileUpdate(false);
+    toast.success("Profilo aggiornato con successo!");
+    setIsSavingProfile(false);
   };
 
   // Unified history combining orders and reservations
@@ -122,6 +186,11 @@ const Profilo = () => {
     // Sort by date descending
     return items.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [orders, reservations]);
+
+  // Visible items (last 5 or all)
+  const visibleHistoryItems = showAllHistory 
+    ? historyItems 
+    : historyItems.slice(0, VISIBLE_ITEMS_COUNT);
 
   // Count active orders/reservations
   const activeOrdersCount = orders.filter(o => !['delivered', 'cancelled', 'done'].includes(o.status)).length;
@@ -166,6 +235,21 @@ const Profilo = () => {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl mx-auto"
         >
+          {/* Profile Update Required Alert */}
+          {needsProfileUpdate && (
+            <Card className="p-4 mb-6 border-amber-500/50 bg-amber-500/10">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-medium text-amber-700">Completa il tuo profilo</p>
+                  <p className="text-sm text-muted-foreground">
+                    Per continuare, inserisci il tuo nome e cognome nella sezione Impostazioni.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
           {/* User Info Card with Quick Actions */}
           <Card className="p-6 mb-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -174,13 +258,11 @@ const Profilo = () => {
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold">
-                  {user.user_metadata?.full_name || "Utente"}
+                  {firstName || lastName ? `${firstName} ${lastName}`.trim() : user.email?.split('@')[0] || "Utente"}
                 </h2>
                 <p className="text-muted-foreground">{user.email}</p>
-                {user.user_metadata?.phone && (
-                  <p className="text-sm text-muted-foreground">
-                    {user.user_metadata.phone}
-                  </p>
+                {phone && (
+                  <p className="text-sm text-muted-foreground">{phone}</p>
                 )}
               </div>
               
@@ -199,7 +281,7 @@ const Profilo = () => {
           </Card>
 
           {/* Tabs for History, Orders, Reservations and Settings */}
-          <Tabs defaultValue="history" className="w-full">
+          <Tabs defaultValue={needsProfileUpdate ? "settings" : "history"} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="history" className="flex items-center gap-2">
                 <History className="w-4 h-4" />
@@ -226,11 +308,22 @@ const Profilo = () => {
               <TabsTrigger value="settings" className="flex items-center gap-2">
                 <Settings className="w-4 h-4" />
                 <span className="hidden sm:inline">Impostazioni</span>
+                {needsProfileUpdate && (
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                )}
               </TabsTrigger>
             </TabsList>
 
-            {/* History Tab - Unified view */}
+            {/* History Tab - Unified view with last 5 + calendar */}
             <TabsContent value="history" className="mt-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold">Attività recente</h3>
+                <Button variant="outline" size="sm" onClick={() => setIsHistoryOpen(true)}>
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Sfoglia Calendario
+                </Button>
+              </div>
+              
               {loadingData ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -252,7 +345,7 @@ const Profilo = () => {
                 </Card>
               ) : (
                 <div className="space-y-3">
-                  {historyItems.map((item) => (
+                  {visibleHistoryItems.map((item) => (
                     <Card key={`${item.type}-${item.id}`} className="p-4">
                       <div className="flex items-start gap-4">
                         {/* Icon */}
@@ -268,7 +361,7 @@ const Profilo = () => {
                         
                         {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className="font-bold">
                               {item.type === 'order' 
                                 ? `Ordine #${(item.details as Order).order_number}`
@@ -279,7 +372,7 @@ const Profilo = () => {
                               item.type === 'order' 
                                 ? statusColors[item.status] || "bg-gray-500"
                                 : item.status === 'confirmed' ? 'bg-green-500' 
-                                : item.status === 'pending' ? 'bg-yellow-500' 
+                                : item.status === 'pending' ? 'bg-amber-500' 
                                 : item.status === 'cancelled' ? 'bg-red-500' 
                                 : 'bg-gray-500'
                             }>
@@ -338,6 +431,29 @@ const Profilo = () => {
                       </div>
                     </Card>
                   ))}
+
+                  {/* Show More/Less Button */}
+                  {historyItems.length > VISIBLE_ITEMS_COUNT && (
+                    <div className="flex justify-center pt-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowAllHistory(!showAllHistory)}
+                        className="gap-2"
+                      >
+                        {showAllHistory ? (
+                          <>
+                            <ChevronUp className="w-4 h-4" />
+                            Mostra meno
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4" />
+                            Mostra altri {historyItems.length - VISIBLE_ITEMS_COUNT}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </TabsContent>
@@ -354,11 +470,11 @@ const Profilo = () => {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {orders.map((order) => (
+                  {orders.slice(0, showAllHistory ? undefined : VISIBLE_ITEMS_COUNT).map((order) => (
                     <Card key={order.id} className="p-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <h3 className="font-bold">Ordine #{order.order_number}</h3>
                             <Badge className={statusColors[order.status] || "bg-gray-500"}>
                               {statusLabels[order.status] || order.status}
@@ -411,11 +527,11 @@ const Profilo = () => {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {reservations.map((reservation) => (
+                  {reservations.slice(0, showAllHistory ? undefined : VISIBLE_ITEMS_COUNT).map((reservation) => (
                     <Card key={reservation.id} className="p-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <h3 className="font-bold">
                               {new Date(reservation.reservation_date).toLocaleDateString('it-IT', {
                                 weekday: 'long',
@@ -425,7 +541,7 @@ const Profilo = () => {
                             </h3>
                             <Badge className={
                               reservation.status === 'confirmed' ? 'bg-green-500' :
-                              reservation.status === 'pending' ? 'bg-yellow-500' :
+                              reservation.status === 'pending' ? 'bg-amber-500' :
                               reservation.status === 'cancelled' ? 'bg-red-500' : 'bg-gray-500'
                             }>
                               {reservationStatusLabels[reservation.status] || reservation.status}
@@ -448,12 +564,68 @@ const Profilo = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="settings" className="mt-6">
+            <TabsContent value="settings" className="mt-6 space-y-6">
+              {/* Profile Form */}
+              <Card className="p-6">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Dati Personali
+                </h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">Nome *</Label>
+                    <Input
+                      id="firstName"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Il tuo nome"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Cognome *</Label>
+                    <Input
+                      id="lastName"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Il tuo cognome"
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="phone">Telefono</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+39 123 456 7890"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Button 
+                      onClick={handleSaveProfile} 
+                      disabled={isSavingProfile}
+                      className="w-full sm:w-auto"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      {isSavingProfile ? "Salvataggio..." : "Salva Profilo"}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+              
               <NotificationSettings />
             </TabsContent>
           </Tabs>
         </motion.div>
       </main>
+
+      {/* History Calendar Dialog */}
+      <HistoryCalendarDialog
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        items={historyItems}
+        title="Il Tuo Storico"
+      />
     </div>
   );
 };
