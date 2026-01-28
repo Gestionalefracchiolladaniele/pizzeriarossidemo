@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { User, Package, Calendar, LogOut, ArrowLeft, Settings, History, Clock, ChevronDown, ChevronUp, AlertCircle, Save } from "lucide-react";
+import { User, Package, Calendar, LogOut, ArrowLeft, Settings, History, Clock, ChevronDown, ChevronUp, AlertCircle, Save, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { NotificationSettings } from "@/components/settings/NotificationSettings
 import { NotificationPromptDialog } from "@/components/NotificationPromptDialog";
 import { HistoryCalendarDialog } from "@/components/HistoryCalendarDialog";
 import { toast } from "sonner";
+
 
 type Order = Tables<"orders">;
 type Reservation = Tables<"reservations">;
@@ -480,6 +481,23 @@ const Profilo = () => {
                               {statusLabels[order.status] || order.status}
                             </Badge>
                           </div>
+                          {(order as any).confirmation_code && (
+                            <div className="flex items-center gap-1 mb-2">
+                              <span className="text-xs text-muted-foreground">Codice:</span>
+                              <span className="font-mono text-sm font-medium">{(order as any).confirmation_code}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-5 w-5"
+                                onClick={() => {
+                                  navigator.clipboard.writeText((order as any).confirmation_code);
+                                  toast.success("Codice copiato!");
+                                }}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
                           <p className="text-sm text-muted-foreground">
                             {new Date(order.created_at).toLocaleDateString('it-IT', {
                               day: 'numeric',
@@ -527,39 +545,97 @@ const Profilo = () => {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {reservations.slice(0, showAllHistory ? undefined : VISIBLE_ITEMS_COUNT).map((reservation) => (
-                    <Card key={reservation.id} className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <h3 className="font-bold">
-                              {new Date(reservation.reservation_date).toLocaleDateString('it-IT', {
-                                weekday: 'long',
-                                day: 'numeric',
-                                month: 'long'
-                              })}
-                            </h3>
-                            <Badge className={
-                              reservation.status === 'confirmed' ? 'bg-green-500' :
-                              reservation.status === 'pending' ? 'bg-amber-500' :
-                              reservation.status === 'cancelled' ? 'bg-red-500' : 'bg-gray-500'
-                            }>
-                              {reservationStatusLabels[reservation.status] || reservation.status}
-                            </Badge>
+                  {reservations.slice(0, showAllHistory ? undefined : VISIBLE_ITEMS_COUNT).map((reservation) => {
+                    // Calculate if cancellation is still allowed (24 hours before reservation)
+                    const reservationDateTime = new Date(reservation.reservation_date);
+                    const [hours, minutes] = reservation.reservation_time.split(':').map(Number);
+                    reservationDateTime.setHours(hours, minutes, 0, 0);
+                    const hoursUntilReservation = (reservationDateTime.getTime() - Date.now()) / (1000 * 60 * 60);
+                    const canCancel = hoursUntilReservation >= 24 && reservation.status !== 'cancelled' && reservation.status !== 'completed';
+                    
+                    const handleCancelReservation = async () => {
+                      if (!canCancel) return;
+                      
+                      const { error } = await supabase
+                        .from("reservations")
+                        .update({ status: "cancelled" })
+                        .eq("id", reservation.id);
+                      
+                      if (error) {
+                        toast.error("Errore nella cancellazione");
+                        return;
+                      }
+                      
+                      toast.success("Prenotazione cancellata");
+                      fetchUserData();
+                    };
+                    
+                    return (
+                      <Card key={reservation.id} className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                              <h3 className="font-bold">
+                                {new Date(reservation.reservation_date).toLocaleDateString('it-IT', {
+                                  weekday: 'long',
+                                  day: 'numeric',
+                                  month: 'long'
+                                })}
+                              </h3>
+                              <Badge className={
+                                reservation.status === 'confirmed' ? 'bg-green-500' :
+                                reservation.status === 'pending' ? 'bg-amber-500' :
+                                reservation.status === 'cancelled' ? 'bg-red-500' : 'bg-gray-500'
+                              }>
+                                {reservationStatusLabels[reservation.status] || reservation.status}
+                              </Badge>
+                            </div>
+                            {(reservation as any).confirmation_code && (
+                              <div className="flex items-center gap-1 mb-2">
+                                <span className="text-xs text-muted-foreground">Codice:</span>
+                                <span className="font-mono text-sm font-medium">{(reservation as any).confirmation_code}</span>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-5 w-5"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText((reservation as any).confirmation_code);
+                                    toast.success("Codice copiato!");
+                                  }}
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            )}
+                            <p className="text-lg font-semibold">
+                              Ore {reservation.reservation_time.slice(0, 5)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {reservation.guests_count} {reservation.guests_count === 1 ? 'persona' : 'persone'}
+                            </p>
+                            {reservation.notes && (
+                              <p className="text-sm italic mt-2">"{reservation.notes}"</p>
+                            )}
                           </div>
-                          <p className="text-lg font-semibold">
-                            Ore {reservation.reservation_time.slice(0, 5)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {reservation.guests_count} {reservation.guests_count === 1 ? 'persona' : 'persone'}
-                          </p>
-                          {reservation.notes && (
-                            <p className="text-sm italic mt-2">"{reservation.notes}"</p>
-                          )}
+                          <div className="text-right">
+                            {canCancel ? (
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={handleCancelReservation}
+                              >
+                                Disdici
+                              </Button>
+                            ) : reservation.status !== 'cancelled' && hoursUntilReservation > 0 && hoursUntilReservation < 24 ? (
+                              <p className="text-xs text-muted-foreground max-w-[120px]">
+                                Non è più possibile disdire (meno di 24h)
+                              </p>
+                            ) : null}
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>

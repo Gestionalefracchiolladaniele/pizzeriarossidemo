@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, Users, Square, Clock, Settings, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Square, Clock, Settings, AlertCircle, CalendarOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BulkTableCreateDialog } from "./BulkTableCreateDialog";
+import { ExceptionDatesManager } from "./ExceptionDatesManager";
 
 interface RestaurantTableWithHours {
   id: string;
@@ -140,6 +142,7 @@ export const AdminTables = () => {
   const [tables, setTables] = useState<RestaurantTableWithHours[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<RestaurantTableWithHours | null>(null);
   const [reservationSettings, setReservationSettings] = useState<ReservationSettings>(DEFAULT_SETTINGS);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
@@ -381,10 +384,14 @@ export const AdminTables = () => {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 max-w-lg">
           <TabsTrigger value="tables" className="flex items-center gap-2">
             <Square className="w-4 h-4" />
             Tavoli
+          </TabsTrigger>
+          <TabsTrigger value="exceptions" className="flex items-center gap-2">
+            <CalendarOff className="w-4 h-4" />
+            Eccezioni
           </TabsTrigger>
           <TabsTrigger value="schedule" className="flex items-center gap-2">
             <Settings className="w-4 h-4" />
@@ -394,7 +401,10 @@ export const AdminTables = () => {
 
         {/* Tables Tab */}
         <TabsContent value="tables" className="space-y-6">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsBulkDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Crea in Blocco
+            </Button>
             <Button onClick={() => openDialog()}>
               <Plus className="w-4 h-4 mr-2" /> Aggiungi Tavolo
             </Button>
@@ -496,6 +506,11 @@ export const AdminTables = () => {
               })}
             </div>
           )}
+        </TabsContent>
+
+        {/* Exceptions Tab */}
+        <TabsContent value="exceptions" className="space-y-6">
+          <ExceptionDatesManager onUpdate={() => {}} />
         </TabsContent>
 
         {/* Settings Tab */}
@@ -696,6 +711,14 @@ export const AdminTables = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Table Create Dialog */}
+      <BulkTableCreateDialog
+        isOpen={isBulkDialogOpen}
+        onOpenChange={setIsBulkDialogOpen}
+        onCreated={fetchTables}
+        startingTableNumber={tables.length > 0 ? Math.max(...tables.map(t => t.table_number)) + 1 : 1}
+      />
     </div>
   );
 };
