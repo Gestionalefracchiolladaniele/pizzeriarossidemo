@@ -135,6 +135,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          confirmation_code: string | null
           created_at: string
           customer_email: string
           customer_name: string
@@ -147,6 +148,8 @@ export type Database = {
           notes: string | null
           order_number: number
           pickup_time: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
           status: string
           subtotal: number
           total: number
@@ -154,6 +157,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          confirmation_code?: string | null
           created_at?: string
           customer_email: string
           customer_name: string
@@ -166,6 +170,8 @@ export type Database = {
           notes?: string | null
           order_number?: number
           pickup_time?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
           status?: string
           subtotal: number
           total: number
@@ -173,6 +179,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          confirmation_code?: string | null
           created_at?: string
           customer_email?: string
           customer_name?: string
@@ -185,6 +192,8 @@ export type Database = {
           notes?: string | null
           order_number?: number
           pickup_time?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
           status?: string
           subtotal?: number
           total?: number
@@ -200,6 +209,7 @@ export type Database = {
           created_at: string
           delivery_radius_km: number | null
           email: string | null
+          exception_dates: Json | null
           id: string
           logo_url: string | null
           name: string
@@ -214,6 +224,7 @@ export type Database = {
           created_at?: string
           delivery_radius_km?: number | null
           email?: string | null
+          exception_dates?: Json | null
           id?: string
           logo_url?: string | null
           name?: string
@@ -228,6 +239,7 @@ export type Database = {
           created_at?: string
           delivery_radius_km?: number | null
           email?: string | null
+          exception_dates?: Json | null
           id?: string
           logo_url?: string | null
           name?: string
@@ -309,6 +321,7 @@ export type Database = {
       }
       reservations: {
         Row: {
+          confirmation_code: string | null
           created_at: string
           guest_email: string
           guest_name: string
@@ -324,6 +337,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          confirmation_code?: string | null
           created_at?: string
           guest_email: string
           guest_name: string
@@ -339,6 +353,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          confirmation_code?: string | null
           created_at?: string
           guest_email?: string
           guest_name?: string

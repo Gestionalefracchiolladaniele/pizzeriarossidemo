@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Users, Check, User, AlertCircle, SquareStack, Clock } from "lucide-react";
-import { format, addDays, isSameDay, getDay, startOfDay, isAfter } from "date-fns";
+import { Calendar, Users, Check, User, AlertCircle, SquareStack, Clock, Copy } from "lucide-react";
+import { format, addDays, isSameDay, getDay, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
-
+import { nanoid } from "nanoid";
 interface RestaurantTableWithHours {
   id: string;
   table_number: number;
@@ -344,6 +345,9 @@ const Prenota = () => {
     
     setIsSubmitting(true);
 
+    // Generate confirmation code
+    const generatedCode = `RES-${nanoid(6).toUpperCase()}`;
+
     try {
       const { data, error } = await supabase
         .from("reservations")
@@ -358,8 +362,9 @@ const Prenota = () => {
           table_id: booking.tableId || null,
           notes: booking.notes || null,
           status: "pending",
+          confirmation_code: generatedCode, // Save confirmation code to database
         })
-        .select("id")
+        .select("id, confirmation_code")
         .single();
 
       if (error) {
@@ -369,9 +374,8 @@ const Prenota = () => {
         return;
       }
 
-      const code = `PR${data.id.slice(0, 8).toUpperCase()}`;
-      setBookingCode(code);
-      setStep(4); // Confirmation step (now step 4, not 5)
+      setBookingCode(data.confirmation_code || generatedCode);
+      setStep(4); // Confirmation step
       toast.success("Prenotazione inviata con successo!");
     } catch (err) {
       console.error("Error:", err);
@@ -757,7 +761,21 @@ const Prenota = () => {
             
             <Card className="p-6 mb-6 max-w-md mx-auto">
               <div className="text-sm text-muted-foreground mb-2">Codice prenotazione</div>
-              <div className="text-2xl font-mono font-bold text-primary mb-4">{bookingCode}</div>
+              <div className="text-2xl font-mono font-bold text-primary mb-4 flex items-center justify-center gap-2">
+                {bookingCode}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7"
+                  onClick={() => {
+                    navigator.clipboard.writeText(bookingCode);
+                    toast.success("Codice copiato!");
+                  }}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+              <Badge className="bg-amber-500 text-white mb-4">In attesa di conferma</Badge>
               <div className="text-left space-y-2">
                 <p><strong>Data:</strong> {booking.date && format(booking.date, "EEEE d MMMM", { locale: it })}</p>
                 <p><strong>Orario:</strong> {booking.selectedTime}</p>

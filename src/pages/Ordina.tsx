@@ -199,9 +199,10 @@ const Ordina = () => {
           notes: cart.deliveryType === "dine_in" && cart.tableNumber 
             ? `Tavolo: ${cart.tableNumber}${orderNotes ? ` - ${orderNotes}` : ""}`
             : orderNotes || null,
-          status: "pending", // Changed from "received" to "pending" - shows as "Inviato" to user
+          status: "pending", // Shows as "Inviato" to user
+          confirmation_code: generatedCode, // Save confirmation code to database
         })
-        .select("order_number")
+        .select("order_number, confirmation_code")
         .single();
 
       if (error) {
