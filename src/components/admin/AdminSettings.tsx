@@ -11,6 +11,7 @@ import { LocationPickerMap } from "@/components/shared/LocationPickerMap";
 export const AdminSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [settingsId, setSettingsId] = useState<string | null>(null);
   const [settings, setSettings] = useState({
     name: "Pizzeria Rossi",
     address: "",
@@ -31,9 +32,11 @@ export const AdminSettings = () => {
     const { data, error } = await supabase
       .from("pizzeria_settings")
       .select("*")
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (data) {
+      setSettingsId(data.id);
       setSettings({
         name: data.name,
         address: data.address || "",
@@ -42,8 +45,8 @@ export const AdminSettings = () => {
         logo_url: data.logo_url || "",
         average_prep_time_minutes: data.average_prep_time_minutes || 30,
         delivery_radius_km: data.delivery_radius_km || 5,
-        pizzeria_lat: (data as any).pizzeria_lat ? Number((data as any).pizzeria_lat) : null,
-        pizzeria_lng: (data as any).pizzeria_lng ? Number((data as any).pizzeria_lng) : null,
+        pizzeria_lat: data.pizzeria_lat ? Number(data.pizzeria_lat) : null,
+        pizzeria_lng: data.pizzeria_lng ? Number(data.pizzeria_lng) : null,
       });
     }
     setIsLoading(false);
@@ -87,20 +90,33 @@ export const AdminSettings = () => {
   };
 
   const handleSave = async () => {
-    const { error } = await supabase
-      .from("pizzeria_settings")
-      .upsert({
-        id: "default",
-        name: settings.name,
-        address: settings.address || null,
-        phone: settings.phone || null,
-        email: settings.email || null,
-        logo_url: settings.logo_url || null,
-        average_prep_time_minutes: settings.average_prep_time_minutes,
-        delivery_radius_km: settings.delivery_radius_km,
-        pizzeria_lat: settings.pizzeria_lat,
-        pizzeria_lng: settings.pizzeria_lng,
-      } as any);
+    const updateData = {
+      name: settings.name,
+      address: settings.address || null,
+      phone: settings.phone || null,
+      email: settings.email || null,
+      logo_url: settings.logo_url || null,
+      average_prep_time_minutes: settings.average_prep_time_minutes,
+      delivery_radius_km: settings.delivery_radius_km,
+      pizzeria_lat: settings.pizzeria_lat,
+      pizzeria_lng: settings.pizzeria_lng,
+    };
+
+    let error;
+    if (settingsId) {
+      // Update existing record
+      const result = await supabase
+        .from("pizzeria_settings")
+        .update(updateData)
+        .eq("id", settingsId);
+      error = result.error;
+    } else {
+      // Insert new record
+      const result = await supabase
+        .from("pizzeria_settings")
+        .insert(updateData);
+      error = result.error;
+    }
 
     if (error) {
       toast.error("Errore: " + error.message);
@@ -108,6 +124,10 @@ export const AdminSettings = () => {
     }
 
     toast.success("Impostazioni salvate!");
+    // Refetch to get the ID if it was a new insert
+    if (!settingsId) {
+      fetchSettings();
+    }
   };
 
   if (isLoading) {
