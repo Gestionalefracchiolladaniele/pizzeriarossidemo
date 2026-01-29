@@ -18,6 +18,8 @@ export const AdminSettings = () => {
     logo_url: "",
     average_prep_time_minutes: 30,
     delivery_radius_km: 5,
+    pizzeria_lat: null as number | null,
+    pizzeria_lng: null as number | null,
   });
 
   useEffect(() => {
@@ -39,6 +41,8 @@ export const AdminSettings = () => {
         logo_url: data.logo_url || "",
         average_prep_time_minutes: data.average_prep_time_minutes || 30,
         delivery_radius_km: data.delivery_radius_km || 5,
+        pizzeria_lat: (data as any).pizzeria_lat ? Number((data as any).pizzeria_lat) : null,
+        pizzeria_lng: (data as any).pizzeria_lng ? Number((data as any).pizzeria_lng) : null,
       });
     }
     setIsLoading(false);
@@ -85,7 +89,9 @@ export const AdminSettings = () => {
         logo_url: settings.logo_url || null,
         average_prep_time_minutes: settings.average_prep_time_minutes,
         delivery_radius_km: settings.delivery_radius_km,
-      });
+        pizzeria_lat: settings.pizzeria_lat,
+        pizzeria_lng: settings.pizzeria_lng,
+      } as any);
 
     if (error) {
       toast.error("Errore: " + error.message);
@@ -192,6 +198,35 @@ export const AdminSettings = () => {
               value={settings.delivery_radius_km}
               onChange={(e) => setSettings({ ...settings, delivery_radius_km: parseInt(e.target.value) || 5 })}
             />
+          </div>
+
+          <div className="pt-4 border-t">
+            <h3 className="text-md font-semibold mb-3">Posizione Pizzeria (per calcolo distanza)</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Latitudine</label>
+                <Input 
+                  type="number"
+                  step="0.000001"
+                  value={settings.pizzeria_lat || ""}
+                  onChange={(e) => setSettings({ ...settings, pizzeria_lat: e.target.value ? parseFloat(e.target.value) : null })}
+                  placeholder="Es: 41.9028"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Longitudine</label>
+                <Input 
+                  type="number"
+                  step="0.000001"
+                  value={settings.pizzeria_lng || ""}
+                  onChange={(e) => setSettings({ ...settings, pizzeria_lng: e.target.value ? parseFloat(e.target.value) : null })}
+                  placeholder="Es: 12.4964"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Puoi trovare le coordinate cercando il tuo indirizzo su Google Maps, tasto destro → "Cosa c'è qui?"
+            </p>
           </div>
         </Card>
         <NotificationSettings />

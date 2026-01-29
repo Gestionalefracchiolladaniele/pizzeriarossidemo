@@ -141,7 +141,10 @@ export type Database = {
           customer_name: string
           customer_phone: string
           delivery_address: string | null
+          delivery_distance_km: number | null
           delivery_fee: number | null
+          delivery_lat: number | null
+          delivery_lng: number | null
           delivery_type: string
           id: string
           items: Json
@@ -163,7 +166,10 @@ export type Database = {
           customer_name: string
           customer_phone: string
           delivery_address?: string | null
+          delivery_distance_km?: number | null
           delivery_fee?: number | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           delivery_type: string
           id?: string
           items: Json
@@ -185,7 +191,10 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           delivery_address?: string | null
+          delivery_distance_km?: number | null
           delivery_fee?: number | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           delivery_type?: string
           id?: string
           items?: Json
@@ -215,6 +224,8 @@ export type Database = {
           name: string
           opening_hours: Json | null
           phone: string | null
+          pizzeria_lat: number | null
+          pizzeria_lng: number | null
           reservation_settings: Json | null
           updated_at: string
         }
@@ -230,6 +241,8 @@ export type Database = {
           name?: string
           opening_hours?: Json | null
           phone?: string | null
+          pizzeria_lat?: number | null
+          pizzeria_lng?: number | null
           reservation_settings?: Json | null
           updated_at?: string
         }
@@ -245,6 +258,8 @@ export type Database = {
           name?: string
           opening_hours?: Json | null
           phone?: string | null
+          pizzeria_lat?: number | null
+          pizzeria_lng?: number | null
           reservation_settings?: Json | null
           updated_at?: string
         }

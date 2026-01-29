@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
-import { Clock, Phone, MapPin, User, History, ChevronDown, ChevronUp, Copy } from "lucide-react";
+import { Clock, Phone, MapPin, User, History, ChevronDown, ChevronUp, Navigation } from "lucide-react";
 import { HistoryCalendarDialog } from "@/components/HistoryCalendarDialog";
 
 type Order = Tables<"orders">;
@@ -17,6 +17,7 @@ const statusColors: Record<string, string> = {
   read: "bg-purple-500",
   preparing: "bg-orange-500",
   done: "bg-green-500",
+  out_for_delivery: "bg-cyan-500",
   delivered: "bg-gray-500",
   cancelled: "bg-red-500",
 };
@@ -26,7 +27,8 @@ const statusLabels: Record<string, string> = {
   received: "Ricevuto",
   read: "Letto",
   preparing: "In Preparazione",
-  done: "Fatto",
+  done: "Pronto",
+  out_for_delivery: "In Consegna",
   delivered: "Consegnato",
   cancelled: "Annullato",
 };
@@ -198,9 +200,25 @@ export const AdminOrders = () => {
                   </div>
 
                   {order.delivery_address && (
-                    <p className="flex items-center gap-1 text-sm">
-                      <MapPin className="w-4 h-4" /> {order.delivery_address}
-                    </p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="w-4 h-4" /> 
+                      <span className="truncate max-w-[300px]">{order.delivery_address}</span>
+                      {(order as any).delivery_lat && (order as any).delivery_lng && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="ml-2"
+                          onClick={() => {
+                            window.open(
+                              `https://www.google.com/maps/dir/?api=1&destination=${(order as any).delivery_lat},${(order as any).delivery_lng}`,
+                              '_blank'
+                            );
+                          }}
+                        >
+                          <Navigation className="w-4 h-4 mr-1" /> Naviga
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -239,7 +257,8 @@ export const AdminOrders = () => {
                     <SelectItem value="received">Ricevuto</SelectItem>
                     <SelectItem value="read">Letto</SelectItem>
                     <SelectItem value="preparing">In Preparazione</SelectItem>
-                    <SelectItem value="done">Fatto</SelectItem>
+                    <SelectItem value="done">Pronto</SelectItem>
+                    <SelectItem value="out_for_delivery">In Consegna</SelectItem>
                     <SelectItem value="delivered">Consegnato</SelectItem>
                     <SelectItem value="cancelled">Annullato</SelectItem>
                   </SelectContent>
