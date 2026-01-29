@@ -193,15 +193,15 @@ export const LocationPickerMap = ({
           disabled={isLocating}
           className="w-full"
         >
-          {isLocating ? (
+        {isLocating ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Localizzazione...
+              Ricerca posizione...
             </>
           ) : (
             <>
               <Navigation className="w-4 h-4 mr-2" />
-              Usa posizione GPS
+              📍 Usa la mia posizione attuale
             </>
           )}
         </Button>
