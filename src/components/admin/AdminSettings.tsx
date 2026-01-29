@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Save, Upload } from "lucide-react";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import { LocationPickerMap } from "@/components/shared/LocationPickerMap";
 
 export const AdminSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -76,8 +77,16 @@ export const AdminSettings = () => {
     toast.success("Logo caricato!");
   };
 
+  const handleLocationChange = (lat: number, lng: number, address?: string) => {
+    setSettings(prev => ({
+      ...prev,
+      pizzeria_lat: lat,
+      pizzeria_lng: lng,
+      address: address || prev.address,
+    }));
+  };
+
   const handleSave = async () => {
-    // Upsert settings
     const { error } = await supabase
       .from("pizzeria_settings")
       .upsert({
@@ -180,6 +189,23 @@ export const AdminSettings = () => {
         </Card>
 
         <Card className="p-6 space-y-4">
+          <h2 className="text-xl font-semibold">Posizione Pizzeria</h2>
+          <p className="text-sm text-muted-foreground">
+            Clicca sulla mappa o usa il GPS per impostare la posizione della pizzeria.
+            Questa serve per calcolare la distanza di consegna.
+          </p>
+          
+          <LocationPickerMap
+            initialLat={settings.pizzeria_lat}
+            initialLng={settings.pizzeria_lng}
+            onLocationChange={handleLocationChange}
+            showGpsButton={true}
+            height="250px"
+            label="Clicca sulla mappa o trascina il marker"
+          />
+        </Card>
+
+        <Card className="p-6 space-y-4">
           <h2 className="text-xl font-semibold">Consegne</h2>
           
           <div>
@@ -192,43 +218,18 @@ export const AdminSettings = () => {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1 block">Raggio consegna (km)</label>
+            <label className="text-sm font-medium mb-1 block">Raggio massimo consegna (km)</label>
             <Input 
               type="number"
               value={settings.delivery_radius_km}
               onChange={(e) => setSettings({ ...settings, delivery_radius_km: parseInt(e.target.value) || 5 })}
             />
-          </div>
-
-          <div className="pt-4 border-t">
-            <h3 className="text-md font-semibold mb-3">Posizione Pizzeria (per calcolo distanza)</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Latitudine</label>
-                <Input 
-                  type="number"
-                  step="0.000001"
-                  value={settings.pizzeria_lat || ""}
-                  onChange={(e) => setSettings({ ...settings, pizzeria_lat: e.target.value ? parseFloat(e.target.value) : null })}
-                  placeholder="Es: 41.9028"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Longitudine</label>
-                <Input 
-                  type="number"
-                  step="0.000001"
-                  value={settings.pizzeria_lng || ""}
-                  onChange={(e) => setSettings({ ...settings, pizzeria_lng: e.target.value ? parseFloat(e.target.value) : null })}
-                  placeholder="Es: 12.4964"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Puoi trovare le coordinate cercando il tuo indirizzo su Google Maps, tasto destro → "Cosa c'è qui?"
+            <p className="text-xs text-muted-foreground mt-1">
+              Gli ordini oltre questo raggio verranno bloccati
             </p>
           </div>
         </Card>
+
         <NotificationSettings />
       </div>
 
