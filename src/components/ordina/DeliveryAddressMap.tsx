@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MapPin, Navigation, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useGoogleMaps, calculateDistance } from "@/hooks/useGoogleMaps";
@@ -67,6 +66,83 @@ export const DeliveryAddressMap = ({ onAddressChange, onValidityChange }: Delive
     loadGoogleMaps();
   }, [loadGoogleMaps]);
 
+  // Update marker and calculate distance
+  const updatePosition = useCallback(
+    async (lat: number, lng: number) => {
+      if (!mapInstanceRef.current || !pizzeriaSettings?.pizzeria_lat) return;
+
+      // Update or create marker
+      if (markerRef.current) {
+        markerRef.current.setPosition({ lat, lng });
+      } else {
+        markerRef.current = new google.maps.Marker({
+          position: { lat, lng },
+          map: mapInstanceRef.current,
+          draggable: true,
+          icon: {
+            path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+            scale: 6,
+            fillColor: "#3b82f6",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+          },
+          title: "La tua posizione (trascina per correggere)",
+        });
+
+        // Handle marker drag
+        markerRef.current.addListener("dragend", () => {
+          const pos = markerRef.current?.getPosition();
+          if (pos) {
+            updatePosition(pos.lat(), pos.lng());
+          }
+        });
+      }
+
+      mapInstanceRef.current.panTo({ lat, lng });
+      mapInstanceRef.current.setZoom(15);
+      setUserPosition({ lat, lng });
+
+      // Reverse geocode to get address
+      let formattedAddress = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      try {
+        const geocoder = new google.maps.Geocoder();
+        const result = await geocoder.geocode({ location: { lat, lng } });
+        if (result.results[0]) {
+          formattedAddress = result.results[0].formatted_address;
+          setAddress(formattedAddress);
+        }
+      } catch (err) {
+        console.error("Geocoding failed:", err);
+      }
+
+      // Calculate distance
+      const dist = calculateDistance(
+        pizzeriaSettings.pizzeria_lat,
+        pizzeriaSettings.pizzeria_lng!,
+        lat,
+        lng
+      );
+      setDistance(dist);
+
+      const withinRange = dist <= pizzeriaSettings.delivery_radius_km;
+      setIsWithinRange(withinRange);
+      onValidityChange(withinRange);
+
+      if (withinRange) {
+        onAddressChange({
+          lat,
+          lng,
+          address: formattedAddress,
+          distance: dist,
+        });
+      } else {
+        onAddressChange(null);
+      }
+    },
+    [pizzeriaSettings, onAddressChange, onValidityChange]
+  );
+
   // Initialize map when loaded
   useEffect(() => {
     if (!isLoaded || !mapRef.current || !pizzeriaSettings?.pizzeria_lat) return;
@@ -116,84 +192,17 @@ export const DeliveryAddressMap = ({ onAddressChange, onValidityChange }: Delive
     });
     circleRef.current = circle;
 
+    // Add click listener to map
+    map.addListener("click", (e: google.maps.MapMouseEvent) => {
+      if (e.latLng) {
+        updatePosition(e.latLng.lat(), e.latLng.lng());
+      }
+    });
+
     return () => {
       mapInstanceRef.current = null;
     };
-  }, [isLoaded, pizzeriaSettings]);
-
-  // Update marker and calculate distance
-  const updatePosition = useCallback(
-    async (lat: number, lng: number) => {
-      if (!mapInstanceRef.current || !pizzeriaSettings?.pizzeria_lat) return;
-
-      // Update or create marker
-      if (markerRef.current) {
-        markerRef.current.setPosition({ lat, lng });
-      } else {
-        markerRef.current = new google.maps.Marker({
-          position: { lat, lng },
-          map: mapInstanceRef.current,
-          draggable: true,
-          icon: {
-            path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-            scale: 6,
-            fillColor: "#3b82f6",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2,
-          },
-          title: "La tua posizione (trascina per correggere)",
-        });
-
-        // Handle marker drag
-        markerRef.current.addListener("dragend", () => {
-          const pos = markerRef.current?.getPosition();
-          if (pos) {
-            updatePosition(pos.lat(), pos.lng());
-          }
-        });
-      }
-
-      mapInstanceRef.current.panTo({ lat, lng });
-      setUserPosition({ lat, lng });
-
-      // Reverse geocode to get address
-      const geocoder = new google.maps.Geocoder();
-      try {
-        const result = await geocoder.geocode({ location: { lat, lng } });
-        if (result.results[0]) {
-          setAddress(result.results[0].formatted_address);
-        }
-      } catch (err) {
-        console.error("Geocoding failed:", err);
-      }
-
-      // Calculate distance
-      const dist = calculateDistance(
-        pizzeriaSettings.pizzeria_lat,
-        pizzeriaSettings.pizzeria_lng!,
-        lat,
-        lng
-      );
-      setDistance(dist);
-
-      const withinRange = dist <= pizzeriaSettings.delivery_radius_km;
-      setIsWithinRange(withinRange);
-      onValidityChange(withinRange);
-
-      if (withinRange) {
-        onAddressChange({
-          lat,
-          lng,
-          address: address || `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-          distance: dist,
-        });
-      } else {
-        onAddressChange(null);
-      }
-    },
-    [pizzeriaSettings, address, onAddressChange, onValidityChange]
-  );
+  }, [isLoaded, pizzeriaSettings, updatePosition]);
 
   // Get user's current location
   const handleGetLocation = () => {
@@ -232,23 +241,6 @@ export const DeliveryAddressMap = ({ onAddressChange, onValidityChange }: Delive
         maximumAge: 0,
       }
     );
-  };
-
-  // Handle manual address search
-  const handleAddressSearch = async () => {
-    if (!address.trim() || !isLoaded) return;
-
-    const geocoder = new google.maps.Geocoder();
-    try {
-      const result = await geocoder.geocode({ address });
-      if (result.results[0]) {
-        const location = result.results[0].geometry.location;
-        updatePosition(location.lat(), location.lng());
-        mapInstanceRef.current?.setZoom(15);
-      }
-    } catch (err) {
-      setGeoError("Indirizzo non trovato. Riprova con un indirizzo più specifico.");
-    }
   };
 
   // Check if pizzeria coordinates are configured
@@ -306,19 +298,6 @@ export const DeliveryAddressMap = ({ onAddressChange, onValidityChange }: Delive
         )}
       </Button>
 
-      {/* Manual address input */}
-      <div className="flex gap-2">
-        <Input
-          placeholder="Oppure inserisci indirizzo manualmente..."
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleAddressSearch()}
-        />
-        <Button type="button" variant="secondary" onClick={handleAddressSearch}>
-          <MapPin className="w-4 h-4" />
-        </Button>
-      </div>
-
       {/* Error message */}
       {geoError && (
         <Alert variant="destructive">
@@ -333,6 +312,12 @@ export const DeliveryAddressMap = ({ onAddressChange, onValidityChange }: Delive
         className="w-full h-64 rounded-lg border bg-muted"
         style={{ minHeight: "250px" }}
       />
+
+      {/* Instructions */}
+      <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
+        <MapPin className="w-3 h-3" />
+        Clicca sulla mappa o trascina il marker per selezionare il punto esatto di consegna
+      </p>
 
       {/* Distance feedback */}
       {distance !== null && (
@@ -354,7 +339,7 @@ export const DeliveryAddressMap = ({ onAddressChange, onValidityChange }: Delive
                   Distanza: {distance.toFixed(1)} km (max {pizzeriaSettings.delivery_radius_km} km)
                 </p>
               )}
-              {userPosition && (
+              {userPosition && address && (
                 <p className="text-xs text-muted-foreground mt-1 truncate max-w-[300px]">
                   {address}
                 </p>
@@ -364,11 +349,10 @@ export const DeliveryAddressMap = ({ onAddressChange, onValidityChange }: Delive
         </Card>
       )}
 
-      {/* Instructions */}
+      {/* Instructions when no position selected */}
       {!userPosition && (
         <p className="text-sm text-muted-foreground text-center">
-          Usa il GPS o inserisci l'indirizzo per verificare la disponibilità della consegna.
-          Puoi trascinare il marker sulla mappa per correggere la posizione.
+          Usa il GPS o clicca sulla mappa per verificare la disponibilità della consegna.
         </p>
       )}
     </div>
