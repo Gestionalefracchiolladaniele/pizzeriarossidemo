@@ -16,6 +16,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { nanoid } from "nanoid";
 import { ProductDetailDialog } from "@/components/ordina/ProductDetailDialog";
 import { DeliveryTypeSelector } from "@/components/ordina/DeliveryTypeSelector";
+import { DeliveryAddressMap } from "@/components/ordina/DeliveryAddressMap";
+
+interface DeliveryCoordinates {
+  lat: number;
+  lng: number;
+  address: string;
+  distance: number;
+}
 
 interface MenuCategory {
   id: string;
@@ -55,6 +63,8 @@ const Ordina = () => {
   const [customerEmail, setCustomerEmail] = useState("");
   const [orderNotes, setOrderNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deliveryCoords, setDeliveryCoords] = useState<DeliveryCoordinates | null>(null);
+  const [isDeliveryValid, setIsDeliveryValid] = useState(false);
   
   // Dynamic menu state
   const [menuItems, setMenuItems] = useState<DbMenuItem[]>([]);
@@ -155,8 +165,8 @@ const Ordina = () => {
       toast.error("Inserisci la tua email");
       return;
     }
-    if (cart.deliveryType === "delivery" && !deliveryAddress.trim()) {
-      toast.error("Inserisci l'indirizzo di consegna");
+    if (cart.deliveryType === "delivery" && !isDeliveryValid) {
+      toast.error("Seleziona un indirizzo di consegna valido");
       return;
     }
     if (cart.deliveryType === "takeaway" && !cart.pickupTime) {
@@ -190,7 +200,10 @@ const Ordina = () => {
           customer_email: customerEmail,
           customer_phone: customerPhone,
           delivery_type: cart.deliveryType,
-          delivery_address: cart.deliveryType === "delivery" ? deliveryAddress : null,
+          delivery_address: cart.deliveryType === "delivery" ? (deliveryCoords?.address || deliveryAddress) : null,
+          delivery_lat: cart.deliveryType === "delivery" ? deliveryCoords?.lat : null,
+          delivery_lng: cart.deliveryType === "delivery" ? deliveryCoords?.lng : null,
+          delivery_distance_km: cart.deliveryType === "delivery" ? deliveryCoords?.distance : null,
           pickup_time: cart.deliveryType === "takeaway" ? cart.pickupTime : null,
           items: orderItems,
           subtotal: totalPrice,
@@ -506,10 +519,14 @@ const Ordina = () => {
                       <MapPin className="w-5 h-5 text-primary" />
                       Indirizzo di consegna
                     </h3>
-                    <Input
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
-                      placeholder="Via Roma 123, Milano"
+                    <DeliveryAddressMap
+                      onAddressChange={(coords) => {
+                        setDeliveryCoords(coords);
+                        if (coords) {
+                          setDeliveryAddress(coords.address);
+                        }
+                      }}
+                      onValidityChange={setIsDeliveryValid}
                     />
                   </Card>
                 )}
