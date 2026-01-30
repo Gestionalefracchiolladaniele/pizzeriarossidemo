@@ -12,11 +12,12 @@ import { useCart, MenuItem } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
 import { ProductDetailDialog } from "@/components/ordina/ProductDetailDialog";
 import { DeliveryTypeSelector } from "@/components/ordina/DeliveryTypeSelector";
 import { DeliveryAddressMap } from "@/components/ordina/DeliveryAddressMap";
+import { DeliveryTimeEstimate } from "@/components/ordina/DeliveryTimeEstimate";
 
 interface DeliveryCoordinates {
   lat: number;
@@ -49,8 +50,7 @@ const pickupTimes = [
 ];
 
 const Ordina = () => {
-  const { user, isLoading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState<"menu" | "checkout" | "confirmed">("menu");
   const [activeCategory, setActiveCategory] = useState("");
   const [orderNumber, setOrderNumber] = useState<number | null>(null);
@@ -522,6 +522,16 @@ const Ordina = () => {
                       }}
                       onValidityChange={setIsDeliveryValid}
                     />
+                    
+                    {/* Show time estimate when address is valid */}
+                    {isDeliveryValid && deliveryCoords && (
+                      <div className="mt-4">
+                        <DeliveryTimeEstimate
+                          cartItems={cart.items}
+                          distanceKm={deliveryCoords.distance}
+                        />
+                      </div>
+                    )}
                   </Card>
                 )}
 
