@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Maximize2, Minimize2, MapPin, Navigation, Clock, Loader2, X } from "lucide-react";
+import { Maximize2, Minimize2, MapPin, Navigation, Clock, Loader2, X, Route } from "lucide-react";
 import { useDeliveryTracking } from "@/hooks/useDeliveryTracking";
 import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,8 +26,10 @@ export const LiveDeliveryMap = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pizzeriaLocation, setPizzeriaLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [estimatedDistance, setEstimatedDistance] = useState<string | null>(null);
+  const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const driverMarkerRef = useRef<google.maps.Marker | null>(null);
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   
   const mapContainerId = `live-map-${orderId}`;
   const fullscreenMapId = `fullscreen-map-${orderId}`;
@@ -63,25 +65,63 @@ export const LiveDeliveryMap = ({
     fetchPizzeriaLocation();
   }, []);
 
-  // Calculate distance between driver and destination
-  useEffect(() => {
-    if (driverLocation && deliveryLat && deliveryLng) {
-      const R = 6371; // Earth radius in km
-      const dLat = (deliveryLat - driverLocation.lat) * Math.PI / 180;
-      const dLng = (deliveryLng - driverLocation.lng) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(driverLocation.lat * Math.PI / 180) * Math.cos(deliveryLat * Math.PI / 180) *
-                Math.sin(dLng/2) * Math.sin(dLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      const distance = R * c;
-      
-      if (distance < 1) {
-        setEstimatedDistance(`${Math.round(distance * 1000)} m`);
-      } else {
-        setEstimatedDistance(`${distance.toFixed(1)} km`);
+  // Calculate route using Directions API
+  const calculateRoute = async (map: google.maps.Map, origin: google.maps.LatLngLiteral, destination: google.maps.LatLngLiteral) => {
+    if (!window.google) return;
+
+    const directionsService = new google.maps.DirectionsService();
+    
+    try {
+      const result = await directionsService.route({
+        origin,
+        destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+      });
+
+      if (result.routes.length > 0) {
+        // Create or update directions renderer
+        if (!directionsRendererRef.current) {
+          directionsRendererRef.current = new google.maps.DirectionsRenderer({
+            map,
+            suppressMarkers: true, // We use custom markers
+            polylineOptions: {
+              strokeColor: "#f97316", // Orange for active route
+              strokeWeight: 5,
+              strokeOpacity: 0.8,
+            },
+          });
+        }
+
+        directionsRendererRef.current.setMap(map);
+        directionsRendererRef.current.setDirections(result);
+
+        // Extract route info
+        const leg = result.routes[0].legs[0];
+        if (leg) {
+          setRouteInfo({
+            distance: leg.distance?.text || "",
+            duration: leg.duration?.text || "",
+          });
+          setEstimatedDistance(leg.distance?.text || null);
+        }
+      }
+    } catch (error) {
+      console.error("Directions request failed:", error);
+      // Fallback to straight-line calculation
+      if (driverLocation) {
+        const R = 6371;
+        const dLat = (deliveryLat - driverLocation.lat) * Math.PI / 180;
+        const dLng = (deliveryLng - driverLocation.lng) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(driverLocation.lat * Math.PI / 180) * Math.cos(deliveryLat * Math.PI / 180) *
+                  Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+        
+        setEstimatedDistance(distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`);
       }
     }
-  }, [driverLocation, deliveryLat, deliveryLng]);
+  };
 
   // Initialize or update map
   const initializeMap = (containerId: string, height: string) => {
@@ -160,6 +200,12 @@ export const LiveDeliveryMap = ({
         title: "Fattorino",
         zIndex: 1000,
       });
+
+      // Calculate route from driver to destination
+      calculateRoute(map, driverLocation, { lat: deliveryLat, lng: deliveryLng });
+    } else if (pizzeriaLocation) {
+      // If no driver location, show route from pizzeria to destination
+      calculateRoute(map, pizzeriaLocation, { lat: deliveryLat, lng: deliveryLng });
     }
 
     // Fit bounds
@@ -174,31 +220,36 @@ export const LiveDeliveryMap = ({
     map.fitBounds(bounds, 50);
   };
 
-  // Update driver marker position
+  // Update driver marker position and recalculate route
   useEffect(() => {
-    if (driverLocation && driverMarkerRef.current && mapRef.current) {
-      driverMarkerRef.current.setPosition({ 
-        lat: driverLocation.lat, 
-        lng: driverLocation.lng 
-      });
-    } else if (driverLocation && mapRef.current && !driverMarkerRef.current) {
-      // Create marker if it doesn't exist
-      driverMarkerRef.current = new google.maps.Marker({
-        position: { lat: driverLocation.lat, lng: driverLocation.lng },
-        map: mapRef.current,
-        icon: {
-          path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          scale: 8,
-          fillColor: "#f97316",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
-        },
-        title: "Fattorino",
-        zIndex: 1000,
-      });
+    if (driverLocation && mapRef.current) {
+      if (driverMarkerRef.current) {
+        driverMarkerRef.current.setPosition({ 
+          lat: driverLocation.lat, 
+          lng: driverLocation.lng 
+        });
+      } else {
+        // Create marker if it doesn't exist
+        driverMarkerRef.current = new google.maps.Marker({
+          position: { lat: driverLocation.lat, lng: driverLocation.lng },
+          map: mapRef.current,
+          icon: {
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale: 8,
+            fillColor: "#f97316",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 3,
+          },
+          title: "Fattorino",
+          zIndex: 1000,
+        });
+      }
+
+      // Recalculate route when driver moves
+      calculateRoute(mapRef.current, driverLocation, { lat: deliveryLat, lng: deliveryLng });
     }
-  }, [driverLocation]);
+  }, [driverLocation, deliveryLat, deliveryLng]);
 
   // Initialize small map
   useEffect(() => {
@@ -251,8 +302,20 @@ export const LiveDeliveryMap = ({
           </div>
           
           {/* Stats row */}
-          <div className="flex items-center gap-4 mt-2 text-sm">
-            {estimatedDistance && (
+          <div className="flex items-center gap-4 mt-2 text-sm flex-wrap">
+            {routeInfo && (
+              <>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Route className="w-4 h-4" />
+                  <span>Distanza: {routeInfo.distance}</span>
+                </div>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Clock className="w-4 h-4" />
+                  <span>ETA: {routeInfo.duration}</span>
+                </div>
+              </>
+            )}
+            {!routeInfo && estimatedDistance && (
               <div className="flex items-center gap-1 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
                 <span>Distanza: {estimatedDistance}</span>
