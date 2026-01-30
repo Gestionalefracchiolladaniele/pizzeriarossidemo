@@ -14,6 +14,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { NotificationPromptDialog } from "@/components/NotificationPromptDialog";
 import { HistoryCalendarDialog } from "@/components/HistoryCalendarDialog";
+import { LiveDeliveryMap } from "@/components/ordina/LiveDeliveryMap";
 import { toast } from "sonner";
 
 
@@ -34,6 +35,7 @@ const statusColors: Record<string, string> = {
   read: "bg-purple-500",
   preparing: "bg-orange-500",
   done: "bg-green-500",
+  out_for_delivery: "bg-cyan-500",
   delivered: "bg-gray-500",
   cancelled: "bg-red-500",
 };
@@ -44,6 +46,7 @@ const statusLabels: Record<string, string> = {
   read: "Letto",
   preparing: "In Preparazione",
   done: "Fatto",
+  out_for_delivery: "In Consegna",
   delivered: "Consegnato",
   cancelled: "Annullato",
 };
@@ -527,6 +530,23 @@ const Profilo = () => {
                           </p>
                         </div>
                       </div>
+
+                      {/* Live Tracking Map for orders out for delivery */}
+                      {order.status === 'out_for_delivery' && 
+                       order.delivery_type === 'delivery' && 
+                       order.delivery_address && 
+                       order.delivery_lat && 
+                       order.delivery_lng && (
+                        <div className="mt-4 pt-4 border-t">
+                          <LiveDeliveryMap
+                            orderId={order.id}
+                            orderNumber={order.order_number}
+                            deliveryAddress={order.delivery_address}
+                            deliveryLat={Number(order.delivery_lat)}
+                            deliveryLng={Number(order.delivery_lng)}
+                          />
+                        </div>
+                      )}
                     </Card>
                   ))}
                 </div>

@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      delivery_tracking: {
+        Row: {
+          created_at: string
+          driver_lat: number | null
+          driver_lng: number | null
+          id: string
+          is_active: boolean
+          last_updated_at: string
+          order_id: string
+          started_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_lat?: number | null
+          driver_lng?: number | null
+          id?: string
+          is_active?: boolean
+          last_updated_at?: string
+          order_id: string
+          started_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_lat?: number | null
+          driver_lng?: number | null
+          id?: string
+          is_active?: boolean
+          last_updated_at?: string
+          order_id?: string
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_tracking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_categories: {
         Row: {
           created_at: string
