@@ -84,13 +84,7 @@ const Ordina = () => {
     clearCart,
   } = useCart();
 
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!authLoading && !user) {
-      toast.error("Devi accedere per ordinare");
-      navigate("/auth");
-    }
-  }, [user, authLoading, navigate]);
+  // No longer require auth - allow direct access for demo
 
   // Fetch menu data from Supabase
   useEffect(() => {

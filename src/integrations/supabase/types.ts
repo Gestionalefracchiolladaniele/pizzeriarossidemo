@@ -98,6 +98,7 @@ export type Database = {
           is_available: boolean | null
           is_popular: boolean | null
           name: string
+          prep_time_minutes: number | null
           price: number
           sort_order: number | null
           tags: string[] | null
@@ -112,6 +113,7 @@ export type Database = {
           is_available?: boolean | null
           is_popular?: boolean | null
           name: string
+          prep_time_minutes?: number | null
           price: number
           sort_order?: number | null
           tags?: string[] | null
@@ -126,6 +128,7 @@ export type Database = {
           is_available?: boolean | null
           is_popular?: boolean | null
           name?: string
+          prep_time_minutes?: number | null
           price?: number
           sort_order?: number | null
           tags?: string[] | null

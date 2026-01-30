@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Pizza, Calendar, ShoppingBag, Settings, Menu, X, LogOut, Armchair, CalendarClock, Clock } from "lucide-react";
+import { LayoutDashboard, Pizza, Calendar, ShoppingBag, Settings, Menu, X, LogOut, Armchair, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,14 +11,12 @@ import { AdminBookings } from "@/components/admin/AdminBookings";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminTables } from "@/components/admin/AdminTables";
 import { AdminOpeningHours } from "@/components/admin/AdminOpeningHours";
-import { AdminReservationSettings } from "@/components/admin/AdminReservationSettings";
 import { NotificationPromptDialog } from "@/components/NotificationPromptDialog";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
   { icon: Pizza, label: "Menu", id: "menu" },
   { icon: Armchair, label: "Tavoli", id: "tables" },
-  { icon: CalendarClock, label: "Disponibilità Prenotazioni", id: "reservation-settings" },
   { icon: Clock, label: "Orari Apertura", id: "hours" },
   { icon: Calendar, label: "Prenotazioni", id: "bookings" },
   { icon: ShoppingBag, label: "Ordini", id: "orders" },
@@ -31,13 +29,7 @@ const Admin = () => {
   const { user, isAdmin, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      navigate("/admin-auth");
-    } else if (!isLoading && user && !isAdmin) {
-      navigate("/");
-    }
-  }, [user, isAdmin, isLoading, navigate]);
+  // No longer require auth - allow direct access for demo
 
   const handleSignOut = async () => {
     await signOut();
@@ -55,9 +47,6 @@ const Admin = () => {
     );
   }
 
-  if (!user || !isAdmin) {
-    return null;
-  }
 
   const renderContent = () => {
     switch (activeSection) {
@@ -67,8 +56,6 @@ const Admin = () => {
         return <AdminMenu />;
       case "tables":
         return <AdminTables />;
-      case "reservation-settings":
-        return <AdminReservationSettings />;
       case "hours":
         return <AdminOpeningHours />;
       case "orders":
