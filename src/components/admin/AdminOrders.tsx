@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
 import { Clock, Phone, MapPin, User, History, ChevronDown, ChevronUp, Navigation } from "lucide-react";
 import { HistoryCalendarDialog } from "@/components/HistoryCalendarDialog";
+import { DeliveryTrackerControl } from "./DeliveryTrackerControl";
 
 type Order = Tables<"orders">;
 
@@ -264,6 +265,23 @@ export const AdminOrders = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Live Delivery Tracking Control - Show for delivery orders out for delivery */}
+              {order.delivery_type === 'delivery' && order.status === 'out_for_delivery' && order.delivery_address && (
+                <div className="mt-4 pt-4 border-t">
+                  <DeliveryTrackerControl
+                    orderId={order.id}
+                    orderNumber={order.order_number}
+                    deliveryAddress={order.delivery_address}
+                    deliveryLat={order.delivery_lat ? Number(order.delivery_lat) : undefined}
+                    deliveryLng={order.delivery_lng ? Number(order.delivery_lng) : undefined}
+                    onStatusChange={(newStatus) => {
+                      // Refresh orders when status changes
+                      fetchOrders();
+                    }}
+                  />
+                </div>
+              )}
             </Card>
           ))}
 
