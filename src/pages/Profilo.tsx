@@ -82,11 +82,7 @@ const Profilo = () => {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [needsProfileUpdate, setNeedsProfileUpdate] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      navigate("/auth");
-    }
-  }, [user, isLoading, navigate]);
+  // No longer require auth - allow direct access for demo
 
   useEffect(() => {
     if (user) {

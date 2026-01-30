@@ -1,14 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingBag, Calendar, TrendingUp, Clock } from "lucide-react";
+import { ShoppingBag, Calendar, TrendingUp, Clock, History } from "lucide-react";
+import { HistoryCalendarDialog } from "@/components/HistoryCalendarDialog";
 
 interface Stats {
   ordersToday: number;
   bookingsToday: number;
   revenue: number;
   pendingOrders: number;
+}
+
+interface HistoryItem {
+  id: string;
+  type: 'order' | 'reservation';
+  date: Date;
+  status: string;
+  details: any;
 }
 
 export const AdminDashboard = () => {
@@ -19,7 +29,10 @@ export const AdminDashboard = () => {
     pendingOrders: 0,
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [allOrders, setAllOrders] = useState<any[]>([]);
+  const [allReservations, setAllReservations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -53,6 +66,18 @@ export const AdminDashboard = () => {
       .order("created_at", { ascending: false })
       .limit(5);
 
+    // Fetch ALL orders for history
+    const { data: allOrdersData } = await supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    // Fetch ALL reservations for history
+    const { data: allReservationsData } = await supabase
+      .from("reservations")
+      .select("*")
+      .order("created_at", { ascending: false });
+
     const todayRevenue = ordersData?.reduce((sum, order) => sum + order.total, 0) || 0;
 
     setStats({
@@ -63,8 +88,38 @@ export const AdminDashboard = () => {
     });
 
     setRecentOrders(recentData || []);
+    setAllOrders(allOrdersData || []);
+    setAllReservations(allReservationsData || []);
     setIsLoading(false);
   };
+
+  // Unified history combining orders and reservations
+  const historyItems: HistoryItem[] = useMemo(() => {
+    const items: HistoryItem[] = [];
+    
+    allOrders.forEach(order => {
+      items.push({
+        id: order.id,
+        type: 'order',
+        date: new Date(order.created_at),
+        status: order.status,
+        details: order,
+      });
+    });
+    
+    allReservations.forEach(reservation => {
+      items.push({
+        id: reservation.id,
+        type: 'reservation',
+        date: new Date(reservation.created_at),
+        status: reservation.status,
+        details: reservation,
+      });
+    });
+    
+    // Sort by date descending
+    return items.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [allOrders, allReservations]);
 
   if (isLoading) {
     return <div className="text-center py-12 text-muted-foreground">Caricamento...</div>;
@@ -72,7 +127,13 @@ export const AdminDashboard = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <Button variant="outline" onClick={() => setIsHistoryOpen(true)}>
+          <History className="w-4 h-4 mr-2" />
+          Sfoglia Storico
+        </Button>
+      </div>
       
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-6">
@@ -135,6 +196,9 @@ export const AdminDashboard = () => {
                 <div>
                   <p className="font-semibold">Ordine #{order.order_number}</p>
                   <p className="text-sm text-muted-foreground">{order.customer_name}</p>
+                  {order.confirmation_code && (
+                    <p className="text-xs font-mono text-primary">{order.confirmation_code}</p>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-primary">€{order.total.toFixed(2)}</p>
@@ -145,6 +209,14 @@ export const AdminDashboard = () => {
           </div>
         )}
       </Card>
+
+      {/* History Calendar Dialog */}
+      <HistoryCalendarDialog
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        items={historyItems}
+        title="Storico Completo"
+      />
     </motion.div>
   );
 };

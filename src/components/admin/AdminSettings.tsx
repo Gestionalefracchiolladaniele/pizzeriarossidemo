@@ -4,21 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Upload } from "lucide-react";
+import { Save } from "lucide-react";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { LocationPickerMap } from "@/components/shared/LocationPickerMap";
 
 export const AdminSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [settingsId, setSettingsId] = useState<string | null>(null);
   const [settings, setSettings] = useState({
     name: "Pizzeria Rossi",
     address: "",
     phone: "",
     email: "",
-    logo_url: "",
-    average_prep_time_minutes: 30,
     delivery_radius_km: 5,
     pizzeria_lat: null as number | null,
     pizzeria_lng: null as number | null,
@@ -42,42 +39,12 @@ export const AdminSettings = () => {
         address: data.address || "",
         phone: data.phone || "",
         email: data.email || "",
-        logo_url: data.logo_url || "",
-        average_prep_time_minutes: data.average_prep_time_minutes || 30,
         delivery_radius_km: data.delivery_radius_km || 5,
         pizzeria_lat: data.pizzeria_lat ? Number(data.pizzeria_lat) : null,
         pizzeria_lng: data.pizzeria_lng ? Number(data.pizzeria_lng) : null,
       });
     }
     setIsLoading(false);
-  };
-
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    const fileExt = file.name.split(".").pop();
-    const fileName = `logo.${fileExt}`;
-    const filePath = `branding/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("pizzeria-images")
-      .upload(filePath, file, { upsert: true });
-
-    if (uploadError) {
-      toast.error("Errore upload: " + uploadError.message);
-      setUploading(false);
-      return;
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from("pizzeria-images")
-      .getPublicUrl(filePath);
-
-    setSettings({ ...settings, logo_url: publicUrl });
-    setUploading(false);
-    toast.success("Logo caricato!");
   };
 
   const handleLocationChange = (lat: number, lng: number, address?: string) => {
@@ -95,8 +62,6 @@ export const AdminSettings = () => {
       address: settings.address || null,
       phone: settings.phone || null,
       email: settings.email || null,
-      logo_url: settings.logo_url || null,
-      average_prep_time_minutes: settings.average_prep_time_minutes,
       delivery_radius_km: settings.delivery_radius_km,
       pizzeria_lat: settings.pizzeria_lat,
       pizzeria_lng: settings.pizzeria_lng,
@@ -180,35 +145,6 @@ export const AdminSettings = () => {
         </Card>
 
         <Card className="p-6 space-y-4">
-          <h2 className="text-xl font-semibold">Logo e Branding</h2>
-          
-          <div className="flex items-center gap-4">
-            {settings.logo_url && (
-              <img 
-                src={settings.logo_url} 
-                alt="Logo" 
-                className="w-24 h-24 object-contain rounded-lg bg-muted"
-              />
-            )}
-            <label className="flex-1">
-              <div className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors">
-                <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
-                <span className="text-sm text-muted-foreground block mt-2">
-                  {uploading ? "Caricamento..." : "Carica logo"}
-                </span>
-              </div>
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
-                onChange={handleLogoUpload}
-                disabled={uploading}
-              />
-            </label>
-          </div>
-        </Card>
-
-        <Card className="p-6 space-y-4">
           <h2 className="text-xl font-semibold">Posizione Pizzeria</h2>
           <p className="text-sm text-muted-foreground">
             Clicca sulla mappa o usa il GPS per impostare la posizione della pizzeria.
@@ -228,15 +164,6 @@ export const AdminSettings = () => {
         <Card className="p-6 space-y-4">
           <h2 className="text-xl font-semibold">Consegne</h2>
           
-          <div>
-            <label className="text-sm font-medium mb-1 block">Tempo preparazione medio (minuti)</label>
-            <Input 
-              type="number"
-              value={settings.average_prep_time_minutes}
-              onChange={(e) => setSettings({ ...settings, average_prep_time_minutes: parseInt(e.target.value) || 30 })}
-            />
-          </div>
-
           <div>
             <label className="text-sm font-medium mb-1 block">Raggio massimo consegna (km)</label>
             <Input 

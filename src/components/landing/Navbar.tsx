@@ -122,29 +122,25 @@ const Navbar = () => {
               <span className="hidden xl:inline">02 1234567</span>
             </a>
             
-            {user ? (
-              <Link to="/profilo">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Profilo
-                </Button>
-              </Link>
-            ) : (
-              <Link to="/auth">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Accedi
-                </Button>
-              </Link>
-            )}
+            <Link to="/profilo">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}
+              >
+                <User className="w-4 h-4 mr-2" />
+                Utente
+              </Button>
+            </Link>
+            <Link to="/admin">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}
+              >
+                Admin
+              </Button>
+            </Link>
             
             <Link to="/ordina">
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red rounded-full px-6 group">
@@ -235,21 +231,18 @@ const Navbar = () => {
                   <Phone className="w-4 h-4 text-primary" />
                   02 1234567
                 </a>
-                {user ? (
-                  <Link to="/profilo" onClick={() => setIsOpen(false)}>
-                    <Button variant="outline" className="w-full">
-                      <User className="w-4 h-4 mr-2" />
-                      Il Mio Profilo
-                    </Button>
-                  </Link>
-                ) : (
-                  <Link to="/auth" onClick={() => setIsOpen(false)}>
-                    <Button variant="outline" className="w-full">
-                      <User className="w-4 h-4 mr-2" />
-                      Accedi / Registrati
-                    </Button>
-                  </Link>
-                )}
+                <Link to="/profilo" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" className="w-full">
+                    <User className="w-4 h-4 mr-2" />
+                    Accedi Utente
+                  </Button>
+                </Link>
+                <Link to="/admin" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" className="w-full mt-2">
+                    <User className="w-4 h-4 mr-2" />
+                    Accedi Admin
+                  </Button>
+                </Link>
                 <Link to="/ordina" onClick={() => setIsOpen(false)}>
                   <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-red mt-2">
                     <ShoppingBag className="w-4 h-4 mr-2" />

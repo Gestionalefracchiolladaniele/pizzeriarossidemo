@@ -1,10 +1,12 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, MapPin, Phone, Clock, Star, Flame } from "lucide-react";
+import { ChevronDown, MapPin, Phone, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { usePizzeriaSettings } from "@/hooks/usePizzeriaSettings";
 import { useRef } from "react";
 
 const HeroSection = () => {
+  const { settings } = usePizzeriaSettings();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -61,26 +63,6 @@ const HeroSection = () => {
           transition={{ duration: 0.8 }}
           className="max-w-5xl mx-auto"
         >
-          {/* Premium Badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-dark mb-8"
-          >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="w-8 h-8 rounded-full bg-gradient-red flex items-center justify-center"
-            >
-              <Flame className="w-4 h-4 text-white" />
-            </motion.div>
-            <span className="text-white font-medium">Forno a Legna dal 1990</span>
-            <div className="flex items-center gap-1 border-l border-white/20 pl-3">
-              <Star className="w-4 h-4 fill-[hsl(var(--gold))] text-[hsl(var(--gold))]" />
-              <span className="text-white/90 text-sm">4.9</span>
-            </div>
-          </motion.div>
 
           {/* Main Heading */}
           <motion.h1
@@ -132,8 +114,7 @@ const HeroSection = () => {
             <Link to="/ordina">
               <Button 
                 size="lg" 
-                variant="outline" 
-                className="border-2 border-white/40 text-white hover:bg-white hover:text-foreground text-lg px-10 py-7 rounded-full w-full sm:w-auto backdrop-blur-sm"
+                className="bg-foreground text-background hover:bg-foreground/90 text-lg px-10 py-7 rounded-full w-full sm:w-auto shadow-lg"
               >
                 Ordina Ora
               </Button>
@@ -148,8 +129,8 @@ const HeroSection = () => {
             className="flex flex-wrap justify-center gap-4 md:gap-6"
           >
             {[
-              { icon: MapPin, text: "Via Roma 123, Milano" },
-              { icon: Phone, text: "02 1234567" },
+              { icon: MapPin, text: settings.address || "Via Roma 123, Milano" },
+              { icon: Phone, text: settings.phone || "02 1234567" },
               { icon: Clock, text: "Mar-Dom 18:00-23:00" },
             ].map((item, index) => (
               <motion.div

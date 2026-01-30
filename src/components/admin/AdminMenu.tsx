@@ -32,6 +32,7 @@ export const AdminMenu = () => {
     is_available: true,
     is_popular: false,
     tags: [] as string[],
+    prep_time_minutes: "10",
   });
 
   useEffect(() => {
@@ -92,6 +93,7 @@ export const AdminMenu = () => {
         is_available: item.is_available ?? true,
         is_popular: item.is_popular ?? false,
         tags: item.tags || [],
+        prep_time_minutes: ((item as any).prep_time_minutes || 10).toString(),
       });
     } else {
       setEditingItem(null);
@@ -104,6 +106,7 @@ export const AdminMenu = () => {
         is_available: true,
         is_popular: false,
         tags: [],
+        prep_time_minutes: "10",
       });
     }
     setIsDialogOpen(true);
@@ -124,6 +127,7 @@ export const AdminMenu = () => {
       is_available: formData.is_available,
       is_popular: formData.is_popular,
       tags: formData.tags.length > 0 ? formData.tags : null,
+      prep_time_minutes: parseInt(formData.prep_time_minutes) || 10,
     };
 
     if (editingItem) {
@@ -277,6 +281,21 @@ export const AdminMenu = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">Tempo Preparazione (minuti)</label>
+              <Input 
+                type="number"
+                min="1"
+                max="120"
+                value={formData.prep_time_minutes}
+                onChange={(e) => setFormData({ ...formData, prep_time_minutes: e.target.value })}
+                placeholder="10"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Tempo necessario per preparare questo piatto
+              </p>
             </div>
 
             <div>
