@@ -85,17 +85,17 @@ const Navbar = () => {
       }`}
     >
       <div className="container mx-auto px-4">
-        <nav className="flex items-center justify-between h-20 lg:h-24">
+        <nav className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-2 group">
             <motion.div
               whileHover={{ rotate: 10, scale: 1.1 }}
-              className="w-12 h-12 rounded-full bg-gradient-red flex items-center justify-center shadow-red"
+              className="w-10 h-10 rounded-full bg-gradient-red flex items-center justify-center shadow-red"
             >
-              <span className="text-2xl">🍕</span>
+              <span className="text-xl">🍕</span>
             </motion.div>
             <span
-              className={`font-display text-xl lg:text-2xl font-bold transition-colors ${
+              className={`font-display text-lg lg:text-xl font-bold transition-colors ${
                 isScrolled || !isHomePage ? "text-foreground" : "text-white"
               }`}
             >
