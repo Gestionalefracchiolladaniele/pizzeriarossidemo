@@ -229,33 +229,33 @@ const Profilo = () => {
       
       {/* Header */}
       <header className="bg-card border-b sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-            <h1 className="text-xl font-bold">Il Mio Profilo</h1>
+            <h1 className="text-lg font-bold">Il Mio Profilo</h1>
           </div>
-          <Button variant="outline" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 mr-2" /> Esci
+          <Button variant="outline" size="sm" onClick={handleSignOut}>
+            <LogOut className="w-3.5 h-3.5 mr-1.5" /> Esci
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto"
+          className="max-w-3xl mx-auto"
         >
           {/* Profile Update Required Alert */}
           {needsProfileUpdate && (
-            <Card className="p-4 mb-6 border-amber-500/50 bg-amber-500/10">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <Card className="p-3 mb-5 border-amber-500/50 bg-amber-500/10">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-medium text-amber-700">Completa il tuo profilo</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium text-sm text-amber-700">Completa il tuo profilo</p>
+                  <p className="text-xs text-muted-foreground">
                     Per continuare, inserisci il tuo nome e cognome nella sezione Impostazioni.
                   </p>
                 </div>
@@ -264,27 +264,27 @@ const Profilo = () => {
           )}
 
           {/* User Info Card with Quick Actions */}
-          <Card className="p-6 mb-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-8 h-8 text-primary" />
+          <Card className="p-4 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold">{displayName}</h2>
-                <p className="text-muted-foreground">{displayEmail}</p>
+                <h2 className="text-xl font-bold">{displayName}</h2>
+                <p className="text-sm text-muted-foreground">{displayEmail}</p>
                 {phone && (
-                  <p className="text-sm text-muted-foreground">{phone}</p>
+                  <p className="text-xs text-muted-foreground">{phone}</p>
                 )}
               </div>
               
               {/* Quick Action Buttons - Always visible */}
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <Button onClick={() => navigate("/ordina")} className="flex-1 sm:flex-none">
-                  <Package className="w-4 h-4 mr-2" />
+                <Button size="sm" onClick={() => navigate("/ordina")} className="flex-1 sm:flex-none text-sm">
+                  <Package className="w-3.5 h-3.5 mr-1.5" />
                   Nuovo Ordine
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/prenota")} className="flex-1 sm:flex-none">
-                  <Calendar className="w-4 h-4 mr-2" />
+                <Button size="sm" variant="outline" onClick={() => navigate("/prenota")} className="flex-1 sm:flex-none text-sm">
+                  <Calendar className="w-3.5 h-3.5 mr-1.5" />
                   Prenota Tavolo
                 </Button>
               </div>
@@ -294,33 +294,33 @@ const Profilo = () => {
           {/* Tabs for History, Orders, Reservations and Settings */}
           <Tabs defaultValue={needsProfileUpdate ? "settings" : "history"} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="history" className="flex items-center gap-2">
-                <History className="w-4 h-4" />
+              <TabsTrigger value="history" className="flex items-center gap-1.5 text-xs">
+                <History className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Storico</span>
               </TabsTrigger>
-              <TabsTrigger value="orders" className="flex items-center gap-2">
-                <Package className="w-4 h-4" />
+              <TabsTrigger value="orders" className="flex items-center gap-1.5 text-xs">
+                <Package className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Ordini</span>
                 {activeOrdersCount > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  <Badge variant="destructive" className="ml-0.5 h-4 w-4 p-0 flex items-center justify-center text-xs">
                     {activeOrdersCount}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="reservations" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
+              <TabsTrigger value="reservations" className="flex items-center gap-1.5 text-xs">
+                <Calendar className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Prenotazioni</span>
                 {activeReservationsCount > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  <Badge variant="destructive" className="ml-0.5 h-4 w-4 p-0 flex items-center justify-center text-xs">
                     {activeReservationsCount}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2">
-                <Settings className="w-4 h-4" />
+              <TabsTrigger value="settings" className="flex items-center gap-1.5 text-xs">
+                <Settings className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Impostazioni</span>
                 {needsProfileUpdate && (
-                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 )}
               </TabsTrigger>
             </TabsList>

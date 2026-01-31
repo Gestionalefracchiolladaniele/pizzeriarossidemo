@@ -69,11 +69,11 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="font-display text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-[0.9]"
+            className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-[0.9]"
           >
             <span className="block">La Pizza</span>
             <span className="block text-gradient-gold">Perfetta</span>
-            <span className="block text-3xl md:text-4xl lg:text-5xl font-normal mt-2 text-white/80">
+            <span className="block text-2xl md:text-3xl lg:text-4xl font-normal mt-2 text-white/80">
               A Casa Tua o Nel Nostro Locale
             </span>
           </motion.h1>
@@ -83,7 +83,7 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="text-lg md:text-xl text-white/70 mb-10 max-w-2xl mx-auto leading-relaxed"
+            className="text-base md:text-lg text-white/70 mb-8 max-w-xl mx-auto leading-relaxed"
           >
             Tradizione napoletana, ingredienti freschi e passione autentica. 
             Ogni pizza è un'opera d'arte cotta nel nostro forno a 485°C.
@@ -94,12 +94,12 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
+            className="flex flex-col sm:flex-row gap-3 justify-center mb-12"
           >
             <Link to="/prenota">
               <Button 
                 size="lg" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red-lg hover-glow-red text-lg px-10 py-7 rounded-full w-full sm:w-auto group"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red-lg hover-glow-red text-base px-8 py-5 rounded-full w-full sm:w-auto group"
               >
                 <span>Prenota Tavolo</span>
                 <motion.span
@@ -114,7 +114,7 @@ const HeroSection = () => {
             <Link to="/ordina">
               <Button 
                 size="lg" 
-                className="bg-foreground text-background hover:bg-foreground/90 text-lg px-10 py-7 rounded-full w-full sm:w-auto shadow-lg"
+                className="bg-foreground text-background hover:bg-foreground/90 text-base px-8 py-5 rounded-full w-full sm:w-auto shadow-lg"
               >
                 Ordina Ora
               </Button>
@@ -126,7 +126,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.6 }}
-            className="flex flex-wrap justify-center gap-4 md:gap-6"
+            className="flex flex-wrap justify-center gap-3 md:gap-4"
           >
             {[
               { icon: MapPin, text: settings.address || "Via Roma 123, Milano" },
@@ -139,9 +139,9 @@ const HeroSection = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.9 + index * 0.1 }}
                 whileHover={{ scale: 1.05, y: -2 }}
-                className="flex items-center gap-2 px-5 py-3 rounded-full glass-dark text-white/80 text-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-full glass-dark text-white/80 text-xs"
               >
-                <item.icon className="w-4 h-4 text-primary" />
+                <item.icon className="w-3.5 h-3.5 text-primary" />
                 <span>{item.text}</span>
               </motion.div>
             ))}

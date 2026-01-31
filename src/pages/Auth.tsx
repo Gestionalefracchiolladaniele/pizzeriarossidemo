@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Phone, AlertCircle, Info, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, Phone, AlertCircle, Info, Eye, EyeOff, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -30,7 +29,8 @@ const DEMO_CREDENTIALS = {
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
-  const requestedRole = searchParams.get("role"); // "user" or "admin"
+  const requestedRole = searchParams.get("role") as "user" | "admin" | null;
+  const currentRole = requestedRole === "admin" ? "admin" : "user";
   
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -38,11 +38,14 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [showDemoDialog, setShowDemoDialog] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   
   const { signIn, signUp, user, isAdmin } = useAuth();
   const navigate = useNavigate();
+
+  // Get credentials for current role
+  const demoCredentials = DEMO_CREDENTIALS[currentRole];
 
   useEffect(() => {
     if (user) {
@@ -120,87 +123,76 @@ const Auth = () => {
     }
   };
 
-  const handleQuickLogin = async (type: "user" | "admin") => {
-    const creds = DEMO_CREDENTIALS[type];
-    setEmail(creds.email);
-    setPassword(creds.password);
-    setShowDemoDialog(false);
+  const handleQuickLogin = async () => {
+    setEmail(demoCredentials.email);
+    setPassword(demoCredentials.password);
     
     setIsLoading(true);
-    const { error } = await signIn(creds.email, creds.password);
+    const { error } = await signIn(demoCredentials.email, demoCredentials.password);
     setIsLoading(false);
 
     if (error) {
       setError(`Errore login demo: ${error.message}. Assicurati che l'account demo esista.`);
     } else {
-      toast.success(`Accesso come ${creds.role} effettuato!`);
+      toast.success(`Accesso come ${demoCredentials.role} effettuato!`);
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
+    setCopiedField(field);
     toast.success("Copiato!");
+    setTimeout(() => setCopiedField(null), 2000);
   };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="font-display text-3xl font-bold">
+        <div className="text-center mb-6">
+          <Link to="/" className="font-display text-2xl font-bold">
             Pizzeria <span className="text-primary">Rossi</span>
           </Link>
-          <p className="text-muted-foreground mt-2">
-            {requestedRole === "admin" 
+          <p className="text-muted-foreground text-sm mt-2">
+            {currentRole === "admin" 
               ? "Accedi come Amministratore" 
               : "Accedi o registrati per gestire le tue prenotazioni"
             }
           </p>
         </div>
 
-        <Card className="p-6 relative">
-          {/* Demo Info Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4 text-muted-foreground hover:text-primary"
-            onClick={() => setShowDemoDialog(true)}
-            title="Credenziali Demo"
-          >
-            <Info className="w-5 h-5" />
-          </Button>
-
+        <Card className="p-5">
           {error && (
             <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span className="text-sm">{error}</span>
             </div>
           )}
 
           <Tabs defaultValue="login" onValueChange={() => setError(null)}>
-            <TabsList className="w-full mb-6">
-              <TabsTrigger value="login" className="flex-1">Accedi</TabsTrigger>
-              <TabsTrigger value="register" className="flex-1">Registrati</TabsTrigger>
+            <TabsList className="w-full mb-5">
+              <TabsTrigger value="login" className="flex-1 text-sm">Accedi</TabsTrigger>
+              <TabsTrigger value="register" className="flex-1 text-sm">Registrati</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-3">
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
                     placeholder="Email" 
                     type="email" 
-                    className="pl-10" 
+                    className="pl-9 h-10 text-sm" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required 
                   />
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
                     placeholder="Password" 
                     type={showPassword ? "text" : "password"}
-                    className="pl-10 pr-10" 
+                    className="pl-9 pr-9 h-10 text-sm" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required 
@@ -210,54 +202,54 @@ const Auth = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <Button className="w-full" disabled={isLoading}>
+                <Button className="w-full h-10 text-sm" disabled={isLoading}>
                   {isLoading ? "Caricamento..." : "Accedi"}
                 </Button>
               </form>
             </TabsContent>
 
             <TabsContent value="register">
-              <form onSubmit={handleRegister} className="space-y-4">
+              <form onSubmit={handleRegister} className="space-y-3">
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
                     placeholder="Nome e Cognome" 
-                    className="pl-10" 
+                    className="pl-9 h-10 text-sm" 
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required 
                   />
                 </div>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
                     placeholder="Email" 
                     type="email" 
-                    className="pl-10" 
+                    className="pl-9 h-10 text-sm" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required 
                   />
                 </div>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
                     placeholder="Telefono" 
                     type="tel" 
-                    className="pl-10" 
+                    className="pl-9 h-10 text-sm" 
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
                     placeholder="Password" 
                     type={showPassword ? "text" : "password"}
-                    className="pl-10 pr-10" 
+                    className="pl-9 pr-9 h-10 text-sm" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required 
@@ -267,10 +259,10 @@ const Auth = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <Button className="w-full" disabled={isLoading}>
+                <Button className="w-full h-10 text-sm" disabled={isLoading}>
                   {isLoading ? "Caricamento..." : "Registrati"}
                 </Button>
               </form>
@@ -278,118 +270,65 @@ const Auth = () => {
           </Tabs>
         </Card>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        {/* Demo Credentials Card - Inline, role-specific */}
+        <Card className={`mt-4 p-4 ${currentRole === "admin" ? "border-amber-500/30 bg-amber-500/5" : "border-primary/20 bg-primary/5"}`}>
+          <div className="flex items-center gap-2 mb-3">
+            <Info className={`w-4 h-4 ${currentRole === "admin" ? "text-amber-600" : "text-primary"}`} />
+            <h4 className={`font-semibold text-sm ${currentRole === "admin" ? "text-amber-700 dark:text-amber-400" : "text-foreground"}`}>
+              Account Demo {demoCredentials.role}
+            </h4>
+          </div>
+          
+          <p className="text-xs text-muted-foreground mb-3">
+            Usa queste credenziali per testare l'applicazione come {demoCredentials.role.toLowerCase()}
+          </p>
+          
+          <div className="space-y-2">
+            <div className="flex items-center justify-between bg-background/60 p-2 rounded-lg border">
+              <div className="flex items-center gap-2">
+                <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Email:</span>
+                <code className="text-xs font-medium">{demoCredentials.email}</code>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0"
+                onClick={() => copyToClipboard(demoCredentials.email, "email")}
+              >
+                {copiedField === "email" ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+              </Button>
+            </div>
+            <div className="flex items-center justify-between bg-background/60 p-2 rounded-lg border">
+              <div className="flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Password:</span>
+                <code className="text-xs font-medium">{demoCredentials.password}</code>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0"
+                onClick={() => copyToClipboard(demoCredentials.password, "password")}
+              >
+                {copiedField === "password" ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+              </Button>
+            </div>
+          </div>
+          
+          <Button 
+            className={`w-full mt-3 h-9 text-sm ${currentRole === "admin" ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}`}
+            onClick={handleQuickLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? "Caricamento..." : `Accedi come ${demoCredentials.role} Demo`}
+          </Button>
+        </Card>
+
+        <p className="text-center text-xs text-muted-foreground mt-5">
           <Link to="/" className="text-primary hover:underline">← Torna alla Home</Link>
         </p>
       </motion.div>
-
-      {/* Demo Credentials Dialog */}
-      <Dialog open={showDemoDialog} onOpenChange={setShowDemoDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Info className="w-5 h-5 text-primary" />
-              Credenziali Demo
-            </DialogTitle>
-            <DialogDescription>
-              Usa queste credenziali per testare l'applicazione
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 mt-4">
-            {/* User Demo */}
-            <Card className="p-4 border-primary/20">
-              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Account Utente
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between bg-muted/50 p-2 rounded">
-                  <span className="text-muted-foreground">Email:</span>
-                  <div className="flex items-center gap-2">
-                    <code className="text-foreground">{DEMO_CREDENTIALS.user.email}</code>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0"
-                      onClick={() => copyToClipboard(DEMO_CREDENTIALS.user.email)}
-                    >
-                      📋
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between bg-muted/50 p-2 rounded">
-                  <span className="text-muted-foreground">Password:</span>
-                  <div className="flex items-center gap-2">
-                    <code className="text-foreground">{DEMO_CREDENTIALS.user.password}</code>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0"
-                      onClick={() => copyToClipboard(DEMO_CREDENTIALS.user.password)}
-                    >
-                      📋
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <Button 
-                className="w-full mt-3" 
-                variant="outline"
-                onClick={() => handleQuickLogin("user")}
-                disabled={isLoading}
-              >
-                Accedi come Utente Demo
-              </Button>
-            </Card>
-
-            {/* Admin Demo */}
-            <Card className="p-4 border-amber-500/30 bg-amber-500/5">
-              <h4 className="font-semibold mb-3 flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                <User className="w-4 h-4" />
-                Account Amministratore
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between bg-muted/50 p-2 rounded">
-                  <span className="text-muted-foreground">Email:</span>
-                  <div className="flex items-center gap-2">
-                    <code className="text-foreground">{DEMO_CREDENTIALS.admin.email}</code>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0"
-                      onClick={() => copyToClipboard(DEMO_CREDENTIALS.admin.email)}
-                    >
-                      📋
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between bg-muted/50 p-2 rounded">
-                  <span className="text-muted-foreground">Password:</span>
-                  <div className="flex items-center gap-2">
-                    <code className="text-foreground">{DEMO_CREDENTIALS.admin.password}</code>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0"
-                      onClick={() => copyToClipboard(DEMO_CREDENTIALS.admin.password)}
-                    >
-                      📋
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <Button 
-                className="w-full mt-3 bg-amber-600 hover:bg-amber-700 text-white"
-                onClick={() => handleQuickLogin("admin")}
-                disabled={isLoading}
-              >
-                Accedi come Admin Demo
-              </Button>
-            </Card>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
