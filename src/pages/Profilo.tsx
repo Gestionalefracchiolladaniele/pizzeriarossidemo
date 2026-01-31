@@ -82,8 +82,12 @@ const Profilo = () => {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [needsProfileUpdate, setNeedsProfileUpdate] = useState(false);
 
-  // Demo mode: when user is null, show guest profile
-  const isGuestMode = !user;
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/auth?role=user");
+    }
+  }, [user, isLoading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -94,41 +98,29 @@ const Profilo = () => {
       setLastName(nameParts.slice(1).join(" ") || "");
       setPhone(user.user_metadata?.phone || "");
       setNeedsProfileUpdate(!fullName.trim());
-    } else {
-      // Guest mode defaults
-      setFirstName("Ospite");
-      setLastName("");
-      setPhone("");
-      setNeedsProfileUpdate(false);
+      
+      // Fetch user data
+      fetchUserData();
     }
-    
-    // Fetch data regardless of auth status
-    fetchUserData();
   }, [user]);
 
   const fetchUserData = async () => {
+    if (!user) return;
+    
     setLoadingData(true);
 
-    // In guest mode, fetch ALL orders and reservations (demo)
-    // In authenticated mode, fetch only user's data
-    let ordersQuery = supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
-    
-    let reservationsQuery = supabase
-      .from("reservations")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (user) {
-      ordersQuery = ordersQuery.eq("user_id", user.id);
-      reservationsQuery = reservationsQuery.eq("user_id", user.id);
-    }
-
+    // Fetch only user's data
     const [ordersRes, reservationsRes] = await Promise.all([
-      ordersQuery,
-      reservationsQuery,
+      supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("reservations")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
     ]);
 
     setOrders(ordersRes.data || []);
@@ -223,26 +215,17 @@ const Profilo = () => {
     );
   }
 
-  // Display name based on mode
-  const displayName = isGuestMode 
-    ? "Utente Ospite"
-    : (firstName || lastName ? `${firstName} ${lastName}`.trim() : user?.email?.split('@')[0] || "Utente");
+  // Display name
+  const displayName = firstName || lastName 
+    ? `${firstName} ${lastName}`.trim() 
+    : user?.email?.split('@')[0] || "Utente";
   
-  const displayEmail = isGuestMode ? "ospite@demo.it" : (user?.email || "");
+  const displayEmail = user?.email || "";
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Notification Prompt Dialog - only show if logged in */}
-      {!isGuestMode && <NotificationPromptDialog userType="customer" />}
-      
-      {/* Guest Mode Banner */}
-      {isGuestMode && (
-        <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2 text-center text-sm">
-          <span className="text-amber-700 dark:text-amber-400">
-            ⚠️ Modalità Demo - Visualizzi tutti gli ordini e prenotazioni del sistema
-          </span>
-        </div>
-      )}
+      {/* Notification Prompt Dialog */}
+      <NotificationPromptDialog userType="customer" />
       
       {/* Header */}
       <header className="bg-card border-b sticky top-0 z-40">
@@ -253,12 +236,9 @@ const Profilo = () => {
             </Button>
             <h1 className="text-xl font-bold">Il Mio Profilo</h1>
           </div>
-          {/* Only show logout button if authenticated */}
-          {!isGuestMode && (
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" /> Esci
-            </Button>
-          )}
+          <Button variant="outline" onClick={handleSignOut}>
+            <LogOut className="w-4 h-4 mr-2" /> Esci
+          </Button>
         </div>
       </header>
 
@@ -292,7 +272,7 @@ const Profilo = () => {
               <div className="flex-1">
                 <h2 className="text-2xl font-bold">{displayName}</h2>
                 <p className="text-muted-foreground">{displayEmail}</p>
-                {phone && !isGuestMode && (
+                {phone && (
                   <p className="text-sm text-muted-foreground">{phone}</p>
                 )}
               </div>

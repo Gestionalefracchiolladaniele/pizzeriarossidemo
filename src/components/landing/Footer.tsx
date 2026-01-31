@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { Facebook, Instagram, Phone, Mail, MapPin, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
-import { MultiWaveDivider } from "@/components/ui/WaveDivider";
 
 // Basil leaf SVG component for realistic leaves
 const BasilLeaf = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
@@ -54,9 +53,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="relative bg-[hsl(var(--pizzeria-red))] text-white pt-32 pb-8 overflow-hidden">
-      {/* Wave Divider at top - from orange contact section */}
-      <MultiWaveDivider variant="top" primaryColor="hsl(var(--section-orange-strong))" />
+    <footer className="relative bg-[hsl(var(--pizzeria-red))] text-white pt-16 pb-8 overflow-hidden">
       
       {/* Large Green Basil Leaves */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

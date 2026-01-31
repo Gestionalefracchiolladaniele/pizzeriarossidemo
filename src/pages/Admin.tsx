@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { LayoutDashboard, Pizza, Calendar, ShoppingBag, Settings, Menu, X, LogOut, Armchair, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,14 +29,24 @@ const Admin = () => {
   const { user, isAdmin, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
 
-  // No longer require auth - allow direct access for demo
+  // Redirect to auth if not logged in or not admin
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        navigate("/auth?role=admin");
+      } else if (!isAdmin) {
+        // User is logged in but not admin - redirect to home with message
+        navigate("/");
+      }
+    }
+  }, [user, isAdmin, isLoading, navigate]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
-  if (isLoading) {
+  if (isLoading || !user || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

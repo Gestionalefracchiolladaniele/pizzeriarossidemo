@@ -122,7 +122,7 @@ const Navbar = () => {
               <span className="hidden xl:inline">02 1234567</span>
             </a>
             
-            <Link to="/profilo">
+            <Link to="/auth?role=user">
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -132,7 +132,7 @@ const Navbar = () => {
                 Utente
               </Button>
             </Link>
-            <Link to="/admin">
+            <Link to="/auth?role=admin">
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -231,13 +231,13 @@ const Navbar = () => {
                   <Phone className="w-4 h-4 text-primary" />
                   02 1234567
                 </a>
-                <Link to="/profilo" onClick={() => setIsOpen(false)}>
+                <Link to="/auth?role=user" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full">
                     <User className="w-4 h-4 mr-2" />
                     Accedi Utente
                   </Button>
                 </Link>
-                <Link to="/admin" onClick={() => setIsOpen(false)}>
+                <Link to="/auth?role=admin" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full mt-2">
                     <User className="w-4 h-4 mr-2" />
                     Accedi Admin
