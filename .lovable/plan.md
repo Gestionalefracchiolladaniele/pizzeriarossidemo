@@ -2,35 +2,55 @@
 
 ## Riepilogo Implementazione
 
-### ✅ Fase 1: Fix Accesso Diretto Profilo Utente
-- Rimossa la condizione `!user` che bloccava la pagina
-- Implementata "Modalità Demo" per utenti non autenticati
-- Gli ospiti vedono tutti gli ordini/prenotazioni del database
-- Banner visibile "Modalità Demo" quando non autenticato
-- Bottone "Esci" nascosto per utenti ospiti
+### ✅ Fase 1: Rimuovere Sfumatura Footer
+- Rimosso `MultiWaveDivider` dal Footer
+- Impostato sfondo pieno `pizzeria-red` senza transizione curva
+- Ridotto padding top da `pt-32` a `pt-16`
 
-### ✅ Fase 2: Fix Accesso Diretto Admin
-- Admin già funzionante senza autenticazione obbligatoria
+### ✅ Fase 2: Rimuovere FloatingElements
+- Rimosso componente `FloatingElements` dalla Index
+- Aggiunto `overflow-x-hidden` per prevenire problemi di zoom
+- Ingredienti fluttuanti non più visibili
 
-### ✅ Fase 3: Stima Tempo Totale Consegna
-- Creato componente `DeliveryTimeEstimate.tsx`
-- Calcola:
-  - Tempo preparazione MAX dai `prep_time_minutes` dei prodotti
-  - Tempo consegna: distanza_km × 2.5 min
-  - Coda ordini: ordini_attivi × 5 min
-- Mostra breakdown completo nel checkout quando si seleziona consegna GPS
+### ✅ Fase 3: Sistema Auth con Credenziali Demo
+- Aggiornata pagina `Auth.tsx` con bottone (i) informativo
+- Dialog mostra credenziali demo:
+  - **Utente:** `demo@pizzeriarossi.it` / `demo123456`
+  - **Admin:** `admin@pizzeriarossi.it` / `admin123456`
+- Bottoni "Accedi come Utente Demo" e "Accedi come Admin Demo"
+- Aggiornata Navbar per puntare a `/auth?role=user` e `/auth?role=admin`
 
-### ✅ Fase 4: Percorso Stradale su LiveDeliveryMap
-- Integrata Google Maps Directions API
-- Polyline colorata arancione per il percorso stradale
-- Distanza e tempo reali basati sul percorso (non linea d'aria)
-- Aggiornamento dinamico quando il fattorino si muove
+### ✅ Fase 4: Riattivare Protezione Pagine
+- `/profilo` richiede autenticazione (redirect a `/auth?role=user`)
+- `/admin` richiede autenticazione + ruolo admin (redirect a `/auth?role=admin`)
 
 ---
 
 ## File Modificati
-- `src/pages/Profilo.tsx` - Accesso demo senza auth
-- `src/pages/Ordina.tsx` - Integrato DeliveryTimeEstimate
-- `src/components/ordina/DeliveryTimeEstimate.tsx` - NUOVO
-- `src/components/ordina/LiveDeliveryMap.tsx` - Directions API
+- `src/components/landing/Footer.tsx` - Rimosso MultiWaveDivider
+- `src/pages/Index.tsx` - Rimosso FloatingElements
+- `src/pages/Auth.tsx` - Dialog credenziali demo con bottone (i)
+- `src/components/landing/Navbar.tsx` - Link auth aggiornati
+- `src/pages/Profilo.tsx` - Protezione auth riattivata
+- `src/pages/Admin.tsx` - Protezione auth + isAdmin riattivata
 
+---
+
+## SQL per Creare Account Demo
+
+Esegui queste query nella console SQL di Supabase:
+
+### 1. Creare gli account demo (se non esistono già)
+Gli account vanno creati dalla UI di Supabase Authentication > Users > Add User:
+- `demo@pizzeriarossi.it` con password `demo123456`
+- `admin@pizzeriarossi.it` con password `admin123456`
+
+### 2. Assegnare ruolo admin
+```sql
+-- Trova l'ID dell'utente admin
+SELECT id FROM auth.users WHERE email = 'admin@pizzeriarossi.it';
+
+-- Inserisci il ruolo admin (sostituisci USER_ID con l'ID trovato)
+INSERT INTO public.user_roles (user_id, role)
+VALUES ('USER_ID', 'admin');
+```

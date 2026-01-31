@@ -7,13 +7,11 @@ import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FAQSection from "@/components/landing/FAQSection";
 import ContactSection from "@/components/landing/ContactSection";
 import Footer from "@/components/landing/Footer";
-import { FloatingElements } from "@/components/animations/FloatingElements";
 import { CurveDivider, MultiWaveDivider } from "@/components/ui/WaveDivider";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background relative">
-      <FloatingElements />
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
       <Navbar />
       <HeroSection />
       <AboutSection />
