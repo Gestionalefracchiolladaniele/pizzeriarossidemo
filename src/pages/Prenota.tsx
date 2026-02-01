@@ -123,7 +123,7 @@ const TableVisual = ({ table, isSelected, availableSlots, onClick }: {
       whileHover={hasSlots ? { scale: 1.05 } : undefined}
       whileTap={hasSlots ? { scale: 0.95 } : undefined}
     >
-      <div className="w-24 h-24 mx-auto relative">
+      <div className="w-20 h-20 mx-auto relative">
         {/* Table surface */}
         <div
           className={`absolute inset-2 ${isRound ? 'rounded-full' : 'rounded-lg'} 
@@ -412,28 +412,28 @@ const Prenota = () => {
       <Navbar />
       
       {/* Hero */}
-      <section className="pt-24 pb-8 bg-gradient-to-b from-primary/10 to-background">
+      <section className="pt-20 pb-6 bg-gradient-to-b from-primary/10 to-background">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-3xl mx-auto"
           >
-            <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
               Prenota il Tuo <span className="text-primary">Tavolo</span>
             </h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-sm">
               Assicurati un posto nel nostro ristorante. Prenotazione facile e veloce in 3 step.
             </p>
           </motion.div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
         {/* Progress Steps - Only 3 steps now */}
         {step < 4 && (
-          <div className="flex justify-center mb-12 relative">
-            <div className="flex items-center gap-8">
+          <div className="flex justify-center mb-8 relative">
+            <div className="flex items-center gap-6">
               {[
                 { num: 1, icon: Calendar, label: "Quando e quanti?" },
                 { num: 2, icon: SquareStack, label: "Tavolo e orario" },
@@ -442,20 +442,20 @@ const Prenota = () => {
                 <div key={s.num} className="flex items-center">
                   <div className="flex flex-col items-center">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                         step >= s.num
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {step > s.num ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+                      {step > s.num ? <Check className="w-4 h-4" /> : <s.icon className="w-4 h-4" />}
                     </div>
-                    <span className={`text-xs mt-2 text-center max-w-[80px] ${step >= s.num ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                    <span className={`text-[10px] mt-1.5 text-center max-w-[70px] ${step >= s.num ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                       {s.label}
                     </span>
                   </div>
                   {idx < 2 && (
-                    <div className={`w-16 h-0.5 mx-2 ${step > s.num ? "bg-primary" : "bg-muted"}`} />
+                    <div className={`w-12 h-0.5 mx-1.5 ${step > s.num ? "bg-primary" : "bg-muted"}`} />
                   )}
                 </div>
               ))}
@@ -472,17 +472,16 @@ const Prenota = () => {
           >
             {/* Number of People */}
             <div>
-              <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
-                <Users className="w-6 h-6 text-primary" />
+              <h2 className="text-xl font-bold text-center mb-4 flex items-center justify-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
                 Quante persone?
               </h2>
-              <div className="flex flex-wrap justify-center gap-3 max-w-md mx-auto">
+              <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
                 {peopleOptions.map((num) => (
                   <Button
                     key={num}
                     variant={booking.people === num ? "default" : "outline"}
-                    size="lg"
-                    className="w-14 h-14 text-lg font-bold"
+                    className="w-11 h-11 text-sm font-bold"
                     onClick={() => setBooking({ ...booking, people: num, tableId: "", selectedTime: "" })}
                   >
                     {num}
@@ -493,8 +492,8 @@ const Prenota = () => {
 
             {/* Date Selection - Now shows 30 days */}
             <div>
-              <h2 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
-                <Calendar className="w-6 h-6 text-primary" />
+              <h2 className="text-xl font-bold text-center mb-4 flex items-center justify-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" />
                 Quando?
               </h2>
               {dates.length === 0 ? (
@@ -505,22 +504,22 @@ const Prenota = () => {
                   </p>
                 </Card>
               ) : (
-                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-2">
+                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 gap-1.5">
                   {dates.slice(0, 21).map((date) => (
                     <Card
                       key={date.toISOString()}
-                      className={`p-2 text-center cursor-pointer transition-all hover:border-primary ${
+                      className={`p-1.5 text-center cursor-pointer transition-all hover:border-primary ${
                         booking.date && isSameDay(booking.date, date)
                           ? "border-primary bg-primary/10 ring-2 ring-primary"
                           : ""
                       }`}
                       onClick={() => setBooking({ ...booking, date, tableId: "", selectedTime: "" })}
                     >
-                      <div className="text-xs text-muted-foreground uppercase">
+                      <div className="text-[10px] text-muted-foreground uppercase">
                         {format(date, "EEE", { locale: it })}
                       </div>
-                      <div className="text-lg font-bold">{format(date, "d")}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-base font-bold">{format(date, "d")}</div>
+                      <div className="text-[10px] text-muted-foreground">
                         {format(date, "MMM", { locale: it })}
                       </div>
                     </Card>
@@ -531,8 +530,10 @@ const Prenota = () => {
 
             <div className="flex justify-center pt-4">
               <Button
-                size="lg"
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  setStep(2);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 disabled={!booking.date || booking.people <= 0}
               >
                 Continua
@@ -549,16 +550,19 @@ const Prenota = () => {
             className="space-y-8"
           >
             <div className="flex items-center justify-between">
-              <Button variant="ghost" onClick={() => setStep(1)}>
+              <Button variant="ghost" size="sm" onClick={() => {
+                setStep(1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}>
                 ← Indietro
               </Button>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 {booking.people} {booking.people === 1 ? "persona" : "persone"} • {booking.date && format(booking.date, "d MMMM", { locale: it })}
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-center flex items-center justify-center gap-2">
-              <SquareStack className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold text-center flex items-center justify-center gap-2">
+              <SquareStack className="w-5 h-5 text-primary" />
               Scegli tavolo e orario
             </h2>
 
@@ -578,7 +582,7 @@ const Prenota = () => {
             ) : (
               <>
                 {/* Tables Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                   {tablesWithAvailability.map((table) => (
                     <TableVisual
                       key={table.id}
@@ -597,16 +601,16 @@ const Prenota = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-8"
                   >
-                    <h3 className="text-xl font-bold text-center mb-4 flex items-center justify-center gap-2">
-                      <Clock className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-bold text-center mb-3 flex items-center justify-center gap-2">
+                      <Clock className="w-4 h-4 text-primary" />
                       Orario per Tavolo {selectedTable?.table_number}
                     </h3>
-                    <div className="flex flex-wrap justify-center gap-3">
+                    <div className="flex flex-wrap justify-center gap-2">
                       {selectedTableData.availableSlots.map((time) => (
                         <Button
                           key={time}
                           variant={booking.selectedTime === time ? "default" : "outline"}
-                          size="lg"
+                          size="sm"
                           onClick={() => setBooking({ ...booking, selectedTime: time })}
                         >
                           {time}
@@ -671,8 +675,10 @@ const Prenota = () => {
 
             <div className="flex justify-center pt-4">
               <Button
-                size="lg"
-                onClick={() => setStep(3)}
+                onClick={() => {
+                  setStep(3);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 disabled={!canProceed()}
               >
                 Continua al Riepilogo
@@ -688,12 +694,15 @@ const Prenota = () => {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
-            <Button variant="ghost" onClick={() => setStep(2)}>
+            <Button variant="ghost" size="sm" onClick={() => {
+              setStep(2);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}>
               ← Indietro
             </Button>
 
-            <h2 className="text-2xl font-bold text-center flex items-center justify-center gap-2">
-              <Check className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold text-center flex items-center justify-center gap-2">
+              <Check className="w-5 h-5 text-primary" />
               Riepilogo Prenotazione
             </h2>
 

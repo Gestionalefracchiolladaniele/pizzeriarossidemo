@@ -49,7 +49,7 @@ export const DeliveryTypeSelector = ({ value, onChange }: DeliveryTypeSelectorPr
             key={option.type}
             onClick={() => onChange(option.type)}
             className={cn(
-              "relative p-6 rounded-xl border-2 text-left transition-all",
+              "relative p-4 rounded-xl border-2 text-left transition-all",
               "hover:shadow-lg hover:scale-[1.02]",
               isSelected 
                 ? "border-primary bg-primary/5 shadow-md" 
@@ -62,28 +62,28 @@ export const DeliveryTypeSelector = ({ value, onChange }: DeliveryTypeSelectorPr
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center"
+                className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center"
               >
-                <Check className="w-4 h-4 text-primary-foreground" />
+                <Check className="w-3 h-3 text-primary-foreground" />
               </motion.div>
             )}
 
             {/* Icon */}
             <div 
               className={cn(
-                "w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-colors",
+                "w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-colors",
                 isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
               )}
             >
-              <Icon className="w-7 h-7" />
+              <Icon className="w-5 h-5" />
             </div>
 
             {/* Title and Subtitle */}
-            <h3 className="text-lg font-bold mb-1">{option.title}</h3>
-            <p className="text-sm text-muted-foreground mb-2">{option.subtitle}</p>
+            <h3 className="text-sm font-bold mb-0.5">{option.title}</h3>
+            <p className="text-xs text-muted-foreground mb-1">{option.subtitle}</p>
             
             {/* Description */}
-            <p className="text-xs text-muted-foreground/70">{option.description}</p>
+            <p className="text-[10px] text-muted-foreground/70 leading-tight">{option.description}</p>
 
             {/* Extra cost badge */}
             {option.extra && (

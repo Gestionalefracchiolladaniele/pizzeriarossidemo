@@ -336,32 +336,32 @@ const Ordina = () => {
       <Navbar />
       
       {/* Hero */}
-      <section className="pt-24 pb-8 bg-gradient-to-b from-primary/10 to-background">
+      <section className="pt-20 pb-6 bg-gradient-to-b from-primary/10 to-background">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-3xl mx-auto"
           >
-            <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
               Ordina <span className="text-primary">Online</span>
             </h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-sm">
               Asporto, consegna a domicilio o direttamente al tavolo. Scegli dal nostro menu.
             </p>
           </motion.div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Menu Section */}
           <div className="lg:col-span-2">
             {step === "menu" && (
               <>
                 {/* Delivery Type Selection - 3 Clear Cards */}
-                <div className="mb-6">
-                  <h2 className="text-lg font-bold mb-4">Come vuoi ricevere il tuo ordine?</h2>
+                <div className="mb-5">
+                  <h2 className="text-base font-bold mb-3">Come vuoi ricevere il tuo ordine?</h2>
                   <DeliveryTypeSelector 
                     value={cart.deliveryType} 
                     onChange={(type) => setDeliveryType(type)} 
@@ -369,15 +369,16 @@ const Ordina = () => {
                 </div>
 
                 {/* Category Tabs */}
-                <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                <div className="flex gap-1.5 mb-5 overflow-x-auto pb-2">
                   {categories.map((category) => (
                     <Button
                       key={category.id}
                       variant={activeCategory === category.id ? "default" : "outline"}
+                      size="sm"
                       onClick={() => setActiveCategory(category.id)}
-                      className="whitespace-nowrap"
+                      className="whitespace-nowrap text-xs"
                     >
-                      <span className="mr-2">{category.icon || "🍽️"}</span>
+                      <span className="mr-1.5">{category.icon || "🍽️"}</span>
                       {category.name}
                     </Button>
                   ))}
@@ -391,7 +392,7 @@ const Ordina = () => {
                     </p>
                   </Card>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {filteredItems.map((item) => {
                       const cartItem = cart.items.find(ci => ci.menuItem.id === item.id);
                       return (
@@ -401,7 +402,7 @@ const Ordina = () => {
                           animate={{ opacity: 1, y: 0 }}
                         >
                           <Card 
-                            className="p-4 flex gap-4 cursor-pointer hover:shadow-md transition-shadow"
+                            className="p-3 flex gap-3 cursor-pointer hover:shadow-md transition-shadow"
                             onClick={() => {
                               setSelectedProduct(item);
                               setIsProductDialogOpen(true);
@@ -410,17 +411,18 @@ const Ordina = () => {
                             <img
                               src={item.image_url || "/placeholder.svg"}
                               alt={item.name}
-                              className="w-24 h-24 object-cover rounded-lg"
+                              className="w-18 h-18 object-cover rounded-lg"
+                              style={{ width: '72px', height: '72px' }}
                             />
                             <div className="flex-1">
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <h3 className="font-bold">{item.name}</h3>
-                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                  <h3 className="font-bold text-sm">{item.name}</h3>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">
                                     {item.description}
                                   </p>
                                 </div>
-                                <span className="font-bold text-primary">
+                                <span className="font-bold text-primary text-sm">
                                   €{item.price.toFixed(2)}
                                 </span>
                               </div>
@@ -481,7 +483,10 @@ const Ordina = () => {
                 animate={{ opacity: 1, x: 0 }}
                 className="space-y-6"
               >
-                <Button variant="ghost" onClick={() => setStep("menu")}>
+                <Button variant="ghost" onClick={() => {
+                  setStep("menu");
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}>
                   ← Torna al menu
                 </Button>
                 
@@ -674,7 +679,10 @@ const Ordina = () => {
                     <Button
                       className="w-full mt-6"
                       size="lg"
-                      onClick={() => setStep("checkout")}
+                      onClick={() => {
+                        setStep("checkout");
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
                       disabled={totalItems === 0}
                     >
                       Procedi al Checkout
