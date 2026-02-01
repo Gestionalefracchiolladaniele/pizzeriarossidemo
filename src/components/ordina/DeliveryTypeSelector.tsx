@@ -36,7 +36,7 @@ const deliveryOptions = [
 
 export const DeliveryTypeSelector = ({ value, onChange }: DeliveryTypeSelectorProps) => {
   return (
-    <div className="grid grid-cols-3 gap-1.5">
+    <div className="grid grid-cols-3 gap-1">
       {deliveryOptions.map((option) => {
         const isSelected = value === option.type;
         const Icon = option.icon;
@@ -46,7 +46,7 @@ export const DeliveryTypeSelector = ({ value, onChange }: DeliveryTypeSelectorPr
             key={option.type}
             onClick={() => onChange(option.type)}
             className={cn(
-              "relative p-2 rounded-lg border-2 text-left transition-all",
+              "relative p-1.5 rounded-lg border-2 text-left transition-all overflow-hidden",
               "hover:shadow-md",
               isSelected 
                 ? "border-primary bg-primary/5 shadow-sm" 
@@ -59,31 +59,31 @@ export const DeliveryTypeSelector = ({ value, onChange }: DeliveryTypeSelectorPr
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-primary flex items-center justify-center"
+                className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-primary flex items-center justify-center"
               >
-                <Check className="w-2 h-2 text-primary-foreground" />
+                <Check className="w-1.5 h-1.5 text-primary-foreground" />
               </motion.div>
             )}
 
             {/* Icon */}
             <div 
               className={cn(
-                "w-7 h-7 rounded-md flex items-center justify-center mb-1 transition-colors",
+                "w-6 h-6 rounded-md flex items-center justify-center mb-0.5 transition-colors",
                 isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
               )}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-3 h-3" />
             </div>
 
             {/* Title and Subtitle */}
-            <h3 className="text-[11px] font-bold leading-tight">{option.title}</h3>
-            <p className="text-[9px] text-muted-foreground leading-tight">{option.subtitle}</p>
+            <h3 className="text-[10px] font-bold leading-tight truncate">{option.title}</h3>
+            <p className="text-[8px] text-muted-foreground leading-tight truncate">{option.subtitle}</p>
 
             {/* Extra cost badge */}
             {option.extra && (
-              <div className="mt-1">
+              <div className="mt-0.5">
                 <span className={cn(
-                  "inline-block px-1 py-0.5 rounded-full text-[9px] font-semibold",
+                  "inline-block px-1 py-0.5 rounded-full text-[8px] font-semibold",
                   isSelected 
                     ? "bg-primary/20 text-primary" 
                     : "bg-muted text-muted-foreground"
