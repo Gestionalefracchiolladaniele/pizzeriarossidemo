@@ -397,7 +397,7 @@ const Ordina = () => {
                     </p>
                   </Card>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {filteredItems.map((item) => {
                       const cartItem = cart.items.find(ci => ci.menuItem.id === item.id);
                       return (
@@ -407,7 +407,7 @@ const Ordina = () => {
                           animate={{ opacity: 1, y: 0 }}
                         >
                           <Card 
-                            className="p-3 flex gap-3 cursor-pointer hover:shadow-md transition-shadow"
+                            className="p-2.5 flex gap-2.5 cursor-pointer hover:shadow-md transition-shadow"
                             onClick={() => {
                               setSelectedProduct(item);
                               setIsProductDialogOpen(true);
@@ -416,57 +416,57 @@ const Ordina = () => {
                             <img
                               src={item.image_url || "/placeholder.svg"}
                               alt={item.name}
-                              className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                              className="w-14 h-14 object-cover rounded-md flex-shrink-0"
                             />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex justify-between items-start gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-bold text-sm truncate">{item.name}</h3>
-                                  <p className="text-xs text-muted-foreground line-clamp-2">
-                                    {item.description}
-                                  </p>
-                                </div>
-                                <span className="font-bold text-primary text-sm whitespace-nowrap flex-shrink-0">
+                            <div className="flex-1 min-w-0 flex flex-col justify-between">
+                              <div className="flex justify-between items-start gap-1">
+                                <h3 className="font-bold text-xs leading-tight line-clamp-1">{item.name}</h3>
+                                <span className="font-bold text-primary text-xs whitespace-nowrap flex-shrink-0">
                                   €{item.price.toFixed(2)}
                                 </span>
                               </div>
+                              <p className="text-[10px] text-muted-foreground line-clamp-1 leading-tight">
+                                {item.description}
+                              </p>
                               
-                              <div className="mt-3 flex justify-between items-center">
+                              <div className="flex justify-between items-center">
                                 {(item.tags || []).length > 0 && (
-                                  <div className="flex gap-1">
+                                  <div className="flex gap-0.5">
                                     {(item.tags || []).slice(0, 2).map(tag => (
-                                      <Badge key={tag} variant="secondary" className="text-xs">
+                                      <span key={tag} className="text-xs">
                                         {tag === "vegetariano" ? "🌿" : tag === "piccante" ? "🌶️" : "🌾"}
-                                      </Badge>
+                                      </span>
                                     ))}
                                   </div>
                                 )}
                                 
                                 {cartItem ? (
-                                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex items-center gap-1.5 ml-auto" onClick={(e) => e.stopPropagation()}>
                                     <Button
-                                      size="sm"
+                                      size="icon"
                                       variant="outline"
+                                      className="h-6 w-6"
                                       onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
                                     >
-                                      <Minus className="w-4 h-4" />
+                                      <Minus className="w-3 h-3" />
                                     </Button>
-                                    <span className="w-8 text-center font-bold">{cartItem.quantity}</span>
+                                    <span className="w-5 text-center text-xs font-bold">{cartItem.quantity}</span>
                                     <Button
-                                      size="sm"
+                                      size="icon"
                                       variant="outline"
+                                      className="h-6 w-6"
                                       onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
                                     >
-                                      <Plus className="w-4 h-4" />
+                                      <Plus className="w-3 h-3" />
                                     </Button>
                                   </div>
                                 ) : (
-                                  <Button size="sm" onClick={(e) => {
+                                  <Button size="sm" className="h-6 text-xs px-2 ml-auto" onClick={(e) => {
                                     e.stopPropagation();
                                     addItem(toCartItem(item));
                                     toast.success(`${item.name} aggiunto al carrello`);
                                   }}>
-                                    <Plus className="w-4 h-4 mr-1" />
+                                    <Plus className="w-3 h-3 mr-0.5" />
                                     Aggiungi
                                   </Button>
                                 )}

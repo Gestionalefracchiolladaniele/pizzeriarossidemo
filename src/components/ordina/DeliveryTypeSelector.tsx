@@ -39,7 +39,7 @@ const deliveryOptions = [
 
 export const DeliveryTypeSelector = ({ value, onChange }: DeliveryTypeSelectorProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-3 gap-2">
       {deliveryOptions.map((option) => {
         const isSelected = value === option.type;
         const Icon = option.icon;
@@ -49,10 +49,10 @@ export const DeliveryTypeSelector = ({ value, onChange }: DeliveryTypeSelectorPr
             key={option.type}
             onClick={() => onChange(option.type)}
             className={cn(
-              "relative p-4 rounded-xl border-2 text-left transition-all",
-              "hover:shadow-lg hover:scale-[1.02]",
+              "relative p-2.5 rounded-lg border-2 text-left transition-all",
+              "hover:shadow-md",
               isSelected 
-                ? "border-primary bg-primary/5 shadow-md" 
+                ? "border-primary bg-primary/5 shadow-sm" 
                 : "border-muted-foreground/20 bg-card hover:border-primary/50"
             )}
             whileTap={{ scale: 0.98 }}
@@ -62,34 +62,31 @@ export const DeliveryTypeSelector = ({ value, onChange }: DeliveryTypeSelectorPr
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center"
+                className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center"
               >
-                <Check className="w-3 h-3 text-primary-foreground" />
+                <Check className="w-2.5 h-2.5 text-primary-foreground" />
               </motion.div>
             )}
 
             {/* Icon */}
             <div 
               className={cn(
-                "w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-colors",
+                "w-8 h-8 rounded-md flex items-center justify-center mb-1.5 transition-colors",
                 isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
               )}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-4 h-4" />
             </div>
 
             {/* Title and Subtitle */}
-            <h3 className="text-sm font-bold mb-0.5">{option.title}</h3>
-            <p className="text-xs text-muted-foreground mb-1">{option.subtitle}</p>
-            
-            {/* Description */}
-            <p className="text-[10px] text-muted-foreground/70 leading-tight">{option.description}</p>
+            <h3 className="text-xs font-bold leading-tight">{option.title}</h3>
+            <p className="text-[10px] text-muted-foreground leading-tight">{option.subtitle}</p>
 
             {/* Extra cost badge */}
             {option.extra && (
-              <div className="mt-3">
+              <div className="mt-1.5">
                 <span className={cn(
-                  "inline-block px-2 py-1 rounded-full text-xs font-semibold",
+                  "inline-block px-1.5 py-0.5 rounded-full text-[10px] font-semibold",
                   isSelected 
                     ? "bg-primary/20 text-primary" 
                     : "bg-muted text-muted-foreground"
