@@ -340,50 +340,50 @@ const Ordina = () => {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Navbar />
       
-      {/* Hero */}
-      <section className="pt-20 pb-6 bg-gradient-to-b from-primary/10 to-background">
-        <div className="container mx-auto px-4">
+      {/* Hero - Compact */}
+      <section className="pt-16 pb-3 bg-gradient-to-b from-primary/10 to-background">
+        <div className="container mx-auto px-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-3xl mx-auto"
           >
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
+            <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-1">
               Ordina <span className="text-primary">Online</span>
             </h1>
-            <p className="text-muted-foreground text-sm">
-              Asporto, consegna a domicilio o direttamente al tavolo. Scegli dal nostro menu.
+            <p className="text-muted-foreground text-xs">
+              Asporto, consegna a domicilio o direttamente al tavolo.
             </p>
           </motion.div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-3 py-4">
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Menu Section */}
           <div className="lg:col-span-2">
             {step === "menu" && (
               <>
-                {/* Delivery Type Selection - 3 Clear Cards */}
-                <div className="mb-5">
-                  <h2 className="text-base font-bold mb-3">Come vuoi ricevere il tuo ordine?</h2>
+                {/* Delivery Type Selection - Compact */}
+                <div className="mb-3">
+                  <h2 className="text-sm font-bold mb-2">Come vuoi ricevere il tuo ordine?</h2>
                   <DeliveryTypeSelector 
                     value={cart.deliveryType} 
                     onChange={(type) => setDeliveryType(type)} 
                   />
                 </div>
 
-                {/* Category Tabs */}
-                <div className="flex gap-1.5 mb-5 overflow-x-auto pb-2">
+                {/* Category Tabs - Compact */}
+                <div className="flex gap-1 mb-3 overflow-x-auto pb-1.5">
                   {categories.map((category) => (
                     <Button
                       key={category.id}
                       variant={activeCategory === category.id ? "default" : "outline"}
                       size="sm"
                       onClick={() => setActiveCategory(category.id)}
-                      className="whitespace-nowrap text-xs"
+                      className="whitespace-nowrap text-[11px] h-8 px-2.5"
                     >
-                      <span className="mr-1.5">{category.icon || "🍽️"}</span>
+                      <span className="mr-1">{category.icon || "🍽️"}</span>
                       {category.name}
                     </Button>
                   ))}
@@ -397,7 +397,7 @@ const Ordina = () => {
                     </p>
                   </Card>
                 ) : (
-                  <div className="space-y-2">
+                <div className="space-y-1.5">
                     {filteredItems.map((item) => {
                       const cartItem = cart.items.find(ci => ci.menuItem.id === item.id);
                       return (
@@ -407,7 +407,7 @@ const Ordina = () => {
                           animate={{ opacity: 1, y: 0 }}
                         >
                           <Card 
-                            className="p-2.5 flex gap-2.5 cursor-pointer hover:shadow-md transition-shadow"
+                            className="p-2 flex gap-2 cursor-pointer hover:shadow-md transition-shadow"
                             onClick={() => {
                               setSelectedProduct(item);
                               setIsProductDialogOpen(true);
@@ -416,16 +416,16 @@ const Ordina = () => {
                             <img
                               src={item.image_url || "/placeholder.svg"}
                               alt={item.name}
-                              className="w-14 h-14 object-cover rounded-md flex-shrink-0"
+                              className="w-[52px] h-[52px] object-cover rounded-md flex-shrink-0"
                             />
-                            <div className="flex-1 min-w-0 flex flex-col justify-between">
+                            <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                               <div className="flex justify-between items-start gap-1">
-                                <h3 className="font-bold text-xs leading-tight line-clamp-1">{item.name}</h3>
-                                <span className="font-bold text-primary text-xs whitespace-nowrap flex-shrink-0">
+                                <h3 className="font-bold text-[11px] leading-tight line-clamp-1">{item.name}</h3>
+                                <span className="font-bold text-primary text-[11px] whitespace-nowrap flex-shrink-0">
                                   €{item.price.toFixed(2)}
                                 </span>
                               </div>
-                              <p className="text-[10px] text-muted-foreground line-clamp-1 leading-tight">
+                              <p className="text-[9px] text-muted-foreground line-clamp-1 leading-tight">
                                 {item.description}
                               </p>
                               
@@ -433,7 +433,7 @@ const Ordina = () => {
                                 {(item.tags || []).length > 0 && (
                                   <div className="flex gap-0.5">
                                     {(item.tags || []).slice(0, 2).map(tag => (
-                                      <span key={tag} className="text-xs">
+                                      <span key={tag} className="text-[10px]">
                                         {tag === "vegetariano" ? "🌿" : tag === "piccante" ? "🌶️" : "🌾"}
                                       </span>
                                     ))}
@@ -441,32 +441,32 @@ const Ordina = () => {
                                 )}
                                 
                                 {cartItem ? (
-                                  <div className="flex items-center gap-1.5 ml-auto" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex items-center gap-1 ml-auto" onClick={(e) => e.stopPropagation()}>
                                     <Button
                                       size="icon"
                                       variant="outline"
-                                      className="h-6 w-6"
+                                      className="h-5 w-5"
                                       onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}
                                     >
-                                      <Minus className="w-3 h-3" />
+                                      <Minus className="w-2.5 h-2.5" />
                                     </Button>
-                                    <span className="w-5 text-center text-xs font-bold">{cartItem.quantity}</span>
+                                    <span className="w-4 text-center text-[10px] font-bold">{cartItem.quantity}</span>
                                     <Button
                                       size="icon"
                                       variant="outline"
-                                      className="h-6 w-6"
+                                      className="h-5 w-5"
                                       onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}
                                     >
-                                      <Plus className="w-3 h-3" />
+                                      <Plus className="w-2.5 h-2.5" />
                                     </Button>
                                   </div>
                                 ) : (
-                                  <Button size="sm" className="h-6 text-xs px-2 ml-auto" onClick={(e) => {
+                                  <Button size="sm" className="h-5 text-[10px] px-1.5 ml-auto" onClick={(e) => {
                                     e.stopPropagation();
                                     addItem(toCartItem(item));
                                     toast.success(`${item.name} aggiunto al carrello`);
                                   }}>
-                                    <Plus className="w-3 h-3 mr-0.5" />
+                                    <Plus className="w-2.5 h-2.5 mr-0.5" />
                                     Aggiungi
                                   </Button>
                                 )}
