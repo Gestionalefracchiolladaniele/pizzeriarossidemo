@@ -121,42 +121,42 @@ export const AdminBookings = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Gestione Prenotazioni</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-bold">Gestione Prenotazioni</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
             {upcomingReservations.length} prenotazioni in arrivo • {pastReservations.length} passate
           </p>
         </div>
-        <Button variant="outline" onClick={() => setIsHistoryOpen(true)}>
-          <History className="w-4 h-4 mr-2" />
+        <Button variant="outline" size="sm" onClick={() => setIsHistoryOpen(true)}>
+          <History className="w-3.5 h-3.5 mr-1.5" />
           Storico
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-amber-500">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card className="p-3 text-center">
+          <div className="text-xl font-bold text-amber-500">
             {reservations.filter(r => r.status === 'pending').length}
           </div>
           <div className="text-xs text-muted-foreground">In Attesa</div>
         </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-green-500">
+        <Card className="p-3 text-center">
+          <div className="text-xl font-bold text-green-500">
             {reservations.filter(r => r.status === 'confirmed').length}
           </div>
           <div className="text-xs text-muted-foreground">Confermate</div>
         </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-primary">
+        <Card className="p-3 text-center">
+          <div className="text-xl font-bold text-primary">
             {upcomingReservations.reduce((sum, r) => sum + r.guests_count, 0)}
           </div>
           <div className="text-xs text-muted-foreground">Ospiti Attesi</div>
         </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-muted-foreground">
+        <Card className="p-3 text-center">
+          <div className="text-xl font-bold text-muted-foreground">
             {reservations.filter(r => r.status === 'completed').length}
           </div>
           <div className="text-xs text-muted-foreground">Completate</div>
@@ -164,52 +164,52 @@ export const AdminBookings = () => {
       </div>
 
       {upcomingReservations.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-muted-foreground">Nessuna prenotazione in arrivo</p>
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground text-sm">Nessuna prenotazione in arrivo</p>
         </Card>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {visibleReservations.map((res) => (
-              <Card key={res.id} className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-bold text-lg">{res.guest_name}</h3>
+              <Card key={res.id} className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="font-bold text-sm">{res.guest_name}</h3>
                   <Badge className={statusColors[res.status]}>
                     {statusLabels[res.status] || res.status}
                   </Badge>
                 </div>
 
-                <div className="space-y-2 text-sm">
-                  <p className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                <div className="space-y-1.5 text-xs">
+                  <p className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                     {format(new Date(res.reservation_date), "EEEE d MMMM", { locale: it })}
                   </p>
-                  <p className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
+                  <p className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                     {res.reservation_time.slice(0, 5)}
                   </p>
-                  <p className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-muted-foreground" />
+                  <p className="flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-muted-foreground" />
                     {res.guests_count} {res.guests_count === 1 ? 'persona' : 'persone'}
                   </p>
-                  <p className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
+                  <p className="flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-muted-foreground" />
                     {res.guest_phone}
                   </p>
                 </div>
 
                 {res.notes && (
-                  <p className="mt-3 text-sm italic text-muted-foreground border-t pt-3">
+                  <p className="mt-2 text-xs italic text-muted-foreground border-t pt-2">
                     "{res.notes}"
                   </p>
                 )}
 
-                <div className="mt-4">
+                <div className="mt-3">
                   <Select 
                     value={res.status} 
                     onValueChange={(v) => updateStatus(res.id, v)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -228,18 +228,19 @@ export const AdminBookings = () => {
           {upcomingReservations.length > VISIBLE_RESERVATIONS_COUNT && (
             <div className="flex justify-center">
               <Button 
-                variant="outline" 
+                variant="outline"
+                size="sm"
                 onClick={() => setShowAll(!showAll)}
-                className="gap-2"
+                className="gap-1.5 h-8 text-xs"
               >
                 {showAll ? (
                   <>
-                    <ChevronUp className="w-4 h-4" />
+                    <ChevronUp className="w-3.5 h-3.5" />
                     Mostra meno
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="w-3.5 h-3.5" />
                     Mostra altre {upcomingReservations.length - VISIBLE_RESERVATIONS_COUNT} prenotazioni
                   </>
                 )}
