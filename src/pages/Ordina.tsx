@@ -337,12 +337,12 @@ const Ordina = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background overflow-x-hidden max-w-full">
       <Navbar />
       
       {/* Hero - Compact */}
       <section className="pt-16 pb-3 bg-gradient-to-b from-primary/10 to-background">
-        <div className="container mx-auto px-3">
+        <div className="max-w-full px-4 mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -358,7 +358,7 @@ const Ordina = () => {
         </div>
       </section>
 
-      <div className="container mx-auto px-3 py-4">
+      <div className="max-w-full px-4 mx-auto py-4">
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Menu Section */}
           <div className="lg:col-span-2">
@@ -373,15 +373,15 @@ const Ordina = () => {
                   />
                 </div>
 
-                {/* Category Tabs - Compact */}
-                <div className="flex gap-1 mb-3 overflow-x-auto pb-1.5">
+                {/* Category Tabs - Compact - Scroll horizontal */}
+                <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1.5 -mx-1 px-1 scrollbar-hide">
                   {categories.map((category) => (
                     <Button
                       key={category.id}
                       variant={activeCategory === category.id ? "default" : "outline"}
                       size="sm"
                       onClick={() => setActiveCategory(category.id)}
-                      className="whitespace-nowrap text-[11px] h-8 px-2.5"
+                      className="whitespace-nowrap text-[10px] h-7 px-2 flex-shrink-0"
                     >
                       <span className="mr-1">{category.icon || "🍽️"}</span>
                       {category.name}
@@ -407,7 +407,7 @@ const Ordina = () => {
                           animate={{ opacity: 1, y: 0 }}
                         >
                           <Card 
-                            className="p-2 flex gap-2 cursor-pointer hover:shadow-md transition-shadow"
+                            className="p-2 flex gap-2 cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
                             onClick={() => {
                               setSelectedProduct(item);
                               setIsProductDialogOpen(true);
@@ -416,11 +416,11 @@ const Ordina = () => {
                             <img
                               src={item.image_url || "/placeholder.svg"}
                               alt={item.name}
-                              className="w-[52px] h-[52px] object-cover rounded-md flex-shrink-0"
+                              className="w-12 h-12 object-cover rounded-md flex-shrink-0"
                             />
-                            <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                            <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 overflow-hidden">
                               <div className="flex justify-between items-start gap-1">
-                                <h3 className="font-bold text-[11px] leading-tight line-clamp-1">{item.name}</h3>
+                                <h3 className="font-bold text-[11px] leading-tight line-clamp-1 min-w-0">{item.name}</h3>
                                 <span className="font-bold text-primary text-[11px] whitespace-nowrap flex-shrink-0">
                                   €{item.price.toFixed(2)}
                                 </span>
@@ -429,9 +429,9 @@ const Ordina = () => {
                                 {item.description}
                               </p>
                               
-                              <div className="flex justify-between items-center">
+                              <div className="flex justify-between items-center gap-1">
                                 {(item.tags || []).length > 0 && (
-                                  <div className="flex gap-0.5">
+                                  <div className="flex gap-0.5 flex-shrink-0">
                                     {(item.tags || []).slice(0, 2).map(tag => (
                                       <span key={tag} className="text-[10px]">
                                         {tag === "vegetariano" ? "🌿" : tag === "piccante" ? "🌶️" : "🌾"}
@@ -441,7 +441,7 @@ const Ordina = () => {
                                 )}
                                 
                                 {cartItem ? (
-                                  <div className="flex items-center gap-1 ml-auto" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex items-center gap-0.5 ml-auto flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                     <Button
                                       size="icon"
                                       variant="outline"
@@ -461,13 +461,13 @@ const Ordina = () => {
                                     </Button>
                                   </div>
                                 ) : (
-                                  <Button size="sm" className="h-5 text-[10px] px-1.5 ml-auto" onClick={(e) => {
+                                  <Button size="sm" className="h-5 text-[9px] px-1 ml-auto flex-shrink-0" onClick={(e) => {
                                     e.stopPropagation();
                                     addItem(toCartItem(item));
                                     toast.success(`${item.name} aggiunto al carrello`);
                                   }}>
                                     <Plus className="w-2.5 h-2.5 mr-0.5" />
-                                    Aggiungi
+                                    Agg.
                                   </Button>
                                 )}
                               </div>
