@@ -230,12 +230,12 @@ export const AdminMenu = () => {
       ))}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="sticky top-0 bg-background pb-2 z-10">
             <DialogTitle>{editingItem ? "Modifica Prodotto" : "Nuovo Prodotto"}</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
               <label className="text-sm font-medium mb-1 block">Nome *</label>
               <Input 
