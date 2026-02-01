@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, MapPin, Phone, Clock } from "lucide-react";
+import { ChevronDown, MapPin, Phone, Clock, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePizzeriaSettings } from "@/hooks/usePizzeriaSettings";
 import { useRef } from "react";
@@ -88,6 +88,24 @@ const HeroSection = () => {
             Tradizione napoletana, ingredienti freschi e passione autentica. 
             Ogni pizza è un'opera d'arte cotta nel nostro forno a 485°C.
           </motion.p>
+
+          {/* Prototype Credit */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.55, duration: 0.5 }}
+            className="mb-4"
+          >
+            <a 
+              href="https://danielefracchiolla.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-white/60 hover:text-white/90 transition-colors text-sm font-sans"
+            >
+              <span>Prototipo di Daniele Fracchiolla</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </motion.div>
 
           {/* CTA Buttons */}
           <motion.div
