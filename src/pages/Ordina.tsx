@@ -342,11 +342,11 @@ const Ordina = () => {
       
       {/* Hero - Compact */}
       <section className="pt-16 pb-3 bg-gradient-to-b from-primary/10 to-background">
-        <div className="max-w-full px-4 mx-auto">
+        <div className="w-full max-w-md mx-auto px-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center max-w-3xl mx-auto"
+            className="text-center"
           >
             <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-1">
               Ordina <span className="text-primary">Online</span>
@@ -358,7 +358,7 @@ const Ordina = () => {
         </div>
       </section>
 
-      <div className="max-w-full px-4 mx-auto py-4">
+      <div className="w-full max-w-md mx-auto px-3 py-4">
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Menu Section */}
           <div className="lg:col-span-2">
