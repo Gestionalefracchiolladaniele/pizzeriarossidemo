@@ -141,21 +141,21 @@ export const AdminOpeningHours = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Clock className="w-8 h-8 text-primary" />
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+            <Clock className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
             Orari di Apertura
           </h1>
           <p className="text-muted-foreground mt-1">
             Configura gli orari di apertura per ogni giorno della settimana
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={resetToDefault}>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={resetToDefault} className="w-full sm:w-auto">
             <RotateCcw className="w-4 h-4 mr-2" /> Reset
           </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
+          <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
             <Save className="w-4 h-4 mr-2" /> 
             {isSaving ? "Salvando..." : "Salva Orari"}
           </Button>
@@ -170,53 +170,65 @@ export const AdminOpeningHours = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
-              className={`flex items-center gap-4 p-4 rounded-lg transition-colors
+              className={`p-4 rounded-lg transition-colors
                 ${hours[day.key].is_closed ? 'bg-red-50 dark:bg-red-950/20' : 'bg-secondary/30'}`}
             >
-              <div className="w-32">
-                <span className="font-semibold">{day.label}</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Aperto</span>
-                <Switch
-                  checked={!hours[day.key].is_closed}
-                  onCheckedChange={(checked) => updateDay(day.key, "is_closed", !checked)}
-                />
-              </div>
-
-              {!hours[day.key].is_closed ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="time"
-                      value={hours[day.key].open}
-                      onChange={(e) => updateDay(day.key, "open", e.target.value)}
-                      className="w-32"
-                    />
-                    <span className="text-muted-foreground">-</span>
-                    <Input
-                      type="time"
-                      value={hours[day.key].close}
-                      onChange={(e) => updateDay(day.key, "close", e.target.value)}
-                      className="w-32"
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                {/* Day + mobile toggle */}
+                <div className="flex items-center justify-between gap-3 sm:w-36">
+                  <span className="font-semibold">{day.label}</span>
+                  <div className="flex items-center gap-2 sm:hidden">
+                    <span className="text-sm text-muted-foreground">Aperto</span>
+                    <Switch
+                      checked={!hours[day.key].is_closed}
+                      onCheckedChange={(checked) => updateDay(day.key, "is_closed", !checked)}
                     />
                   </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToAll(day.key)}
-                    className="ml-auto text-xs"
-                  >
-                    Applica a tutti
-                  </Button>
-                </>
-              ) : (
-                <div className="flex-1 text-center">
-                  <span className="text-red-600 font-medium">Chiuso</span>
                 </div>
-              )}
+
+                {/* Desktop toggle */}
+                <div className="hidden sm:flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Aperto</span>
+                  <Switch
+                    checked={!hours[day.key].is_closed}
+                    onCheckedChange={(checked) => updateDay(day.key, "is_closed", !checked)}
+                  />
+                </div>
+
+                {/* Hours */}
+                {!hours[day.key].is_closed ? (
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 w-full">
+                    <div className="flex items-center gap-2 w-full">
+                      <Input
+                        type="time"
+                        value={hours[day.key].open}
+                        onChange={(e) => updateDay(day.key, "open", e.target.value)}
+                        className="w-full sm:w-32 max-w-[160px]"
+                      />
+                      <span className="text-muted-foreground">-</span>
+                      <Input
+                        type="time"
+                        value={hours[day.key].close}
+                        onChange={(e) => updateDay(day.key, "close", e.target.value)}
+                        className="w-full sm:w-32 max-w-[160px]"
+                      />
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToAll(day.key)}
+                      className="text-xs w-full sm:w-auto sm:ml-auto"
+                    >
+                      Applica a tutti
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="w-full sm:flex-1 sm:text-center">
+                    <span className="text-destructive font-medium">Chiuso</span>
+                  </div>
+                )}
+              </div>
             </motion.div>
           ))}
         </div>
@@ -226,7 +238,7 @@ export const AdminOpeningHours = () => {
       <Card className="p-6">
         <h3 className="font-semibold mb-4 text-lg">Anteprima per i clienti</h3>
         <div className="bg-muted rounded-lg p-4">
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
             {DAYS.map(day => (
               <div key={day.key} className="flex justify-between py-1 border-b border-border/50">
                 <span className="font-medium">{day.label}</span>
