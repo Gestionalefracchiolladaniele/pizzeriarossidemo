@@ -85,41 +85,41 @@ const Admin = () => {
       <NotificationPromptDialog userType="admin" />
       
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-56 bg-card border-r transform transition-transform lg:transform-none ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
-        <div className="p-3 border-b flex justify-between items-center">
-          <Link to="/" className="font-display text-lg font-bold">
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-48 bg-card border-r transform transition-transform lg:transform-none ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+        <div className="p-2.5 border-b flex justify-between items-center">
+          <Link to="/" className="font-display text-base font-bold">
             Pizzeria <span className="text-primary">Rossi</span>
           </Link>
-          <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
-            <X className="w-4 h-4" />
+          <Button variant="ghost" size="sm" className="lg:hidden h-7 w-7 p-0" onClick={() => setSidebarOpen(false)}>
+            <X className="w-3.5 h-3.5" />
           </Button>
         </div>
         
-        <nav className="p-3 space-y-1.5">
+        <nav className="p-2 space-y-1">
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => { setActiveSection(item.id); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors text-sm ${activeSection === item.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}
+              className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg transition-colors text-xs ${activeSection === item.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}
             >
-              <item.icon className="w-4 h-4" />
+              <item.icon className="w-3.5 h-3.5" />
               {item.label}
             </button>
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t">
-          <Button variant="ghost" size="sm" className="w-full justify-start text-sm" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 mr-2" /> Esci
+        <div className="absolute bottom-0 left-0 right-0 p-2 border-t">
+          <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-8" onClick={handleSignOut}>
+            <LogOut className="w-3.5 h-3.5 mr-1.5" /> Esci
           </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 lg:p-6">
-        <div className="lg:hidden mb-3">
-          <Button variant="outline" size="sm" onClick={() => setSidebarOpen(true)}>
-            <Menu className="w-4 h-4 mr-1.5" /> Menu
+      <main className="flex-1 p-3 lg:p-4">
+        <div className="lg:hidden mb-2">
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setSidebarOpen(true)}>
+            <Menu className="w-3.5 h-3.5 mr-1" /> Menu
           </Button>
         </div>
 

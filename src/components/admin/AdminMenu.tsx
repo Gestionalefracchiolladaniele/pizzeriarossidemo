@@ -179,48 +179,48 @@ export const AdminMenu = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Gestione Menu</h1>
-        <Button onClick={() => openDialog()}>
-          <Plus className="w-4 h-4 mr-2" /> Aggiungi Prodotto
+        <h1 className="text-2xl font-bold">Gestione Menu</h1>
+        <Button size="sm" onClick={() => openDialog()}>
+          <Plus className="w-3.5 h-3.5 mr-1.5" /> Aggiungi Prodotto
         </Button>
       </div>
 
       {categories.map((category) => (
-        <div key={category.id} className="space-y-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
+        <div key={category.id} className="space-y-3">
+          <h2 className="text-lg font-semibold flex items-center gap-1.5">
             {category.icon && <span>{category.icon}</span>}
             {category.name}
           </h2>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {items.filter(item => item.category_id === category.id).map((item) => (
-              <Card key={item.id} className="p-4">
-                <div className="flex gap-4">
+              <Card key={item.id} className="p-3">
+                <div className="flex gap-3">
                   {item.image_url ? (
                     <img 
                       src={item.image_url} 
                       alt={item.name}
-                      className="w-20 h-20 object-cover rounded-lg"
+                      className="w-16 h-16 object-cover rounded-lg"
                     />
                   ) : (
-                    <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center">
-                      <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                    <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
+                      <ImageIcon className="w-6 h-6 text-muted-foreground" />
                     </div>
                   )}
                   <div className="flex-1">
-                    <h3 className="font-semibold">{item.name}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
-                    <p className="text-primary font-bold mt-1">€{item.price.toFixed(2)}</p>
+                    <h3 className="font-semibold text-sm">{item.name}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                    <p className="text-primary font-bold text-sm mt-0.5">€{item.price.toFixed(2)}</p>
                   </div>
                 </div>
-                <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" onClick={() => openDialog(item)}>
-                    <Pencil className="w-4 h-4" />
+                <div className="flex gap-1.5 mt-3">
+                  <Button variant="outline" size="sm" className="h-7" onClick={() => openDialog(item)}>
+                    <Pencil className="w-3.5 h-3.5" />
                   </Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(item.id)}>
-                    <Trash2 className="w-4 h-4" />
+                  <Button variant="destructive" size="sm" className="h-7" onClick={() => handleDelete(item.id)}>
+                    <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </Card>

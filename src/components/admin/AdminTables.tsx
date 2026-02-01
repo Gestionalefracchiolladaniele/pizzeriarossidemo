@@ -356,11 +356,11 @@ export const AdminTables = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Gestione Tavoli</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-bold">Gestione Tavoli</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
             {activeTables} tavoli attivi • {totalSeats} posti totali
           </p>
         </div>
@@ -368,14 +368,14 @@ export const AdminTables = () => {
 
       {/* Warning if tables without hours */}
       {tablesWithoutHours.length > 0 && (
-        <Card className="p-4 border-orange-500/50 bg-orange-500/10">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-orange-500" />
+        <Card className="p-3 border-orange-500/50 bg-orange-500/10">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-orange-500" />
             <div>
-              <p className="font-medium text-orange-700">
+              <p className="font-medium text-sm text-orange-700">
                 {tablesWithoutHours.length} tavol{tablesWithoutHours.length === 1 ? 'o' : 'i'} senza orari configurati
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 I tavoli senza orari non saranno visibili ai clienti durante la prenotazione.
               </p>
             </div>
@@ -384,60 +384,60 @@ export const AdminTables = () => {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 max-w-lg">
-          <TabsTrigger value="tables" className="flex items-center gap-2">
-            <Square className="w-4 h-4" />
+        <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsTrigger value="tables" className="flex items-center gap-1.5 text-xs">
+            <Square className="w-3.5 h-3.5" />
             Tavoli
           </TabsTrigger>
-          <TabsTrigger value="exceptions" className="flex items-center gap-2">
-            <CalendarOff className="w-4 h-4" />
+          <TabsTrigger value="exceptions" className="flex items-center gap-1.5 text-xs">
+            <CalendarOff className="w-3.5 h-3.5" />
             Eccezioni
           </TabsTrigger>
-          <TabsTrigger value="schedule" className="flex items-center gap-2">
-            <Settings className="w-4 h-4" />
+          <TabsTrigger value="schedule" className="flex items-center gap-1.5 text-xs">
+            <Settings className="w-3.5 h-3.5" />
             Impostazioni
           </TabsTrigger>
         </TabsList>
 
         {/* Tables Tab */}
-        <TabsContent value="tables" className="space-y-6">
+        <TabsContent value="tables" className="space-y-4">
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsBulkDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" /> Crea in Blocco
+            <Button variant="outline" size="sm" onClick={() => setIsBulkDialogOpen(true)}>
+              <Plus className="w-3.5 h-3.5 mr-1.5" /> Crea in Blocco
             </Button>
-            <Button onClick={() => openDialog()}>
-              <Plus className="w-4 h-4 mr-2" /> Aggiungi Tavolo
+            <Button size="sm" onClick={() => openDialog()}>
+              <Plus className="w-3.5 h-3.5 mr-1.5" /> Aggiungi Tavolo
             </Button>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-3 gap-4">
-            <Card className="p-4 text-center">
-              <div className="text-3xl font-bold text-primary">{totalTables}</div>
-              <div className="text-sm text-muted-foreground">Tavoli Totali</div>
+          <div className="grid grid-cols-3 gap-3">
+            <Card className="p-3 text-center">
+              <div className="text-2xl font-bold text-primary">{totalTables}</div>
+              <div className="text-xs text-muted-foreground">Tavoli Totali</div>
             </Card>
-            <Card className="p-4 text-center">
-              <div className="text-3xl font-bold text-green-600">{activeTables}</div>
-              <div className="text-sm text-muted-foreground">Tavoli Attivi</div>
+            <Card className="p-3 text-center">
+              <div className="text-2xl font-bold text-green-600">{activeTables}</div>
+              <div className="text-xs text-muted-foreground">Tavoli Attivi</div>
             </Card>
-            <Card className="p-4 text-center">
-              <div className="text-3xl font-bold text-blue-600">{totalSeats}</div>
-              <div className="text-sm text-muted-foreground">Posti Disponibili</div>
+            <Card className="p-3 text-center">
+              <div className="text-2xl font-bold text-blue-600">{totalSeats}</div>
+              <div className="text-xs text-muted-foreground">Posti Disponibili</div>
             </Card>
           </div>
 
           {tables.length === 0 ? (
-            <Card className="p-12 text-center">
-              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <Square className="w-10 h-10 text-muted-foreground" />
+            <Card className="p-8 text-center">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                <Square className="w-8 h-8 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground mb-4">Nessun tavolo configurato</p>
-              <Button onClick={() => openDialog()}>
-                <Plus className="w-4 h-4 mr-2" /> Aggiungi il primo tavolo
+              <p className="text-muted-foreground text-sm mb-3">Nessun tavolo configurato</p>
+              <Button size="sm" onClick={() => openDialog()}>
+                <Plus className="w-3.5 h-3.5 mr-1.5" /> Aggiungi il primo tavolo
               </Button>
             </Card>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {tables.map((table) => {
                 const hasNoHours = !table.available_hours || table.available_hours.length === 0;
                 
@@ -447,9 +447,9 @@ export const AdminTables = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                   >
-                    <Card className={`p-4 transition-all ${!table.is_active ? 'opacity-60 grayscale' : 'hover:shadow-lg'} ${hasNoHours ? 'border-orange-500/50' : ''}`}>
-                      <div className="flex justify-between items-start mb-2">
-                        <div className={`px-2 py-1 rounded-full text-xs font-medium
+                    <Card className={`p-3 transition-all ${!table.is_active ? 'opacity-60 grayscale' : 'hover:shadow-lg'} ${hasNoHours ? 'border-orange-500/50' : ''}`}>
+                      <div className="flex justify-between items-start mb-1.5">
+                        <div className={`px-2 py-0.5 rounded-full text-xs font-medium
                           ${table.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
                         >
                           {table.is_active ? 'Attivo' : 'Disattivo'}
@@ -462,18 +462,18 @@ export const AdminTables = () => {
 
                       <TableVisual table={table} isActive={table.is_active ?? true} />
 
-                      <div className="text-center mt-4">
-                        <h3 className="font-bold text-lg">Tavolo {table.table_number}</h3>
-                        <p className="text-muted-foreground flex items-center justify-center gap-1">
-                          <Users className="w-4 h-4" /> {table.seats} posti
+                      <div className="text-center mt-3">
+                        <h3 className="font-bold text-base">Tavolo {table.table_number}</h3>
+                        <p className="text-muted-foreground text-xs flex items-center justify-center gap-1">
+                          <Users className="w-3.5 h-3.5" /> {table.seats} posti
                         </p>
                       </div>
 
                       {/* Show available hours */}
-                      <div className="mt-3">
+                      <div className="mt-2">
                         {hasNoHours ? (
-                          <div className="flex items-center justify-center gap-1 text-orange-600 text-sm">
-                            <AlertCircle className="w-4 h-4" />
+                          <div className="flex items-center justify-center gap-1 text-orange-600 text-xs">
+                            <AlertCircle className="w-3.5 h-3.5" />
                             <span>Nessun orario</span>
                           </div>
                         ) : (

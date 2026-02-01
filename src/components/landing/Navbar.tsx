@@ -183,7 +183,7 @@ const Navbar = () => {
             transition={{ duration: 0.3 }}
             className="lg:hidden bg-background border-b border-border overflow-hidden"
           >
-            <div className="container mx-auto px-4 py-6 space-y-2">
+            <div className="container mx-auto px-4 py-4 space-y-1">
               {navLinks.map((link, index) => (
                 <motion.div
                   key={link.label}
@@ -200,7 +200,7 @@ const Navbar = () => {
                           handleNavClick(link.href);
                         }
                       }}
-                      className="block py-3 text-foreground hover:text-primary font-medium transition-colors"
+                      className="block py-2 text-sm text-foreground hover:text-primary font-medium transition-colors"
                     >
                       {link.label}
                     </a>
@@ -208,7 +208,7 @@ const Navbar = () => {
                     <Link
                       to={link.href}
                       onClick={() => setIsOpen(false)}
-                      className={`block py-3 text-foreground hover:text-primary font-medium transition-colors ${
+                      className={`block py-2 text-sm text-foreground hover:text-primary font-medium transition-colors ${
                         location.pathname === link.href ? "text-primary" : ""
                       }`}
                     >
@@ -222,30 +222,30 @@ const Navbar = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="pt-6 space-y-3 border-t border-border mt-4"
+                className="pt-4 space-y-2 border-t border-border mt-3"
               >
                 <a
                   href="tel:+39021234567"
-                  className="flex items-center gap-2 text-foreground py-2"
+                  className="flex items-center gap-2 text-sm text-foreground py-1.5"
                 >
-                  <Phone className="w-4 h-4 text-primary" />
+                  <Phone className="w-3.5 h-3.5 text-primary" />
                   02 1234567
                 </a>
                 <Link to="/auth?role=user" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    <User className="w-4 h-4 mr-2" />
+                  <Button variant="outline" size="sm" className="w-full h-9 text-sm">
+                    <User className="w-3.5 h-3.5 mr-1.5" />
                     Accedi Utente
                   </Button>
                 </Link>
                 <Link to="/auth?role=admin" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full mt-2">
-                    <User className="w-4 h-4 mr-2" />
+                  <Button variant="outline" size="sm" className="w-full h-9 text-sm mt-1.5">
+                    <User className="w-3.5 h-3.5 mr-1.5" />
                     Accedi Admin
                   </Button>
                 </Link>
                 <Link to="/ordina" onClick={() => setIsOpen(false)}>
-                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-red mt-2">
-                    <ShoppingBag className="w-4 h-4 mr-2" />
+                  <Button size="sm" className="w-full h-9 text-sm bg-primary hover:bg-primary/90 text-primary-foreground shadow-red mt-1.5">
+                    <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
                     Ordina Ora
                   </Button>
                 </Link>

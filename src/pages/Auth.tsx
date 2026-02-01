@@ -49,11 +49,20 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      // Redirect based on role
-      if (isAdmin || requestedRole === "admin") {
-        navigate("/admin");
+      // Redirect based on role and requested page
+      if (requestedRole === "admin") {
+        // Only redirect to admin if user is actually an admin
+        if (isAdmin) {
+          navigate("/admin");
+        }
+        // If not admin, stay on auth page to show error or let them log in with different account
       } else {
-        navigate("/profilo");
+        // Default user flow
+        if (isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/profilo");
+        }
       }
     }
   }, [user, isAdmin, navigate, requestedRole]);

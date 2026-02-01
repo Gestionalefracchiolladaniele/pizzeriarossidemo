@@ -126,42 +126,42 @@ export const AdminOrders = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Gestione Ordini</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-bold">Gestione Ordini</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
             {activeOrders.length} ordini attivi • {completedOrders.length} completati
           </p>
         </div>
-        <Button variant="outline" onClick={() => setIsHistoryOpen(true)}>
-          <History className="w-4 h-4 mr-2" />
+        <Button variant="outline" size="sm" onClick={() => setIsHistoryOpen(true)}>
+          <History className="w-3.5 h-3.5 mr-1.5" />
           Storico
         </Button>
       </div>
 
       {/* Active Orders Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-amber-500">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card className="p-3 text-center">
+          <div className="text-xl font-bold text-amber-500">
             {orders.filter(o => o.status === 'pending').length}
           </div>
           <div className="text-xs text-muted-foreground">Inviati</div>
         </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-blue-500">
+        <Card className="p-3 text-center">
+          <div className="text-xl font-bold text-blue-500">
             {orders.filter(o => o.status === 'received').length}
           </div>
           <div className="text-xs text-muted-foreground">Ricevuti</div>
         </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-orange-500">
+        <Card className="p-3 text-center">
+          <div className="text-xl font-bold text-orange-500">
             {orders.filter(o => o.status === 'preparing').length}
           </div>
           <div className="text-xs text-muted-foreground">In Preparazione</div>
         </Card>
-        <Card className="p-4 text-center">
-          <div className="text-2xl font-bold text-green-500">
+        <Card className="p-3 text-center">
+          <div className="text-xl font-bold text-green-500">
             {orders.filter(o => o.status === 'done').length}
           </div>
           <div className="text-xs text-muted-foreground">Pronti</div>
@@ -169,46 +169,46 @@ export const AdminOrders = () => {
       </div>
 
       {activeOrders.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-muted-foreground">Nessun ordine attivo</p>
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground text-sm">Nessun ordine attivo</p>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {visibleOrders.map((order) => (
-            <Card key={order.id} className="p-6">
-              <div className="flex flex-wrap gap-4 justify-between items-start">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h3 className="text-xl font-bold">Ordine #{order.order_number}</h3>
+            <Card key={order.id} className="p-4">
+              <div className="flex flex-wrap gap-3 justify-between items-start">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-lg font-bold">Ordine #{order.order_number}</h3>
                     <Badge className={statusColors[order.status]}>
                       {statusLabels[order.status] || order.status}
                     </Badge>
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="text-xs">
                       {deliveryTypeLabels[order.delivery_type] || order.delivery_type}
                     </Badge>
                   </div>
                   
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <User className="w-4 h-4" /> {order.customer_name}
+                      <User className="w-3.5 h-3.5" /> {order.customer_name}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Phone className="w-4 h-4" /> {order.customer_phone}
+                      <Phone className="w-3.5 h-3.5" /> {order.customer_phone}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" /> {new Date(order.created_at).toLocaleString('it-IT')}
+                      <Clock className="w-3.5 h-3.5" /> {new Date(order.created_at).toLocaleString('it-IT')}
                     </span>
                   </div>
 
                   {order.delivery_address && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="w-4 h-4" /> 
-                      <span className="truncate max-w-[300px]">{order.delivery_address}</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <MapPin className="w-3.5 h-3.5" /> 
+                      <span className="truncate max-w-[250px]">{order.delivery_address}</span>
                       {(order as any).delivery_lat && (order as any).delivery_lng && (
                         <Button
                           variant="outline"
                           size="sm"
-                          className="ml-2"
+                          className="ml-1.5 h-6 text-xs"
                           onClick={() => {
                             window.open(
                               `https://www.google.com/maps/dir/?api=1&destination=${(order as any).delivery_lat},${(order as any).delivery_lng}`,
@@ -216,7 +216,7 @@ export const AdminOrders = () => {
                             );
                           }}
                         >
-                          <Navigation className="w-4 h-4 mr-1" /> Naviga
+                          <Navigation className="w-3 h-3 mr-1" /> Naviga
                         </Button>
                       )}
                     </div>
@@ -224,13 +224,13 @@ export const AdminOrders = () => {
                 </div>
 
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-primary">€{order.total.toFixed(2)}</p>
+                  <p className="text-xl font-bold text-primary">€{order.total.toFixed(2)}</p>
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t">
-                <h4 className="font-semibold mb-2">Prodotti:</h4>
-                <ul className="text-sm space-y-1">
+              <div className="mt-3 pt-3 border-t">
+                <h4 className="font-semibold text-sm mb-1.5">Prodotti:</h4>
+                <ul className="text-xs space-y-0.5">
                   {Array.isArray(order.items) && order.items.map((item: any, idx: number) => (
                     <li key={idx}>
                       {item.quantity}x {item.name} - €{(item.price * item.quantity).toFixed(2)}
@@ -239,18 +239,18 @@ export const AdminOrders = () => {
                 </ul>
 
                 {order.notes && (
-                  <p className="mt-2 text-sm italic text-muted-foreground">
+                  <p className="mt-1.5 text-xs italic text-muted-foreground">
                     Note: {order.notes}
                   </p>
                 )}
               </div>
 
-              <div className="mt-4 flex gap-2">
+              <div className="mt-3 flex gap-2">
                 <Select 
                   value={order.status} 
                   onValueChange={(v) => updateStatus(order.id, v)}
                 >
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-40 h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -268,7 +268,7 @@ export const AdminOrders = () => {
 
               {/* Live Delivery Tracking Control - Show for delivery orders out for delivery */}
               {order.delivery_type === 'delivery' && order.status === 'out_for_delivery' && order.delivery_address && (
-                <div className="mt-4 pt-4 border-t">
+                <div className="mt-3 pt-3 border-t">
                   <DeliveryTrackerControl
                     orderId={order.id}
                     orderNumber={order.order_number}
@@ -289,18 +289,19 @@ export const AdminOrders = () => {
           {activeOrders.length > VISIBLE_ORDERS_COUNT && (
             <div className="flex justify-center">
               <Button 
-                variant="outline" 
+                variant="outline"
+                size="sm"
                 onClick={() => setShowAll(!showAll)}
-                className="gap-2"
+                className="gap-1.5 h-8 text-xs"
               >
                 {showAll ? (
                   <>
-                    <ChevronUp className="w-4 h-4" />
+                    <ChevronUp className="w-3.5 h-3.5" />
                     Mostra meno
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="w-3.5 h-3.5" />
                     Mostra altri {activeOrders.length - VISIBLE_ORDERS_COUNT} ordini
                   </>
                 )}
