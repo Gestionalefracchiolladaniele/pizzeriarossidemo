@@ -84,6 +84,11 @@ const Ordina = () => {
     clearCart,
   } = useCart();
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
   // No longer require auth - allow direct access for demo
 
   // Fetch menu data from Supabase
@@ -411,18 +416,17 @@ const Ordina = () => {
                             <img
                               src={item.image_url || "/placeholder.svg"}
                               alt={item.name}
-                              className="w-18 h-18 object-cover rounded-lg"
-                              style={{ width: '72px', height: '72px' }}
+                              className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
                             />
-                            <div className="flex-1">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h3 className="font-bold text-sm">{item.name}</h3>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-bold text-sm truncate">{item.name}</h3>
                                   <p className="text-xs text-muted-foreground line-clamp-2">
                                     {item.description}
                                   </p>
                                 </div>
-                                <span className="font-bold text-primary text-sm">
+                                <span className="font-bold text-primary text-sm whitespace-nowrap flex-shrink-0">
                                   €{item.price.toFixed(2)}
                                 </span>
                               </div>
