@@ -111,17 +111,37 @@ Deno.serve(async (req) => {
       },
       by_date: byDate,
       by_status: byStatus,
-      orders: orders?.map((o) => ({
-        id: o.id,
-        order_number: o.order_number,
-        created_at: o.created_at,
-        status: o.status,
-        delivery_type: o.delivery_type,
-        subtotal: o.subtotal,
-        delivery_fee: o.delivery_fee,
-        total: o.total,
-        customer_name: o.customer_name,
-      })),
+      orders: orders?.map((o) => {
+        // Parse items to readable format
+        const itemsList = Array.isArray(o.items)
+          ? (o.items as any[]).map((item: any) => ({
+              name: item.name || "Sconosciuto",
+              quantity: item.quantity || 1,
+              price: item.price || 0,
+              total: (item.quantity || 1) * (item.price || 0),
+            }))
+          : [];
+
+        const itemsSummary = itemsList
+          .map((i) => `${i.quantity}x ${i.name}`)
+          .join(", ");
+
+        return {
+          id: o.id,
+          order_number: o.order_number,
+          created_at: o.created_at,
+          date: o.created_at.split("T")[0],
+          time: o.created_at.split("T")[1]?.substring(0, 5) || "",
+          status: o.status,
+          delivery_type: o.delivery_type,
+          customer_name: o.customer_name,
+          items_summary: itemsSummary,
+          items_detail: itemsList,
+          subtotal: o.subtotal,
+          delivery_fee: o.delivery_fee,
+          total: o.total,
+        };
+      }),
     };
 
     return new Response(JSON.stringify(response), {
