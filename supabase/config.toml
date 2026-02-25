@@ -1,1 +1,4 @@
 project_id = "ksebribqmjrqkxmraowe"
+
+[functions.get-financial-data]
+verify_jwt = false

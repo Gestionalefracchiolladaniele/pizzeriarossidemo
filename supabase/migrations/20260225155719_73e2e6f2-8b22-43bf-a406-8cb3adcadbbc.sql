@@ -1,0 +1,1 @@
+ALTER TABLE pizzeria_settings ADD COLUMN IF NOT EXISTS api_key text UNIQUE DEFAULT NULL;
