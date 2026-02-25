@@ -258,6 +258,7 @@ export type Database = {
       pizzeria_settings: {
         Row: {
           address: string | null
+          api_key: string | null
           average_prep_time_minutes: number | null
           created_at: string
           delivery_radius_km: number | null
@@ -275,6 +276,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          api_key?: string | null
           average_prep_time_minutes?: number | null
           created_at?: string
           delivery_radius_km?: number | null
@@ -292,6 +294,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          api_key?: string | null
           average_prep_time_minutes?: number | null
           created_at?: string
           delivery_radius_km?: number | null
