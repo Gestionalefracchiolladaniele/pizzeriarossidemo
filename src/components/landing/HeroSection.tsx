@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, MapPin, Phone, Clock, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePizzeriaSettings } from "@/hooks/usePizzeriaSettings";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRef } from "react";
 
 const HeroSection = () => {
   const { settings } = usePizzeriaSettings();
+  const { t } = useLanguage();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -71,10 +73,10 @@ const HeroSection = () => {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-[0.9]"
           >
-            <span className="block">La Pizza</span>
-            <span className="block text-gradient-gold">Perfetta</span>
+            <span className="block">{t("hero.title1")}</span>
+            <span className="block text-gradient-gold">{t("hero.title2")}</span>
             <span className="block text-2xl md:text-3xl lg:text-4xl font-normal mt-2 text-white/80">
-              A Casa Tua o Nel Nostro Locale
+              {t("hero.subtitle")}
             </span>
           </motion.h1>
 
@@ -85,8 +87,7 @@ const HeroSection = () => {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="text-base md:text-lg text-white/70 mb-8 max-w-xl mx-auto leading-relaxed"
           >
-            Tradizione napoletana, ingredienti freschi e passione autentica. 
-            Ogni pizza è un'opera d'arte cotta nel nostro forno a 485°C.
+            {t("hero.description")}
           </motion.p>
 
           {/* Prototype Credit */}
@@ -102,7 +103,7 @@ const HeroSection = () => {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-white/60 hover:text-white/90 transition-colors text-sm font-sans"
             >
-              <span>Prototipo di Daniele Fracchiolla</span>
+              <span>{t("hero.prototype")}</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </motion.div>
@@ -119,7 +120,7 @@ const HeroSection = () => {
                 size="lg" 
                 className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red-lg hover-glow-red text-base px-8 py-5 rounded-full w-full sm:w-auto group"
               >
-                <span>Prenota Tavolo</span>
+                <span>{t("hero.bookTable")}</span>
                 <motion.span
                   animate={{ x: [0, 5, 0] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
@@ -134,7 +135,7 @@ const HeroSection = () => {
                 size="lg" 
                 className="bg-foreground text-background hover:bg-foreground/90 text-base px-8 py-5 rounded-full w-full sm:w-auto shadow-lg"
               >
-                Ordina Ora
+                {t("nav.orderNow")}
               </Button>
             </Link>
           </motion.div>
@@ -149,7 +150,7 @@ const HeroSection = () => {
             {[
               { icon: MapPin, text: settings.address || "Via Roma 123, Milano" },
               { icon: Phone, text: settings.phone || "02 1234567" },
-              { icon: Clock, text: "Mar-Dom 18:00-23:00" },
+              { icon: Clock, text: t("hero.hours") },
             ].map((item, index) => (
               <motion.div
                 key={index}
@@ -178,7 +179,7 @@ const HeroSection = () => {
             transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
             className="flex flex-col items-center gap-2"
           >
-            <span className="text-white/50 text-xs tracking-widest uppercase">Scorri</span>
+            <span className="text-white/50 text-xs tracking-widest uppercase">{t("hero.scroll")}</span>
             <div className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-1">
               <motion.div
                 animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
