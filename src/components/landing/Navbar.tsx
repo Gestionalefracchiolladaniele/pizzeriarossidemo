@@ -4,14 +4,8 @@ import { Menu, X, Phone, User, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "Chi Siamo", href: "/#chi-siamo" },
-  { label: "Menu", href: "/menu" },
-  { label: "Prenota", href: "/prenota" },
-  { label: "Contatti", href: "/#contatti" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSwitcher } from "@/components/landing/LanguageSwitcher";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,6 +13,15 @@ const Navbar = () => {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
   const { user } = useAuth();
+  const { t } = useLanguage();
+
+  const navLinks = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.about"), href: "/#chi-siamo" },
+    { label: t("nav.menu"), href: "/menu" },
+    { label: t("nav.book"), href: "/prenota" },
+    { label: t("nav.contact"), href: "/#contatti" },
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -129,7 +132,7 @@ const Navbar = () => {
                 className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}
               >
                 <User className="w-4 h-4 mr-2" />
-                Utente
+                {t("nav.user")}
               </Button>
             </Link>
             <Link to="/auth?role=admin">
@@ -138,22 +141,27 @@ const Navbar = () => {
                 size="sm"
                 className={isScrolled || !isHomePage ? "text-foreground" : "text-white/90"}
               >
-                Admin
+                {t("nav.admin")}
               </Button>
             </Link>
-            
+
+            <LanguageSwitcher variant={isScrolled || !isHomePage ? "dark" : "light"} />
+
             <Link to="/ordina">
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-red rounded-full px-6 group">
                 <ShoppingBag className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                Ordina
+                {t("nav.order")}
               </Button>
             </Link>
           </div>
 
-          {/* Mobile Menu Button - Animated Hamburger */}
-          <button
+          {/* Mobile: Language switcher + Hamburger */}
+          <div className="lg:hidden flex items-center gap-3">
+            <LanguageSwitcher variant={isScrolled || !isHomePage ? "dark" : "light"} />
+            <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`lg:hidden relative w-10 h-10 flex flex-col items-center justify-center gap-1.5 transition-colors ${
+            aria-label="Menu"
+            className={`relative w-10 h-10 flex flex-col items-center justify-center gap-1.5 transition-colors ${
               isScrolled || !isHomePage ? "text-foreground" : "text-white"
             }`}
           >
@@ -169,7 +177,8 @@ const Navbar = () => {
               animate={isOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
               className="w-6 h-0.5 bg-current origin-center"
             />
-          </button>
+            </button>
+          </div>
         </nav>
       </div>
 
@@ -234,19 +243,19 @@ const Navbar = () => {
                 <Link to="/auth?role=user" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" size="sm" className="w-full h-9 text-sm">
                     <User className="w-3.5 h-3.5 mr-1.5" />
-                    Accedi Utente
+                    {t("nav.loginUser")}
                   </Button>
                 </Link>
                 <Link to="/auth?role=admin" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" size="sm" className="w-full h-9 text-sm mt-1.5">
                     <User className="w-3.5 h-3.5 mr-1.5" />
-                    Accedi Admin
+                    {t("nav.loginAdmin")}
                   </Button>
                 </Link>
                 <Link to="/ordina" onClick={() => setIsOpen(false)}>
                   <Button size="sm" className="w-full h-9 text-sm bg-primary hover:bg-primary/90 text-primary-foreground shadow-red mt-1.5">
                     <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
-                    Ordina Ora
+                    {t("nav.orderNow")}
                   </Button>
                 </Link>
               </motion.div>
